@@ -17,6 +17,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var admin: AdminWindow?
     private var server: ServerProcess?
     private var menu: StatusMenu?
+    #if FREMKIT_SPARKLE
+    private var updater: Updater?
+    #endif
     /// Latest Edge bounds, kept so the kiosk window can be created lazily when it appears.
     private var edge: CGRect?
     /// Polls the Accessibility grant until it lands, so the menu stops claiming it is missing.
@@ -48,6 +51,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = StatusMenu()
         self.menu = menu
         wireMenu(menu)
+
+        #if FREMKIT_SPARKLE
+        let updater = Updater()
+        self.updater = updater
+        menu.onCheckForUpdates = { [weak updater] in updater?.checkForUpdates() }
+        menu.update { $0.updates = true }
+        #endif
 
         let driver = TouchDriver(poster: poster)
         driver.onState = { [weak self] state in

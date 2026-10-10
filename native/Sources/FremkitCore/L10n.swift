@@ -52,6 +52,8 @@ public enum L10nKey: String, CaseIterable {
     case toggleManageServer
     case toggleLaunchAtLogin
     case openLog
+    /// Only in the app, which updates itself through Sparkle.
+    case checkForUpdates
     case quit
 
     // Admin window and its menu bar
@@ -106,6 +108,7 @@ public enum L10n {
         .toggleManageServer: "Gérer le serveur",
         .toggleLaunchAtLogin: "Lancer au login",
         .openLog: "Journal…",
+        .checkForUpdates: "Rechercher les mises à jour…",
         .quit: "Quitter",
 
         .adminWindowTitle: "Fremkit — admin",
@@ -157,6 +160,7 @@ public enum L10n {
         .toggleManageServer: "Manage the server",
         .toggleLaunchAtLogin: "Launch at login",
         .openLog: "Log…",
+        .checkForUpdates: "Check for Updates…",
         .quit: "Quit",
 
         .adminWindowTitle: "Fremkit — admin",

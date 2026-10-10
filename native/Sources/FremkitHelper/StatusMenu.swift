@@ -21,6 +21,8 @@ struct MenuState {
     var loginFailed = false
     /// True when the login item is registered but still waiting for approval in System Settings.
     var loginNeedsApproval = false
+    /// True in the app, which updates itself; the developer helper has no updater to offer.
+    var updates = false
 
     /// Touch line label, in the language the helper picked at launch.
     var touchLabel: String {
@@ -62,6 +64,7 @@ final class StatusMenu: NSObject {
     private let dockToggle: NSMenuItem
     private let manageServerToggle: NSMenuItem
     private let launchAtLoginToggle: NSMenuItem
+    private let checkForUpdatesItem = NSMenuItem()
 
     var onOpenAdmin: (() -> Void)?
     var onOpenAdminInBrowser: (() -> Void)?
@@ -72,6 +75,7 @@ final class StatusMenu: NSObject {
     var onToggleManageServer: ((Bool) -> Void)?
     var onToggleLaunchAtLogin: ((Bool) -> Void)?
     var onOpenLog: (() -> Void)?
+    var onCheckForUpdates: (() -> Void)?
     var onQuit: (() -> Void)?
 
     override init() {
@@ -153,6 +157,11 @@ final class StatusMenu: NSObject {
         menu.addItem(.separator())
 
         menu.addItem(actionItem(L10n.string(.openLog), #selector(openLog)))
+        checkForUpdatesItem.title = L10n.string(.checkForUpdates)
+        checkForUpdatesItem.action = #selector(checkForUpdates)
+        checkForUpdatesItem.target = self
+        checkForUpdatesItem.isEnabled = true
+        menu.addItem(checkForUpdatesItem)
         let quit = actionItem(L10n.string(.quit), #selector(quit))
         quit.keyEquivalent = "q"
         menu.addItem(quit)
@@ -176,6 +185,7 @@ final class StatusMenu: NSObject {
         dockLine.title = state.dock.label
         loginFailedLine.isHidden = !state.loginFailed
         loginApprovalLine.isHidden = !state.loginNeedsApproval
+        checkForUpdatesItem.isHidden = !state.updates
 
         touchToggle.state = state.touchEnabled ? .on : .off
         fenceToggle.state = state.fenceEnabled ? .on : .off
@@ -190,6 +200,7 @@ final class StatusMenu: NSObject {
     @objc private func openAdminInBrowser() { onOpenAdminInBrowser?() }
     @objc private func reload() { onReload?() }
     @objc private func openLog() { onOpenLog?() }
+    @objc private func checkForUpdates() { onCheckForUpdates?() }
     @objc private func quit() { onQuit?() }
 
     @objc private func toggleTouch() { onToggleTouch?(!state.touchEnabled) }
