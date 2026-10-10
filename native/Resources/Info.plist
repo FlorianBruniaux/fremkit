@@ -27,6 +27,9 @@
 	<string>13.0</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<!-- Shown when the server first asks Terminal or iTerm2 to bring a Claude Code session forward. -->
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Fremkit brings the window of the Claude Code session you touched to the front.</string>
 	<!-- fremkit://admin opens the admin window; see HelperURL in FremkitCore. -->
 	<key>CFBundleURLTypes</key>
 	<array>
