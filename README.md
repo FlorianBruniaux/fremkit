@@ -355,7 +355,9 @@ The list is short and it is all of it.
 Everything else Fremkit knows, you typed into it: the connections of the table above, whose
 secrets live in the macOS keychain (see [docs/connections.md](docs/connections.md)). Nothing is
 sent to any server other than the ones you configured, there is no telemetry, and the server
-listens on `127.0.0.1` only.
+listens on `127.0.0.1` only. The one exception is the app's update check: once a day it
+downloads `appcast.xml` from this project's GitHub releases, sending nothing but the request
+itself (Sparkle's system profile is off).
 
 ## Troubleshooting
 
