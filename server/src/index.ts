@@ -54,7 +54,7 @@ if (requestedRegistry && !dev) {
   console.error(`fremkit: FREMKIT_DEV=1, installing widgets from ${requestedRegistry}`)
 }
 
-// Not a top-level await: the app's bundled server is CommonJS (see scripts/bundle-server.mjs),
+// Not a top-level await: the app's bundled server is CommonJS (see server/scripts/bundle.mjs),
 // which has none. A failure still ends the process with a non-zero status, as it did.
 async function main(): Promise<void> {
   const app = await buildApp({
