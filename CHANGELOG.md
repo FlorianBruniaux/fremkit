@@ -47,6 +47,11 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 - The Claude limits widget shows today's tokens and its hourly histogram again. It reached for the
   bridge's escaping helper by the wrong name, so every render threw where the footer begins and
   everything under the gauges stayed empty (@mcouzinet, #5).
+- The helper keeps its Input Monitoring and Accessibility grants across rebuilds again, on Macs
+  where `scripts/create-signing-identity.sh` failed at the import step ("MAC verification failed").
+  The identity was never created, so every build stayed ad-hoc signed and lost the permissions
+  granted to the one before, which shows up as the touch panel clicking on another display
+  (@mcouzinet, #8).
 - Spotify's progress bar moves: on a Mac whose number format uses a decimal comma the position
   read as nothing, and the bar sat at zero. It now glides across each second instead of stepping,
   lands at once on a seek, a new track or a pause, and empties when Spotify closes (@mcouzinet, #4).
