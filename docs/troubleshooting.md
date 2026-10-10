@@ -14,9 +14,9 @@ and "Notifications: active" above the toggles, and *Log…* opens the supervised
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| "Touch: permission missing" | Input Monitoring not granted to *this build* of the helper | Add "Fremkit Helper" under Privacy & Security → Input Monitoring, then relaunch it |
+| "Touch: permission missing" | Input Monitoring not granted to *this build* of the helper | Add "Fremkit" (the app) or "Fremkit Helper" (a source install) under Privacy & Security → Input Monitoring, then relaunch it |
 | "Touch: taken by another driver" | Touchscreen Gestures, another driver or a `--probe` run holds the panel | Quit it, and unload its launchd agent so it does not come back |
-| "Fence: permission missing" | Accessibility not granted | Add "Fremkit Helper" under Privacy & Security → Accessibility, then relaunch it |
+| "Fence: permission missing" | Accessibility not granted | Add "Fremkit" (the app) or "Fremkit Helper" (a source install) under Privacy & Security → Accessibility, then relaunch it |
 | "Fremkit can't be opened" / "is damaged and can't be opened" | The download was altered or is not the published one | Download the DMG again from the release page; see [Gatekeeper](#gatekeeper) |
 | Input Monitoring and Accessibility asked again after moving to the app | The app's Developer ID signature is a new code identity | Expected once; see [The app asks for permissions again](#the-app-asks-for-permissions-again) |
 | Permissions reset after every rebuild | Ad-hoc signature: a new code identity each build | Run `scripts/create-signing-identity.sh`, rebuild, grant once more |
@@ -178,7 +178,8 @@ macOS 15 and later gate LAN access per application, and the server has no identi
 runs inside whatever launched it. So the app to allow under System Settings → Privacy & Security →
 **Local Network** is:
 
-- **Fremkit Helper**, when the helper manages the server (the normal case);
+- **Fremkit** (the app) or **Fremkit Helper** (a source install), when the helper manages the
+  server (the normal case);
 - **your terminal** (Terminal, iTerm, Ghostty…), when you run `pnpm dev` yourself.
 
 Without the grant, every connection to a LAN device fails as `EHOSTUNREACH`. This is the usual
@@ -188,7 +189,7 @@ cause of a Bambu printer or a Homey that looks perfectly reachable.
 the filter — on the same address, from the same shell, `curl` answers 200 while Node gets
 `EHOSTUNREACH`. So the test that means something is: `ping` or `curl` reaches the device but
 **Node** — the server, or a script — does not. That is the grant missing on the app that runs
-Node: Fremkit Helper for the live server, your terminal for anything you run yourself.
+Node: Fremkit or Fremkit Helper for the live server, your terminal for anything you run yourself.
 
 **After a reinstall the helper may vanish from the Local Network list.** The grant is tied to the
 installed bundle, and deleting it drops the grant silently. Reinstall with
