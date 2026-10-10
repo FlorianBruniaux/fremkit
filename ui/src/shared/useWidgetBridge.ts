@@ -4,7 +4,7 @@ import { t, useI18n } from './i18n'
 import { isHexColor, tileText } from './color'
 import { useAppliedTheme, useThemeColors } from './theme'
 import { channelAllowed, mergeSettings, type AccentMode, type NavSlot, type WidgetInstance, type WidgetManifest, type WidgetSize } from './types'
-import { FrameTrust, connRequest, faviconTarget, fetchTarget, imageTarget, nonEmptyString, stampInstance } from './widgetMessages'
+import { FrameTrust, connRequest, faviconTarget, fetchTarget, imageTarget, mayListApps, nonEmptyString, stampInstance } from './widgetMessages'
 
 export type BridgeState = 'loading' | 'ready' | 'error'
 
@@ -216,6 +216,7 @@ export function useWidgetBridge(
         // turn a name the user typed into the icon it asks for — and no filesystem path.
         const id = str(m.id)
         if (!id) break
+        if (!mayListApps(manifest()?.subscriptions)) { reply(id, undefined, t('bridge.channelNotAllowed', { channel: 'dock' })); break }
         fetch('/api/apps/installed')
           .then(async (r) => {
             if (!r.ok) { reply(id, undefined, t('bridge.noApps')); return }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FrameTrust, faviconTarget, fetchTarget, imageTarget, nonEmptyString, stampInstance } from '../src/shared/widgetMessages'
+import { FrameTrust, faviconTarget, fetchTarget, imageTarget, mayListApps, nonEmptyString, stampInstance } from '../src/shared/widgetMessages'
 
 describe('nonEmptyString', () => {
   it('accepts a non-empty string and nothing else', () => {
@@ -87,6 +87,14 @@ describe('imageTarget', () => {
     expect(imageTarget({ url: 'https://evil.example.net/x.png' }, settings)).toBeNull()
     expect(imageTarget({ url: 'file:///etc/hosts' }, { p: 'file:///etc/hosts' })).toBeNull()
     expect(imageTarget({ url: 42 }, settings)).toBeNull()
+  })
+})
+
+describe('mayListApps', () => {
+  it('answers only a widget that subscribes to the Dock', () => {
+    expect(mayListApps(['dock'])).toBe(true)
+    expect(mayListApps(['dock', 'volume'])).toBe(true)
+    for (const subs of [undefined, [], ['volume'], ['dockyard']]) expect(mayListApps(subs), JSON.stringify(subs)).toBe(false)
   })
 })
 

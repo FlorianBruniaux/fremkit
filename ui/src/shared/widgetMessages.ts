@@ -6,6 +6,8 @@
  * can be exercised directly.
  */
 
+import { channelAllowed } from './types'
+
 /** A non-empty string, or null. Every field of a widget's message goes through this. */
 export function nonEmptyString(value: unknown): string | null {
   return typeof value === 'string' && value !== '' ? value : null
@@ -175,4 +177,15 @@ export class FrameTrust {
     this.loadedSrc = null
     this.disowned = false
   }
+}
+
+/**
+ * Whether a widget may read the list of installed applications through the host.
+ *
+ * Only a widget subscribed to `dock`, which already shows it the Dock's applications and their
+ * bundle ids and which the consent dialog lists. A list of what is installed on this Mac is a fine
+ * fingerprint, so a widget that asked for nothing gets nothing.
+ */
+export function mayListApps(subscriptions: string[] | undefined): boolean {
+  return channelAllowed(subscriptions ?? [], 'dock')
 }
