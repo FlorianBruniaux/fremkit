@@ -31,23 +31,24 @@ final class ServerLaunchTests: XCTestCase {
 
     func testCheckoutGuardNeedsBothTheRepoAndTheEntryPoint() {
         let launch = ServerLaunch.checkout(repoPath: "/Volumes/Dev/fremkit")
+        let node = "/opt/homebrew/bin/node"
         XCTAssertTrue(launch.isOwnServer(commandLine:
-            "/opt/homebrew/bin/node /Volumes/Dev/fremkit/server/node_modules/tsx/dist/cli.mjs src/index.ts"))
-        XCTAssertFalse(launch.isOwnServer(commandLine: "/opt/homebrew/bin/node /Volumes/Dev/fremkit/other.js"))
-        XCTAssertFalse(launch.isOwnServer(commandLine: "/opt/homebrew/bin/node /elsewhere/src/index.ts"))
-        XCTAssertFalse(ServerLaunch.checkout(repoPath: "").isOwnServer(commandLine: "node src/index.ts"))
+            "\(node) /Volumes/Dev/fremkit/server/node_modules/tsx/dist/cli.mjs src/index.ts", executablePath: node))
+        XCTAssertFalse(launch.isOwnServer(commandLine: "\(node) /Volumes/Dev/fremkit/other.js", executablePath: node))
+        XCTAssertFalse(launch.isOwnServer(commandLine: "\(node) /elsewhere/src/index.ts", executablePath: node))
+        XCTAssertFalse(ServerLaunch.checkout(repoPath: "").isOwnServer(commandLine: "node src/index.ts", executablePath: node))
     }
 
     func testBundledGuardNeedsTheBundleExecutableItself() {
         let launch = ServerLaunch.bundled(resourcesPath: resources)
-        XCTAssertTrue(launch.isOwnServer(commandLine: bundledServer))
-        XCTAssertTrue(launch.isOwnServer(commandLine: bundledServer + " --some-flag"))
-        // Another copy of the app, or something merely naming the path, is not ours.
-        XCTAssertFalse(launch.isOwnServer(commandLine:
+        XCTAssertTrue(launch.isOwnServer(commandLine: bundledServer, executablePath: bundledServer))
+        // Another copy of the app, or a process merely naming the path, is not ours.
+        XCTAssertFalse(launch.isOwnServer(commandLine: "x", executablePath:
             "/Users/someone/Downloads/Fremkit.app/Contents/Resources/server/fremkit-server"))
-        XCTAssertFalse(launch.isOwnServer(commandLine: "/bin/cat " + bundledServer))
-        XCTAssertFalse(launch.isOwnServer(commandLine: bundledServer + "-old"))
-        XCTAssertFalse(ServerLaunch.bundled(resourcesPath: "").isOwnServer(commandLine: "/server/fremkit-server"))
+        XCTAssertFalse(launch.isOwnServer(commandLine: "/bin/cat " + bundledServer, executablePath: "/bin/cat"))
+        XCTAssertFalse(launch.isOwnServer(commandLine: bundledServer, executablePath: bundledServer + "-old"))
+        XCTAssertFalse(launch.isOwnServer(commandLine: bundledServer, executablePath: nil))
+        XCTAssertFalse(ServerLaunch.bundled(resourcesPath: "").isOwnServer(commandLine: "", executablePath: "/server/fremkit-server"))
     }
 
     func testCheckoutEnvironmentKeepsTheDeveloperPath() {

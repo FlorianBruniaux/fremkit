@@ -31,24 +31,25 @@ public enum ServerLaunch: Equatable {
     }
 
     /**
-     Whether `commandLine` — a process's, as `ps -o command=` prints it — is the server this
-     launch starts. It guards the kill of an orphan named by a stale pid file: pids are recycled,
-     and the pid may belong to anything by now.
+     Whether a running process is the server this launch starts. It guards the kill of an orphan
+     named by a stale pid file: pids are recycled, and the pid may belong to anything by now.
 
-     A checkout's child is `node …/tsx/… src/index.ts` from the repo, so it must carry both the
-     repo path and the entry point; either alone matches far too much. A bundled child is the
-     bundle's own executable, so the command line must *start* with its absolute path. An empty
-     path never matches: `contains("")` is true for everything.
+     A checkout's child is `node …/tsx/… src/index.ts` from the repo, so its `commandLine` (as
+     `ps -o command=` prints it) must carry both the repo path and the entry point; either alone
+     matches far too much. A bundled child is the bundle's own executable, so its
+     `executablePath` — the kernel's, from `proc_pidpath`, with symlinks resolved — must be that
+     file exactly. `resourcesPath` has to be resolved the same way for the comparison to hold
+     (`/tmp` is `/private/tmp`, and `ps` prints whichever spelling the process was started with).
+     An empty path never matches: `contains("")` is true for everything.
      */
-    public func isOwnServer(commandLine: String) -> Bool {
+    public func isOwnServer(commandLine: String, executablePath: String?) -> Bool {
         switch self {
         case let .checkout(repoPath):
             guard !repoPath.isEmpty else { return false }
             return commandLine.contains(repoPath) && commandLine.contains("src/index.ts")
         case let .bundled(resourcesPath):
-            guard !resourcesPath.isEmpty else { return false }
-            let executable = resourcesPath + "/" + Self.bundledExecutable
-            return commandLine == executable || commandLine.hasPrefix(executable + " ")
+            guard !resourcesPath.isEmpty, let executablePath else { return false }
+            return executablePath == resourcesPath + "/" + Self.bundledExecutable
         }
     }
 

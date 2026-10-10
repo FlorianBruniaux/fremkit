@@ -90,8 +90,9 @@ final class ServerProcess {
 
     init(config: HelperConfig) {
         self.config = config
-        launch = ServerLaunch.decide(repoPath: config.repoPath,
-                                     resourcesPath: Bundle.main.resourcePath) {
+        // Resolved like proc_pidpath resolves the child's executable, for the orphan guard.
+        let resources = Bundle.main.resourcePath.map(Self.realPath)
+        launch = ServerLaunch.decide(repoPath: config.repoPath, resourcesPath: resources) {
             FileManager.default.isExecutableFile(atPath: $0)
         }
     }
@@ -575,7 +576,7 @@ final class ServerProcess {
         // node)" once matched almost any Node process on the machine — the pid file is stale
         // often enough that this was a real way to kill something else entirely.
         let command = Self.commandLine(of: pid)
-        guard launch.isOwnServer(commandLine: command) else {
+        guard launch.isOwnServer(commandLine: command, executablePath: Self.executablePath(of: pid)) else {
             // The command line is not logged: it is another process's, and the log is a file the
             // user may hand to someone else.
             NSLog("fremkit: pid %d from server.pid is not our server, leaving it alone", pid)
@@ -594,6 +595,20 @@ final class ServerProcess {
             Self.killTree(pid, signal: SIGKILL)
         }
         Self.removePidFile()
+    }
+
+    /// The executable `pid` runs, as the kernel knows it (symlinks resolved), or nil.
+    private static func executablePath(of pid: pid_t) -> String? {
+        var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN) * 4)
+        guard proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0 else { return nil }
+        return String(cString: buffer)
+    }
+
+    /// `path` with every symlink resolved, or `path` itself when it cannot be.
+    private static func realPath(_ path: String) -> String {
+        guard let resolved = realpath(path, nil) else { return path }
+        defer { free(resolved) }
+        return String(cString: resolved)
     }
 
     /// Full command line of `pid` via `ps`, or an empty string when it cannot be read.
