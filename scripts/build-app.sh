@@ -227,7 +227,17 @@ SPARKLE_FW="$APP/Contents/Frameworks/Sparkle.framework"
 sign "$SPARKLE_FW/Versions/B/Autoupdate"
 sign "$SPARKLE_FW/Versions/B/Updater.app"
 sign "$SPARKLE_FW"
-sign --entitlements native/Resources/Fremkit.entitlements "$APP"
+# The hardened runtime's library validation only loads a framework signed by the app's own team.
+# A self-signed or ad-hoc identity has no team, so the app would die in dyld loading Sparkle.
+# Such a build — local, never notarizable — gets library validation turned off; a Developer ID
+# build never does.
+APP_ENTITLEMENTS="native/Resources/Fremkit.entitlements"
+if [ "$TIMESTAMP" != "--timestamp" ]; then
+    APP_ENTITLEMENTS="$WORK/Fremkit-local.entitlements"
+    cp native/Resources/Fremkit.entitlements "$APP_ENTITLEMENTS"
+    /usr/libexec/PlistBuddy -c "Add :com.apple.security.cs.disable-library-validation bool true" "$APP_ENTITLEMENTS"
+fi
+sign --entitlements "$APP_ENTITLEMENTS" "$APP"
 
 codesign --verify --strict --verbose=2 "$APP"
 
