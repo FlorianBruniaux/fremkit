@@ -10,7 +10,27 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 
 ## Unreleased
 
+### Added
+- **Fremkit as an app.** A signed, notarized `Fremkit.app`, on a DMG or with
+  `brew install --cask fdussert/fremkit/fremkit`, runs the whole dashboard on its own: no
+  checkout, no Node, no Xcode tools. Drag it to Applications, open it, grant two permissions.
+  Its data lives in `~/Library/Application Support/Fremkit`. Building from source works as
+  before and is untouched.
+- **Updates from the menu.** The app updates itself through Sparkle, and *Check for Updates…* in
+  the menu bar menu asks right away. Updates are signed; the dashboard server stops and starts
+  again around the update on its own.
+- The Claude Code hook and status line ship inside the app, at
+  `/Applications/Fremkit.app/Contents/Resources/scripts/`, for `~/.claude/settings.json` to name.
+
 ### Changed
+- **The signed app asks for Input Monitoring and Accessibility once more** on its first launch:
+  macOS ties those grants to the signature, and the app is signed with the project's Developer ID
+  rather than the local certificate of a source install. If the old grant is still ticked and
+  touch does not work, run `tccutil reset ListenEvent dev.fremkit.helper` and
+  `tccutil reset Accessibility dev.fremkit.helper`, then open Fremkit again.
+- The helper reports its real version (it said 0.1.0).
+- A helper with touch, the mouse fence and the Dock badges all off no longer asks for
+  Accessibility, which none of the three is using.
 - **Homey is a declared connection now.** The Homey connection type built into Fremkit is gone:
   both Homey widgets bring their own, so one API key serves the two of them. An existing Homey
   connection is migrated when the server starts — same name, same address, same key — and the

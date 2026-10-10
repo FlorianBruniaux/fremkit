@@ -32,7 +32,11 @@ Fremkit turns a Corsair Xeneon Edge (a 2560 × 720 touch strip) into a widget da
   supervises the server: it spawns `tsx src/index.ts`, restarts it when it dies, and takes over
   an external server it finds on 4242. Built with `scripts/build-helper.sh` (plain `swiftc`, no
   Xcode project), tested with `scripts/test-helper.sh`.
-- `scripts/` — setup, dev, build/install/test of the helper, signing identity.
+- `scripts/` — setup, dev, build/install/test of the helper, signing identity, and the
+  downloadable app: `build-app.sh` (self-contained, signed `Fremkit.app` with Sparkle and the
+  server as a Node single executable), `notarize.sh`, `release.sh` (builds a release and stops
+  before publishing). See [docs/releasing.md](docs/releasing.md). Never install a built
+  `Fremkit.app` on the owner's machine: it shares the bundle id of the live helper.
 - `themes/<id>/theme.json` — a palette, fonts and text size as validated tokens, painted on the
   dashboard, the editor and inside every widget. Two ship; the rest are published on the registry
   and installed into `<dataDir>/themes`, exactly like a widget. See [docs/themes.md](docs/themes.md).
@@ -149,3 +153,4 @@ agent's in-flight work. Say where the worktree is, and remove it once the work h
 | change the dashboard | `ui/src/dashboard/App.vue`, `NavBar.vue`, `CompactWidgetFrame.vue`, `NavPopover.vue` |
 | change what widgets can do | `server/src/bridge/fremkit.js` and `ui/src/shared/useWidgetBridge.ts`, together |
 | touch or the kiosk window | `native/Sources/FremkitHelper/` |
+| the app, its signing, notarization or updates | `scripts/build-app.sh`, `scripts/release.sh`, `native/Sources/FremkitCore/ServerLaunch.swift` (checkout or bundled server), `server/src/paths.ts` (the bundle's layout), `docs/releasing.md` |
