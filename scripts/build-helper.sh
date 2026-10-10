@@ -6,6 +6,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 # shellcheck source=lib/swiftc-common.sh
 source scripts/lib/swiftc-common.sh
+# shellcheck source=lib/version.sh
+source scripts/lib/version.sh
+VERSION="$(fremkit_version)"
 
 echo "SDK: $SDK"
 
@@ -32,6 +35,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$OUT/FremkitHelper" "$APP/Contents/MacOS/FremkitHelper"
 cp native/Resources/Info.plist "$APP/Contents/Info.plist"
+fremkit_stamp_version "$APP/Contents/Info.plist" "$VERSION"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
 # Brand assets: the app icon named by CFBundleIconFile, and the menu bar glyph. The "Template"

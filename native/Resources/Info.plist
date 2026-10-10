@@ -14,10 +14,11 @@
 	<string>Fremkit</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<!-- Stamped at build time from server/src/version.ts (scripts/lib/version.sh). -->
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.0</string>
+	<string>0.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>0.1.0</string>
+	<string>0.0.0</string>
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSHighResolutionCapable</key>
