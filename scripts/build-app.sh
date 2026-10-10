@@ -163,6 +163,8 @@ fi
 RES="$APP/Contents/Resources"
 cp brand/icon/Fremkit.icns "$RES/Fremkit.icns"
 cp brand/menubar/fremkitTemplate.png brand/menubar/fremkitTemplate@2x.png "$RES/"
+# The permission prompts' text, in French and English (see Info.plist).
+cp -R native/Resources/en.lproj native/Resources/fr.lproj "$RES/"
 
 # The layout server/src/paths.ts reads under FREMKIT_ROOT. Change both together.
 mkdir -p "$RES/server/bridge" "$RES/ui" "$RES/brand" "$RES/scripts"

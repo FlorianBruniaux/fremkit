@@ -42,6 +42,8 @@ printf 'APPL????' > "$APP/Contents/PkgInfo"
 # suffix in the file name is what makes AppKit tint the glyph for the current menu bar theme.
 cp brand/icon/Fremkit.icns "$APP/Contents/Resources/Fremkit.icns"
 cp brand/menubar/fremkitTemplate.png brand/menubar/fremkitTemplate@2x.png "$APP/Contents/Resources/"
+# The permission prompts' text, in French and English (see Info.plist).
+cp -R native/Resources/en.lproj native/Resources/fr.lproj "$APP/Contents/Resources/"
 
 # Ad-hoc signatures change with every build, and TCC ties its Input Monitoring and
 # Accessibility grants to the signature, so each rebuild forces the user to grant again.

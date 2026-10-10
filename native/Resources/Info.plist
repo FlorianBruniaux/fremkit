@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
 	<key>CFBundleIdentifier</key>
 	<string>dev.fremkit.helper</string>
 	<key>CFBundleName</key>
@@ -27,7 +29,8 @@
 	<string>13.0</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<!-- Shown when the server first asks Terminal or iTerm2 to bring a Claude Code session forward. -->
+	<!-- Shown when the server first asks Terminal or iTerm2 to bring a Claude Code session forward.
+	     Translated in native/Resources/{en,fr}.lproj/InfoPlist.strings. -->
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Fremkit brings the window of the Claude Code session you touched to the front.</string>
 	<!-- fremkit://admin opens the admin window; see HelperURL in FremkitCore. -->
