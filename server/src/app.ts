@@ -2,7 +2,7 @@ import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastif
 import fastifyStatic from '@fastify/static'
 import fastifyWebsocket from '@fastify/websocket'
 import { homedir } from 'node:os'
-import { fileURLToPath } from 'node:url'
+import { shippedPaths } from './paths.js'
 import { join } from 'node:path'
 import { access } from 'node:fs/promises'
 import { ConfigStore } from './config/store.js'
@@ -73,6 +73,10 @@ export interface AppOptions {
   /** Only ever passed by the tests, which need to look inside what the proxy cached. */
   connCache?: ConnCache
   uiDist?: string
+  /** The widget SDK served as `/fremkit.js`. Defaults to the one in the checkout, see `paths.ts`. */
+  bridgePath?: string
+  /** The wallpaper copied into a fresh background library. Defaults like `bridgePath`. */
+  wallpaperPath?: string
   providers?: Provider[]
   logger?: boolean
   claudeTranscriptsDir?: string
@@ -112,7 +116,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   const catalog = new WidgetCatalog(opts.widgetsDir, installedDir)
   await catalog.scan()
   const themes = new ThemeCatalog(
-    opts.themesDir ?? fileURLToPath(new URL('../../themes', import.meta.url)),
+    opts.themesDir ?? shippedPaths().themesDir,
     installedThemesDir(opts.dataDir),
   )
   await themes.scan()
@@ -124,7 +128,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   // The shipped wallpaper, copied into the user's background library as an ordinary file so it
   // can be picked and deleted like any upload. Before the store loads, so a fresh install's
   // default config already has the image it names.
-  await seedDefaultBackground(opts.dataDir)
+  await seedDefaultBackground(opts.dataDir, opts.wallpaperPath)
 
   const dock = new DockState({ iconsDir: join(opts.dataDir, 'icons') })
   await dock.loadIcons()
@@ -247,7 +251,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
 
   await app.register(configRoutes, { store, catalog })
   await app.register(connectionRoutes, { store, catalog, types: connectionTypes, manager: connections, secrets, connCache })
-  await app.register(widgetRoutes, { catalog, store })
+  await app.register(widgetRoutes, { catalog, store, bridgePath: opts.bridgePath ?? shippedPaths().bridgePath })
   await app.register(themeRoutes, { catalog: themes })
   await app.register(proxyRoutes, { catalog, store, secrets, cache: connCache })
   const marketplaceRegistry = new Registry({
