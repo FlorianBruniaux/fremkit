@@ -33,6 +33,12 @@ if (configured && !isAbsolute(configured)) {
   console.error(`fremkit: FREMKIT_DATA_DIR must be an absolute path, got ${configured}`)
   process.exit(1)
 }
+// Inside the app, `<root>/data` would be inside the signed bundle, which every update replaces:
+// the helper always passes FREMKIT_DATA_DIR there, and a hand-run bundled server must too.
+if (!configured && process.env.FREMKIT_ROOT) {
+  console.error('fremkit: FREMKIT_ROOT is set but FREMKIT_DATA_DIR is not; refusing to write data inside the app')
+  process.exit(1)
+}
 const dataDir = configured || `${shipped.root}/data`
 
 /**
