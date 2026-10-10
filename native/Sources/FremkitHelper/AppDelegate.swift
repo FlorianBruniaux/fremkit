@@ -53,10 +53,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         wireMenu(menu)
 
         #if FREMKIT_SPARKLE
-        let updater = Updater()
-        self.updater = updater
-        menu.onCheckForUpdates = { [weak updater] in updater?.checkForUpdates() }
-        menu.update { $0.updates = true }
+        // A build without Sparkle's public key (a local build before the owner generated one)
+        // could never accept an update, and Sparkle would complain at every launch: no updater.
+        if let key = Bundle.main.object(forInfoDictionaryKey: "SUPublicEDKey") as? String, !key.isEmpty {
+            let updater = Updater()
+            self.updater = updater
+            menu.onCheckForUpdates = { [weak updater] in updater?.checkForUpdates() }
+            menu.update { $0.updates = true }
+        }
         #endif
 
         let driver = TouchDriver(poster: poster)
