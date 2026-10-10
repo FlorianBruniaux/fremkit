@@ -200,13 +200,14 @@ rm -rf "$APP/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices" \
 # helpers, its framework, then the app. --options runtime everywhere (notarization requires the
 # hardened runtime); a secure timestamp only with a Developer ID, which is what Apple's
 # timestamp server is for.
+# Read once: `security … | grep -q` under pipefail can fail on SIGPIPE when grep exits early.
+IDENTITIES="$(security find-identity -v -p codesigning 2>/dev/null || true)"
 if [ -n "${FREMKIT_SIGN_IDENTITY:-}" ]; then
     IDENTITY="$FREMKIT_SIGN_IDENTITY"
 else
-    IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
-        | awk -v team="($TEAM_ID)" '/"Developer ID Application: / && index($0, team) {print $2; exit}')"
+    IDENTITY="$(awk -v team="($TEAM_ID)" '/"Developer ID Application: / && index($0, team) {print $2; exit}' <<<"$IDENTITIES")"
     if [ -z "$IDENTITY" ]; then
-        if security find-identity -v -p codesigning 2>/dev/null | grep -q '"Fremkit Helper Dev"'; then
+        if grep -q '"Fremkit Helper Dev"' <<<"$IDENTITIES"; then
             IDENTITY="Fremkit Helper Dev"
         else
             IDENTITY="-"
@@ -215,8 +216,7 @@ else
     fi
 fi
 TIMESTAMP="--timestamp=none"
-if [ "$IDENTITY" != "-" ] && security find-identity -v -p codesigning 2>/dev/null \
-        | grep "$IDENTITY" | grep -q "Developer ID Application"; then
+if [ "$IDENTITY" != "-" ] && grep -F "$IDENTITY" <<<"$IDENTITIES" | grep -q "Developer ID Application"; then
     TIMESTAMP="--timestamp"
 fi
 echo "==> signing with $IDENTITY ($TIMESTAMP)"
