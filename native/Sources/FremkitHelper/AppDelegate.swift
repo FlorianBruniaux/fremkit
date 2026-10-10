@@ -37,8 +37,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Accessibility is needed to post the synthetic events the touch driver generates, not
         // just to create the fence tap, so ask for it once at launch whatever the fence setting is.
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-        _ = AXIsProcessTrustedWithOptions(options)
+        // Only a helper with touch, fence and Dock badges all switched off has no use for it — a
+        // copy run beside the installed one for testing, typically — and is not made to ask: a
+        // prompt answered for that copy would be answered for the bundle id both share.
+        if config.touch || config.fence || config.dock {
+            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+            _ = AXIsProcessTrustedWithOptions(options)
+        }
 
         let menu = StatusMenu()
         self.menu = menu
