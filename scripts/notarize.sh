@@ -15,6 +15,8 @@ cd "$(dirname "$0")/.."
 
 APP="native/dist/Fremkit.app"
 PROFILE="${FREMKIT_NOTARY_PROFILE:-fremkit-notary}"
+# shellcheck source=lib/pins.sh
+source scripts/lib/pins.sh
 WORK="native/.build/notarize"
 
 if [ ! -d "$APP" ]; then
@@ -31,7 +33,13 @@ fi
 
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")"
 DMG="native/dist/Fremkit-${VERSION}.dmg"
-IDENTITY="$(sed -n 's/^Authority=\(Developer ID Application: .*\)$/\1/p' <<<"$SIGNATURE")"
+# The DMG is signed by the same team's identity, named by hash (see pins.sh), or by
+# FREMKIT_SIGN_IDENTITY when the app was.
+IDENTITY="${FREMKIT_SIGN_IDENTITY:-$(fremkit_developer_id)}"
+if [ -z "$IDENTITY" ]; then
+    echo "error: no Developer ID Application identity for team $TEAM_ID in the keychain" >&2
+    exit 1
+fi
 
 rm -rf "$WORK"
 mkdir -p "$WORK"

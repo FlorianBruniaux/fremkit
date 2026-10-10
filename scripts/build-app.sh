@@ -25,19 +25,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 REPO="$(pwd)"
 
-# --- Pinned downloads ---------------------------------------------------------------------------
-# Node: one current LTS line. The tarball is checked against SHASUMS256.txt from nodejs.org, as
-# published, and against the hash pinned here, so a changed file on the server fails the build
-# instead of shipping. Bump both together.
-NODE_VERSION="24.21.0"
-NODE_TARBALL="node-v${NODE_VERSION}-darwin-arm64.tar.gz"
-NODE_SHA256="bed7eea5325e1108f32ce5228ddd6a5f0f08a499ee42aa7442aea583702f6057"
-# Sparkle 2: the release tarball, its SHA-256 as GitHub publishes it for the asset.
-SPARKLE_VERSION="2.10.0"
-SPARKLE_TARBALL="Sparkle-${SPARKLE_VERSION}.tar.xz"
-SPARKLE_SHA256="c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c"
-
-TEAM_ID="874TMS6WBS"
+# Node, Sparkle and the team: pinned in one place.
+# shellcheck source=lib/pins.sh
+source scripts/lib/pins.sh
 DEFAULT_FEED_URL="https://github.com/fdussert/fremkit/releases/latest/download/appcast.xml"
 
 CACHE="${FREMKIT_BUILD_CACHE:-$HOME/Library/Caches/Fremkit-build}"
@@ -96,7 +86,6 @@ if [ "$actual" != "$SPARKLE_SHA256" ]; then
     echo "error: $SPARKLE_TARBALL is $actual, pinned $SPARKLE_SHA256" >&2
     exit 1
 fi
-SPARKLE_DIR="$WORK/sparkle-${SPARKLE_VERSION}"
 if [ ! -d "$SPARKLE_DIR/Sparkle.framework" ]; then
     rm -rf "$SPARKLE_DIR" && mkdir -p "$SPARKLE_DIR"
     tar -xJf "$CACHE/$SPARKLE_TARBALL" -C "$SPARKLE_DIR"
@@ -200,14 +189,13 @@ rm -rf "$APP/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices" \
 # helpers, its framework, then the app. --options runtime everywhere (notarization requires the
 # hardened runtime); a secure timestamp only with a Developer ID, which is what Apple's
 # timestamp server is for.
-# Read once: `security … | grep -q` under pipefail can fail on SIGPIPE when grep exits early.
-IDENTITIES="$(security find-identity -v -p codesigning 2>/dev/null || true)"
 if [ -n "${FREMKIT_SIGN_IDENTITY:-}" ]; then
     IDENTITY="$FREMKIT_SIGN_IDENTITY"
 else
-    IDENTITY="$(awk -v team="($TEAM_ID)" '/"Developer ID Application: / && index($0, team) {print $2; exit}' <<<"$IDENTITIES")"
+    IDENTITY="$(fremkit_developer_id)"
     if [ -z "$IDENTITY" ]; then
-        if grep -q '"Fremkit Helper Dev"' <<<"$IDENTITIES"; then
+        # Read once: `security … | grep -q` under pipefail can fail on SIGPIPE when grep exits early.
+        if grep -q '"Fremkit Helper Dev"' <<<"$(security find-identity -v -p codesigning 2>/dev/null || true)"; then
             IDENTITY="Fremkit Helper Dev"
         else
             IDENTITY="-"
@@ -215,9 +203,13 @@ else
         echo "warning: no Developer ID Application identity for team $TEAM_ID; signing with \"$IDENTITY\" (not notarizable)" >&2
     fi
 fi
+# A secure timestamp only with a Developer ID, which is what Apple's timestamp server is for (and
+# what notarization requires). The identity may be a name or a hash; ask the keychain which.
 TIMESTAMP="--timestamp=none"
-if [ "$IDENTITY" != "-" ] && grep -F "$IDENTITY" <<<"$IDENTITIES" | grep -q "Developer ID Application"; then
-    TIMESTAMP="--timestamp"
+if [ "$IDENTITY" != "-" ]; then
+    case "$(grep -F "$IDENTITY" <<<"$(security find-identity -v -p codesigning 2>/dev/null || true)")" in
+        *'"Developer ID Application: '*) TIMESTAMP="--timestamp" ;;
+    esac
 fi
 echo "==> signing with $IDENTITY ($TIMESTAMP)"
 sign() { codesign --force --options runtime "$TIMESTAMP" --sign "$IDENTITY" "$@"; }
