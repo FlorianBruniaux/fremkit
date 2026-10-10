@@ -35,6 +35,16 @@ if [ -n "$(git status --porcelain)" ]; then
     git status --short >&2
     exit 1
 fi
+# Nor an ignored one where build-app.sh copies whole folders from: .gitignore hides `dist/`,
+# `.env`, `*.pem` and the like from the check above, and they would ship signed and notarized.
+# .DS_Store is the one exception: build-app.sh leaves it out of every copy.
+ignored="$(git status --porcelain --ignored -- widgets themes brand/wallpaper \
+    scripts/claude-hook.sh scripts/claude-statusline.sh server/src/bridge | { grep -v '/\.DS_Store$' || true; })"
+if [ -n "$ignored" ]; then
+    echo "error: ignored files inside folders the app ships; remove them first:" >&2
+    printf '%s\n' "$ignored" >&2
+    exit 1
+fi
 for override in FREMKIT_APP_VERSION FREMKIT_SPARKLE_PUBLIC_KEY FREMKIT_SPARKLE_FEED_URL FREMKIT_SIGN_IDENTITY; do
     if [ -n "${!override:-}" ]; then
         echo "error: $override is set; a release is built from the repository alone" >&2
@@ -82,7 +92,9 @@ DMG="$DIST/Fremkit-$VERSION.dmg"
 ZIP="$DIST/Fremkit-$VERSION.zip"
 rm -f "$ZIP"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
-SIGN_UPDATE="$(ls -d native/.build/app/sparkle-*/bin/sign_update | tail -1)"
+# shellcheck source=lib/pins.sh
+source scripts/lib/pins.sh
+SIGN_UPDATE="$SPARKLE_DIR/bin/sign_update"
 if [ -n "${FREMKIT_SPARKLE_KEY_FILE:-}" ]; then
     signed="$("$SIGN_UPDATE" --ed-key-file "$FREMKIT_SPARKLE_KEY_FILE" "$ZIP")"
 else
@@ -94,6 +106,11 @@ if [ -z "$signature" ] || [ -z "$length" ]; then
     echo "error: sign_update printed no signature: $signed" >&2
     exit 1
 fi
+# Checked against the key the app carries, the way Sparkle will: a signature from any other key —
+# a test key left in FREMKIT_SPARKLE_KEY_FILE, a second keychain item — would publish an update
+# every installed copy refuses.
+APP_KEY="$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$APP/Contents/Info.plist")"
+node scripts/lib/appcast.mjs verify "$ZIP" "$signature" "$APP_KEY"
 BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Contents/Info.plist")"
 node scripts/lib/appcast.mjs appcast "$VERSION" "$BUILD" \
     "$REPO_URL/releases/download/$TAG/Fremkit-$VERSION.zip" "$length" "$signature" "$NOTES" \

@@ -4,11 +4,14 @@
 //       prints the section `## <version>` of the changelog (Markdown), or fails if there is none
 //   node scripts/lib/appcast.mjs appcast <version> <build> <enclosure-url> <length> <ed-signature> <notes.md>
 //       prints appcast.xml with a single item
+//   node scripts/lib/appcast.mjs verify <file> <ed-signature> <public-key-base64>
+//       fails unless the signature is the public key's over the file, i.e. what Sparkle will check
 //
 // One item is enough: the feed is the newest release's asset (see docs/releasing.md), and Sparkle
 // only needs the newest update a given Mac can take. The release notes are the changelog section,
 // turned into the little HTML Sparkle's window shows.
 import { readFileSync } from 'node:fs'
+import { createPublicKey, verify } from 'node:crypto'
 
 const [command, ...args] = process.argv.slice(2)
 
@@ -99,6 +102,15 @@ if (command === 'notes') {
   </channel>
 </rss>
 `)
+} else if (command === 'verify') {
+  const [file, signature, publicKey] = args
+  if (!publicKey) fail('usage: verify <file> <ed-signature> <public-key-base64>')
+  const raw = Buffer.from(publicKey, 'base64')
+  if (raw.length !== 32) fail('the public key is not a base64 Ed25519 key (32 bytes)')
+  const key = createPublicKey({ key: { kty: 'OKP', crv: 'Ed25519', x: raw.toString('base64url') }, format: 'jwk' })
+  if (!verify(null, readFileSync(file), key, Buffer.from(signature, 'base64'))) {
+    fail(`${file} is not signed by the key in the public key given: installed apps would refuse it`)
+  }
 } else {
-  fail('usage: appcast.mjs notes|appcast …')
+  fail('usage: appcast.mjs notes|appcast|verify …')
 }
