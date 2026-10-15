@@ -42,6 +42,12 @@ export async function configRoutes(app: FastifyInstance, opts: { store: ConfigSt
       ...validateConnections(parsed.data),
     ]
     if (errors.length) return reply.code(400).send({ errors })
-    return opts.store.save(parsed.data)
+    // Rebind connections at the store queue turn, not when this request began. A concurrent
+    // credential quarantine may remove a binding while a layout save waits for its own write.
+    return opts.store.update((latest) => ({
+      ...parsed.data,
+      connections: latest.connections,
+      secrets: latest.secrets,
+    }))
   })
 }

@@ -89,6 +89,14 @@ describe('selected service and account authorization', () => {
     expect([...relays.keys()]).toEqual(['custom-mail:account-b'])
   })
 
+  it('requires selection even when a manifest grants a literal account channel', () => {
+    const { manifest, send, relays } = load()
+    manifest.value.subscriptions = ['gmail:account-a']
+    delete manifest.value.settingsSchema.account.connectionService
+    send('fremkit:subscribe', 'gmail:account-a')
+    expect(relays.size).toBe(0)
+  })
+
   it('drops a relay when consent is removed and preserves legacy single-provider behavior', async () => {
     const { manifest, send, relays, selected } = load()
     send('fremkit:subscribe', 'gmail:account-a')

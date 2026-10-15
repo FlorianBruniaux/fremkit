@@ -104,7 +104,7 @@ export function useWidgetBridge(
     // A wildcard account channel always needs an explicit selected connection. A downloaded
     // manifest cannot bypass this by omitting connectionService from its settings schema.
     const serviceFields = Object.entries(m.settingsSchema).filter(([, field]) => field.connectionService === family)
-    if (!(m[kind] ?? []).includes(family + ':*') && !serviceFields.length) return true
+    if (!channel.includes(':')) return true
     const legacyConnectionType = family === 'calendar' ? 'ics' : family
     const accountFields = serviceFields.length ? serviceFields : Object.entries(m.settingsSchema)
       .filter(([, field]) => field.connectionService === undefined && field.connectionType === legacyConnectionType)
