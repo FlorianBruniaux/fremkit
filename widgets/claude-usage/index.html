@@ -31,6 +31,7 @@
   .ok>i{background:var(--ok, #2fb36b)}.warn>i{background:#f0a020}.hot>i{background:var(--danger, #d9463f)}
   .stale .g{opacity:.45}
   .foot{font-size:calc(14px * var(--text-scale, 1));color:#c3c8d0}
+  .foot .plan{margin-right:8px}
   .hist{display:flex;align-items:flex-end;gap:2px;height:40px;margin-top:6px}.hist>i{flex:1;background:var(--border-strong, #3a404a);border-radius:2px 2px 0 0;min-height:1px}.hist>i.now{background:var(--accent, #d9b36a)}.histrow{display:flex;gap:12px;align-items:flex-end}.histlbl{font-size:calc(12px * var(--text-scale, 1));color:var(--text-muted, #8b93a0);white-space:nowrap}
   [hidden]{display:none!important}
   /* Compact: the navigation bar shows the three limits on one line, sized from the bar height (--h). */
@@ -52,8 +53,8 @@
   html.compact.slot-right .cwrap{justify-content:flex-end;text-align:right}
 </style>
 </head>
-<body><div class="wrap" id="wrap"><div class="note-line"><div class="note" id="note"></div><span class="plan" id="plan" hidden></span></div>
-<div class="gauges" id="gauges"></div><div class="foot" id="foot"></div>
+<body><div class="wrap" id="wrap"><div class="note-line"><div class="note" id="note"></div></div>
+<div class="gauges" id="gauges"></div><div class="foot" id="foot"><span class="plan" id="plan" hidden></span><span id="foot-text"></span></div>
 <div class="histrow" id="histrow" hidden><div class="hist" id="hist"></div><div class="histlbl" id="histlbl"></div></div></div>
 <div class="cwrap" id="cwrap"></div>
 <script>
@@ -117,7 +118,7 @@
     var planBadge = document.getElementById('plan')
     planBadge.hidden = !knownPlan
     planBadge.textContent = knownPlan ? 'Claude ' + identity.subscriptionType.charAt(0).toUpperCase() + identity.subscriptionType.slice(1) : ''
-    var wrap = document.getElementById('wrap'), note = document.getElementById('note'), foot = document.getElementById('foot'), gauges = document.getElementById('gauges')
+    var wrap = document.getElementById('wrap'), note = document.getElementById('note'), footText = document.getElementById('foot-text'), gauges = document.getElementById('gauges')
     var useAccount = account && account.available && account.limits && account.limits.length
     var stale = useAccount ? account.stale : !!(data && data.stale)
     wrap.classList.toggle('stale', stale)
@@ -139,7 +140,7 @@
       parts.push(Fremkit.t(L.today, { tokens: tokens(total), sessions: sessions })
         + (t.costUsd ? Fremkit.t(L.cost, { amount: dec(t.costUsd, 2) }) : ''))
     }
-    foot.innerHTML = parts.map(Fremkit.esc).join('<br>')
+    footText.innerHTML = parts.map(Fremkit.esc).join('<br>')
     var histrow = document.getElementById('histrow'), hist = document.getElementById('hist'), histlbl = document.getElementById('histlbl')
     if (data && data.today && data.today.hourly && Fremkit.size.h >= 4) {
       histrow.hidden = false
