@@ -10,6 +10,8 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 
 ## Unreleased
 
+- Show local app icons in the Notifications widget by loading them through the trusted dashboard host.
+
 ### Changed
 - **Clock in the compact bar.** Show an accent-coloured clock icon beside the time, matching the weather icon.
 - **The system tiles show useful Mac capacity.** Disk usage uses the APFS data volume and shows available space; memory shows available RAM and swap.

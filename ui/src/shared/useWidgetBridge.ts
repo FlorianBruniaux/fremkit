@@ -4,7 +4,7 @@ import { t, useI18n } from './i18n'
 import { isHexColor, tileText } from './color'
 import { useAppliedTheme, useThemeColors } from './theme'
 import { channelAllowed, mergeSettings, type AccentMode, type NavSlot, type WidgetInstance, type WidgetManifest, type WidgetSize } from './types'
-import { FrameTrust, connRequest, faviconTarget, fetchTarget, imageTarget, mayListApps, nonEmptyString, stampInstance } from './widgetMessages'
+import { FrameTrust, appIconTarget, connRequest, faviconTarget, fetchTarget, imageTarget, mayListApps, nonEmptyString, stampInstance } from './widgetMessages'
 
 export type BridgeState = 'loading' | 'ready' | 'error'
 
@@ -202,6 +202,21 @@ export function useWidgetBridge(
         const url = imageTarget(m, mergeSettings(manifest(), instance().settings))
         if (!url) { reply(id, undefined, t('bridge.badRequest')); break }
         fetch(`/api/favicon?image=${encodeURIComponent(url)}`)
+          .then(async (r) => {
+            if (!r.ok) { reply(id, undefined, t('bridge.noIcon')); return }
+            reply(id, await dataUrl(await r.blob()))
+          })
+          .catch((e: Error) => reply(id, undefined, e.message))
+        break
+      }
+      case 'fremkit:app-icon': {
+        const id = str(m.id)
+        if (!id) break
+        if (!mayListApps(manifest()?.subscriptions)) { reply(id, undefined, t('bridge.channelNotAllowed', { channel: 'dock' })); break }
+        const bundleId = appIconTarget(m)
+        if (!bundleId) { reply(id, undefined, t('bridge.badRequest')); break }
+        // Fetch from the host origin. An opaque widget cannot load this route directly.
+        fetch(`/api/apps/icon/${encodeURIComponent(bundleId)}`, { cache: 'no-store' })
           .then(async (r) => {
             if (!r.ok) { reply(id, undefined, t('bridge.noIcon')); return }
             reply(id, await dataUrl(await r.blob()))
