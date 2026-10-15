@@ -1,0 +1,23 @@
+CHANGELOG.md
+  s_e827e256e15185::t_afb7e7ceee22a9 32-33
+server/test/claude-usage-widget.test.ts
+  s_e827e256e15185::t_e9b772351557bd 18,64,78-79,89,107
+widgets/claude-usage/index.html
+  s_e827e256e15185::t_8554e628c4ed14 34,56-57,121,143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2cf9516c80f6827cadc2a6c8ac15a4d0e822c096",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
