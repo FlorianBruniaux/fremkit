@@ -1,0 +1,31 @@
+CHANGELOG.md
+  s_0861d83bba1ae0::t_d989fa7506e25c 14
+server/src/providers/google-tasks.ts
+  s_06dce32f69286a::t_32441cdaa20120 11,14,53,57
+server/test/google-tasks.test.ts
+  s_06dce32f69286a::t_13d4ab2c3cc1ac 19,22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ccd0af30da8ccfbce4aefe3c78176eef05586930",
+  "prompts": {},
+  "sessions": {
+    "s_06dce32f69286a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13f7b-8a64-7c90-bfe5-5965facb37b1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    },
+    "s_0861d83bba1ae0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13e93-a7e3-7a52-85e4-3e94ff1bf808",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
