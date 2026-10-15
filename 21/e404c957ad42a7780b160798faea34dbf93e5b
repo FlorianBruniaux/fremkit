@@ -1,0 +1,53 @@
+ui/src/shared/types.ts
+  s_e827e256e15185::t_0c43a3244a30d6 78-79
+server/src/providers/system.ts
+  s_e827e256e15185::t_0c43a3244a30d6 3,7-9,16,18,27-29
+ui/src/admin/ScreenInspector.vue
+  s_e827e256e15185::t_0c43a3244a30d6 65-67,269-272
+server/src/config/migrate.ts
+  s_e827e256e15185::t_0c43a3244a30d6 152
+server/test/config-migration.test.ts
+  s_e827e256e15185::t_31fb9d0cd478e6 148-154
+server/src/app.ts
+  s_e827e256e15185::t_0c43a3244a30d6 55,150-151
+server/src/config/schema.ts
+  s_e827e256e15185::t_0c43a3244a30d6 240-241,346
+CHANGELOG.md
+  s_e827e256e15185::t_c5aa3d567ac47f 13-15
+docs/widgets.md
+  s_e827e256e15185::t_5a14568454b21c 165
+server/src/providers/mac-thermals.ts
+  s_e827e256e15185::t_241d50e67fc308 1-59
+server/test/mac-thermals.test.ts
+  s_e827e256e15185::t_2039c2d5f15d3c 1-52
+server/test/system-thermals.test.ts
+  s_e827e256e15185::t_2588a15c3ec0b6 1-24
+ui/src/shared/locales/en.ts
+  s_e827e256e15185::t_ac7acdd6c6a49c 185-186
+ui/src/shared/locales/fr.ts
+  s_e827e256e15185::t_df3456f58e9f88 185-186
+ui/test/marketplace-modal.test.ts
+  s_e827e256e15185::t_8538c95014d49a 62
+ui/test/permissions-asks.test.ts
+  s_e827e256e15185::t_d1ab95551e95b0 44
+ui/test/store.test.ts
+  s_e827e256e15185::t_b27d14bd9254c5 31
+ui/test/theme-repaint.test.ts
+  s_e827e256e15185::t_e5d69ecd60fc35 21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "21e404c957ad42a7780b160798faea34dbf93e5b",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
