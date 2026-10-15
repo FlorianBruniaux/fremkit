@@ -1,0 +1,63 @@
+README.md
+  s_e827e256e15185::t_7a439ac4212f2d 49,221-223
+docs/local-operations.md
+  s_e827e256e15185::t_5a2dbdcc9e2988 1-17
+docs/writing-widgets.md
+  s_e827e256e15185::t_964d3976723bee 282
+native/Sources/FremkitCore/DashboardVisibility.swift
+  s_e827e256e15185::t_f4283bd3e38e7b 1-12
+native/Sources/FremkitCore/L10n.swift
+  s_e827e256e15185::t_719a6206280624 49-50,105-106,158-159
+native/Sources/FremkitHelper/AppDelegate.swift
+  s_e827e256e15185::t_26d1bafd387b60 14-15,60-63,89,191-206,222-225,231-232,258-262,284
+native/Sources/FremkitHelper/KioskWindow.swift
+  s_e827e256e15185::t_4aecd3093e4bbb 140,146-183
+native/Sources/FremkitHelper/StatusMenu.swift
+  s_e827e256e15185::t_a2f71644ceb77d 7-8,54,72,149-151,180-181,201
+native/Tests/FremkitCoreTests/DashboardVisibilityTests.swift
+  s_e827e256e15185::t_2c5265b4c540f3 1-39
+native/Tests/Shim/main.swift
+  s_e827e256e15185::t_4c2bf9988c765e 108-112
+server/src/app.ts
+  s_e827e256e15185::t_26f75034ea9b48 250
+server/src/providers/index.ts
+  s_e827e256e15185::t_300f568e392f45 1,14-15
+server/src/providers/local-operations.ts
+  s_e827e256e15185::t_dddbdedc11b439 1-194
+server/src/widgets/routes.ts
+  s_e827e256e15185::t_6249978ee1b418 26-28,32-51,54-55,59,61,64,66,114
+server/test/app.test.ts
+  s_e827e256e15185::t_7ba5a4c5c556b0 6,164-196
+server/test/local-operations.test.ts
+  s_e827e256e15185::t_375ccac88b4221 1-123
+widgets/clock/index.html
+  s_e827e256e15185::t_9a7743da7f4c02 40-41,50
+widgets/clock/manifest.json
+  s_e827e256e15185::t_0270b40234aae7 3
+CHANGELOG.md
+  s_d71503cffd655d::t_205595c5b29391 14,28-29,44-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a493337149517d93087afaf0f1f9489c0cd81f55",
+  "prompts": {},
+  "sessions": {
+    "s_d71503cffd655d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_d71503cffd655d",
+        "model": "unknown"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    },
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
