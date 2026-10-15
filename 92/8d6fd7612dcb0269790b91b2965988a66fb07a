@@ -1,0 +1,29 @@
+server/src/codex/config.ts
+  s_e827e256e15185::t_9b69c2193118fe 1-6
+server/src/codex/local-chats.ts
+  s_e827e256e15185::t_d71abdb9f19366 1-38
+server/src/codex/snapshot.ts
+  s_e827e256e15185::t_c28326c27e0411 1-23
+server/test/codex-adapter.test.ts
+  s_e827e256e15185::t_2b34ccac287dd4 1-125
+server/src/codex/adapter.ts
+  s_e827e256e15185::t_028edd813725cf 1-189
+server/test/codex-local-chats.test.ts
+  s_e827e256e15185::t_22e69c8fdf6c66 1-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "928d6fd7612dcb0269790b91b2965988a66fb07a",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
