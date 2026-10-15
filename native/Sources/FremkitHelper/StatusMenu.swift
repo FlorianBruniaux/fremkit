@@ -4,6 +4,8 @@ import FremkitCore
 
 /// Everything the menu displays, handed over by the delegate on each rebuild.
 struct MenuState {
+    var dashboardAvailable = false
+    var dashboardHidden = false
     var server: ServerState = .stopped
     var touch: TouchState = .disabled
     /// What the fence is really doing, as opposed to what the config asks for.
@@ -49,6 +51,7 @@ final class StatusMenu: NSObject {
     private var state = MenuState()
 
     // Status lines, all disabled; the last three are hidden unless they have something to say.
+    private let dashboardToggle = NSMenuItem()
     private let serverLine = NSMenuItem()
     private let touchLine = NSMenuItem()
     private let fenceLine = NSMenuItem()
@@ -66,6 +69,7 @@ final class StatusMenu: NSObject {
     var onOpenAdmin: (() -> Void)?
     var onOpenAdminInBrowser: (() -> Void)?
     var onReload: (() -> Void)?
+    var onToggleDashboard: (() -> Void)?
     var onToggleTouch: ((Bool) -> Void)?
     var onToggleFence: ((Bool) -> Void)?
     var onToggleDock: ((Bool) -> Void)?
@@ -142,6 +146,9 @@ final class StatusMenu: NSObject {
 
         menu.addItem(actionItem(L10n.string(.openAdmin), #selector(openAdmin)))
         menu.addItem(actionItem(L10n.string(.openAdminInBrowser), #selector(openAdminInBrowser)))
+        dashboardToggle.target = self
+        dashboardToggle.action = #selector(toggleDashboard)
+        menu.addItem(dashboardToggle)
         menu.addItem(actionItem(L10n.string(.reloadDashboard), #selector(reload)))
         menu.addItem(.separator())
 
@@ -170,6 +177,8 @@ final class StatusMenu: NSObject {
     // MARK: - State
 
     private func apply() {
+        dashboardToggle.title = L10n.string(state.dashboardHidden ? .showDashboard : .hideDashboard)
+        dashboardToggle.isEnabled = state.dashboardAvailable
         serverLine.title = state.server.label
         touchLine.title = state.touchLabel
         fenceLine.isHidden = state.fence != .missingPermission
@@ -189,6 +198,7 @@ final class StatusMenu: NSObject {
     @objc private func openAdmin() { onOpenAdmin?() }
     @objc private func openAdminInBrowser() { onOpenAdminInBrowser?() }
     @objc private func reload() { onReload?() }
+    @objc private func toggleDashboard() { onToggleDashboard?() }
     @objc private func openLog() { onOpenLog?() }
     @objc private func quit() { onQuit?() }
 

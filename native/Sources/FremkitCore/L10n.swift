@@ -46,6 +46,8 @@ public enum L10nKey: String, CaseIterable {
     case openAdmin
     case openAdminInBrowser
     case reloadDashboard
+    case hideDashboard
+    case showDashboard
     case toggleTouch
     case toggleFence
     case toggleDock
@@ -100,6 +102,8 @@ public enum L10n {
         .openAdmin: "Ouvrir l'admin",
         .openAdminInBrowser: "Admin dans le navigateur",
         .reloadDashboard: "Recharger le dashboard",
+        .hideDashboard: "Masquer",
+        .showDashboard: "Réafficher",
         .toggleTouch: "Tactile",
         .toggleFence: "Barrière souris",
         .toggleDock: "Notifications",
@@ -151,6 +155,8 @@ public enum L10n {
         .openAdmin: "Open the admin",
         .openAdminInBrowser: "Admin in the browser",
         .reloadDashboard: "Reload the dashboard",
+        .hideDashboard: "Hide",
+        .showDashboard: "Show",
         .toggleTouch: "Touch",
         .toggleFence: "Mouse fence",
         .toggleDock: "Notifications",

@@ -182,6 +182,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Display
 
+    // Keep the F menu synchronized with the existing dashboard hide/show buttons as well.
+    func applicationDidHide(_ notification: Notification) { kiosk?.hideDashboard() }
+    func applicationDidUnhide(_ notification: Notification) { kiosk?.showDashboard() }
+
+    private func refreshDashboardMenu() {
+        menu?.update { state in
+            state.dashboardAvailable = edge != nil && kiosk != nil
+            state.dashboardHidden = kiosk?.isHiddenByUser == true || NSApp.isHidden
+        }
+    }
+
     private func edgeDidChange(_ edge: CGRect?) {
         self.edge = edge
         driver?.displayBounds = edge
@@ -197,11 +208,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             } else {
                 let url = Self.parseURL(config.url, what: "url")
                 kiosk = KioskWindow(frame: frame, url: url)
+                kiosk?.onVisibilityChange = { [weak self] in self?.refreshDashboardMenu() }
             }
         } else {
             admin?.kioskFrame = nil
             kiosk?.setEdgeFrame(nil)
         }
+        refreshDashboardMenu()
     }
 
     // MARK: - Server
@@ -227,6 +240,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func wireMenu(_ menu: StatusMenu) {
+        menu.onToggleDashboard = { [weak self] in
+            guard let self, self.edge != nil, let kiosk = self.kiosk else { return }
+            if kiosk.isHiddenByUser || NSApp.isHidden { kiosk.showDashboard() }
+            else { kiosk.hideDashboard() }
+        }
         menu.onOpenAdmin = { [weak self] in self?.admin?.show() }
 
         menu.onOpenAdminInBrowser = { [weak self] in
