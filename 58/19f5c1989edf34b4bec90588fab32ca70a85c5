@@ -1,0 +1,30 @@
+ui/src/shared/useWidgetBridge.ts
+  s_e827e256e15185::t_f6939b45f6dbfe 108,110
+  s_e827e256e15185::t_f61bea98b54b35 104-105,107,109,111
+server/src/connections/manager.ts
+  s_e827e256e15185::t_f61bea98b54b35 72,76-79,138,140,142,148-152,225
+server/test/connection-services.test.ts
+  s_e827e256e15185::t_af1af505500da7 193-194,196-201,209
+  s_e827e256e15185::t_8d6b1f14e8fed1 195,202-208
+  s_e827e256e15185::t_f72a10dd85aa77 210-229
+ui/test/connection-service-bridge.test.ts
+  s_e827e256e15185::t_af1af505500da7 76-91,93,100
+CHANGELOG.md
+  s_e827e256e15185::t_a2075af36e4acd 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5819f5c1989edf34b4bec90588fab32ca70a85c5",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
