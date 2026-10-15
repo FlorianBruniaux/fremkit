@@ -484,6 +484,7 @@ describe('the real connection types bind their secrets', () => {
       synology: ['host'],
       // dev.azure.com is hardcoded, and an ICS calendar's URL *is* its secret.
       'azure-devops': [],
+      google: [],
       ics: [],
     })
     // Every bound key must be a real, non-secret field of its type.

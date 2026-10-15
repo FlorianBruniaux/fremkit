@@ -19,6 +19,10 @@ export type Params = Record<string, string | number>
  * `en` falls back to its French text rather than to the bare key.
  */
 const fr = {
+  'google.reconnect': 'Reconnectez ce compte Google.',
+  'google.partial': 'Certains services demandés ne sont pas autorisés. Reconnectez le compte pour réessayer.',
+  'google.stored': 'Autorisation enregistrée. La disponibilité des services est vérifiée lors de leur lecture.',
+  'google.malformed': 'Configuration Google invalide.',
   // config/schema.ts — layout and connection checks
   'config.defaultPageName': 'Accueil',
   'config.backgroundName': 'nom de fichier invalide',
@@ -266,6 +270,10 @@ const fr = {
 export type MessageKey = keyof typeof fr
 
 const en: Record<MessageKey, string> = {
+  'google.reconnect': 'Reconnect this Google account.',
+  'google.partial': 'Some requested services were not authorized. Reconnect the account to try again.',
+  'google.stored': 'Authorization stored. Service availability is checked when reading data.',
+  'google.malformed': 'Invalid Google configuration.',
   'config.defaultPageName': 'Home',
   'config.backgroundName': 'invalid file name',
   'layout.duplicateInstance': 'page {page}: duplicate instanceId {instanceId}',

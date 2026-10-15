@@ -4,6 +4,7 @@ import BaseButton from '../shared/ui/BaseButton.vue'
 import BaseCard from '../shared/ui/BaseCard.vue'
 import BaseIcon from '../shared/ui/BaseIcon.vue'
 import ConnectionForm from './ConnectionForm.vue'
+import GoogleConnectionForm from './GoogleConnectionForm.vue'
 import { useI18n } from '../shared/i18n'
 import { useConfirm } from '../shared/useConfirm'
 import { useConnectionsStore } from './connections'
@@ -70,7 +71,8 @@ function remove(id: string): void {
 <template>
   <div v-if="type && editingId">
     <h2>{{ editing ? editing.name : t('admin.connections.new') }} <span class="kind">{{ type.name }}</span></h2>
-    <ConnectionForm :key="editingId" :type="type" :connection="editing" :id="editingId" @done="close" @cancel="close" />
+    <GoogleConnectionForm v-if="type.id === 'google'" :key="editingId" :connection="editing" :id="editingId" @done="close" @cancel="close" />
+    <ConnectionForm v-else :key="editingId" :type="type" :connection="editing" :id="editingId" @done="close" @cancel="close" />
   </div>
 
   <div v-else>
