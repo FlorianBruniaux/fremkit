@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify'
 import { BUNDLE_ID_RE, isPng, MAX_ICON_BYTES, MAX_ICONS, type DockState } from './state.js'
 import { isLoopbackAddress } from '../net/loopback.js'
 import { tr } from '../i18n.js'
+import { isCrossSiteFetch } from '../http/guard.js'
 
 /**
  * Twice the base64 of the largest accepted PNG, plus the small JSON envelope around it: an icon
@@ -52,6 +53,7 @@ export async function dockRoutes(app: FastifyInstance, opts: { state: DockState;
   })
 
   app.get<{ Params: { bundleId: string } }>('/api/apps/icon/:bundleId', async (req, reply) => {
+    if (isCrossSiteFetch(req.headers)) return reply.code(403).send()
     const { bundleId } = req.params
     if (!BUNDLE_ID_RE.test(bundleId)) return reply.code(400).send({ error: 'identifiant de bundle invalide' })
     // The helper uploads one icon per Dock slot; an application that is merely installed — the

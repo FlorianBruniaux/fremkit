@@ -52,20 +52,20 @@
       var img = document.createElement('img')
       img.alt = app.name
       function missing() {
-        if (!img.parentNode) return
+        if (!button.isConnected || !img.parentNode) return
         var glyph = document.createElement('span')
         glyph.className = 'fallback'
         glyph.title = app.name
         glyph.textContent = '◻︎'
         img.parentNode.replaceChild(glyph, img)
         button.retryTimer = setTimeout(function () {
-          if (!glyph.parentNode) return
+          if (!button.isConnected || !glyph.parentNode) return
           glyph.parentNode.replaceChild(attach(), glyph)
         }, ICON_RETRY_MS)
       }
       img.addEventListener('error', missing)
       Fremkit.appIcon(app.bundleId).then(function (src) {
-        if (img.parentNode) img.src = src
+        if (button.isConnected && img.parentNode) img.src = src
       }).catch(missing)
       return img
     }
