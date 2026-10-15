@@ -58,7 +58,7 @@ dropped in by hand is reported as an error while the built-in keeps the id.
 | `commands` | no | The channels it may send commands to. Default `[]` |
 | `permissions.network` | no | Hosts `Fremkit.fetch` may reach. Default `[]` |
 | `settingsSchema` | no | The settings the admin offers — see below. Default `{}` |
-| `sdk` | no | The bridge generation the widget needs (`Fremkit.sdk`). Default `1`; a widget asking for more than the server has is refused at install |
+| `sdk` | no | The bridge generation the widget needs (`Fremkit.sdk`) — see [SDK generations](#sdk-generations). Default `1`; a widget asking for more than the server has is refused at install |
 | `homepage` | no | An `https` URL, shown in the admin. Never fetched, never executed |
 | `author` | no | A name, shown in the admin |
 | `license` | no | An [SPDX](https://spdx.org/licenses/) identifier — `MIT`, `Apache-2.0` |
@@ -199,6 +199,24 @@ Fremkit.whenReady(() => {
   Fremkit.fetch('https://api.example.com/x')   // host must be declared in permissions.network
 })
 ```
+
+### SDK generations
+
+`Fremkit.sdk` and the manifest's `sdk` count *generations* of this bridge, not Fremkit releases.
+A generation only adds members, so a widget declaring `1` keeps installing and running on every
+Fremkit that speaks `2` or more. Declare the lowest generation that has every member you call;
+a Fremkit older than that refuses the widget at install, with "needs a newer Fremkit", instead of
+installing it and leaving the call to fail.
+
+| `sdk` | First Fremkit | What it adds |
+|---|---|---|
+| `1` | 0.2.0 | Everything not listed below |
+| `2` | 0.3.0 | `favicon(url)`, `image(url)`, `installedApps()`, `appIcon(bundleId)` |
+
+A widget calling `installedApps()` with `"sdk": 1` would install on 0.2.0 and find the method
+missing. Data channels are not generations: a channel the running Fremkit has no provider for
+simply never sends anything, so a widget subscribing to one should show its empty state rather
+than wait.
 
 ### Properties
 

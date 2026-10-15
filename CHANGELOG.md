@@ -2,15 +2,21 @@
 
 What changed for the person using Fremkit, release by release. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow semver, and the
-version is the one `FREMKIT_VERSION` carries — the registry compares a widget's `sdk` against it.
+version is the one `FREMKIT_VERSION` carries. A widget's `sdk` is a separate number,
+`SDK_VERSION` in `server/src/bridge/sdk.ts`, that moves only when the bridge grows.
 
 Anything that changes what the dashboard, the admin or a widget can do gets a line under
-**Unreleased** in the same commit. A release renames that section, bumps the three `0.x.y`
-(`package.json`, `server/package.json`, `server/src/version.ts`) and is tagged `vX.Y.Z`.
+**Unreleased** in the same commit. A release renames that section, bumps the four `0.x.y`
+(`package.json`, `server/package.json`, `ui/package.json`, `server/src/version.ts`) and is
+tagged `vX.Y.Z`.
 
 ## Unreleased
 
 ### Added
+- **Widget SDK 2.** For widget authors: `Fremkit.sdk` is now `2`, the generation that brought
+  `favicon()`, `image()`, `installedApps()` and `appIcon()`. A widget that calls them declares
+  `"sdk": 2`, and an older Fremkit then says it needs an update instead of installing it broken.
+  Widgets declaring `1` keep installing as before.
 - Add read-only Codex account quotas, token usage, selected local chats and observed turns. Enable account reads or select history sources in the admin screen privacy settings; both start off. History selection explains that titles and labels reach subscribed widgets. A chat opens only after exact-ID validation against the local desktop catalog. Account email is not sent to widgets. Removing a history source or disabling account reads also removes its cached fields if the next Codex read fails.
 
 ### Changed
