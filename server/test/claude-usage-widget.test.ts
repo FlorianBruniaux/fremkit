@@ -95,3 +95,20 @@ describe('the claude-usage widget', () => {
     expect(loaded.nodes.get('hist')?.innerHTML).toContain('height:100%')
   })
 })
+
+describe('Claude plan in its usage widget', () => {
+  it('shows a known plan independently of account usage being disabled', async () => {
+    const widget = await loadWidget()
+    widget.publish('claude-account', { error: 'disabled' })
+    widget.publish('claude-identity', { loggedIn: true, subscriptionType: 'max', authMethod: 'claude.ai', stale: false })
+    expect(widget.nodes.get('plan')?.textContent).toBe('Claude Max')
+    expect(widget.nodes.get('plan')?.hidden).toBe(false)
+  })
+  it('hides the badge when the plan is stale or the user signs out', async () => {
+    const widget = await loadWidget()
+    widget.publish('claude-identity', { loggedIn: true, subscriptionType: 'pro', authMethod: 'claude.ai', stale: true })
+    expect(widget.nodes.get('plan')?.hidden).toBe(true)
+    widget.publish('claude-identity', { loggedIn: false, subscriptionType: null, stale: false })
+    expect(widget.nodes.get('plan')?.textContent).toBe('')
+  })
+})

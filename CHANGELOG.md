@@ -38,6 +38,8 @@ tagged `vX.Y.Z`.
 - **cmux session navigation.** A Claude card selects its cmux panel through the bundled CLI when the running process identifies both workspace and surface and socket access allows it. Otherwise it brings cmux forward.
 - **Local Docker and AI models.** Registry widgets can show up to 200 local containers and observed Ollama or MLX models. Fremkit refuses remote Docker contexts, distinguishes a missing CLI from a stopped daemon, and keeps the container list when stats fail.
 - **The Uptime tile shows time since boot.** The reading comes from macOS and remains unavailable when the system cannot provide it.
+- **The Claude limits tile shows your plan.** When the local Claude CLI reports a known
+  subscription, the tile shows a compact badge without publishing the account email.
 - **Borrow the Edge display.** Hide or show the dashboard from the helper menu without quitting it. Hidden state survives display rearrangements, and the mouse fence pauses while the Edge is borrowed. Touch and data collection continue; the dashboard reappears after a helper restart.
 - **Account e-mail stays private.** A new box in **/admin → Screen → Privacy**, *Show the account
   e-mail address*, off by default. Until you tick it, a widget that shows an account gets its plan

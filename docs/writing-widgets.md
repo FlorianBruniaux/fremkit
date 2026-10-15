@@ -298,8 +298,8 @@ document.documentElement.style.setProperty('--h', Fremkit.size.px.height + 'px')
 
 `system`, `processes`, `volume`, `spotify`, `mutedeck`, `clipboard`, `shortcuts`, `cleanshot`,
 `network`, `battery`, `service-status`, `config`, `claude-sessions`, `claude-usage`,
-`claude-account`, `codex`, `codex-live`, `dock`, `docker-local`, `local-models`,
-plus one per connection: `azure-devops:<connectionId>`,
+`claude-account`, `claude-identity`, `codex`, `codex-live`, `dock`, `docker-local`,
+`local-models`, plus one per connection: `azure-devops:<connectionId>`,
 `bambu:<connectionId>`, `github:<connectionId>`, `synology:<connectionId>`,
 and `calendar:<connectionId>` for an ICS connection.
 
