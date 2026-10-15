@@ -1,0 +1,45 @@
+server/test/config-schema.test.ts
+  s_e827e256e15185::t_f686a9143b55b0 103-108
+ui/src/shared/types.ts
+  s_e827e256e15185::t_29acef387cf3cb 49-50,57-58
+  s_e827e256e15185::t_4c964a69b193e3 284-285,313
+server/src/config/schema.ts
+  s_e827e256e15185::t_29acef387cf3cb 120,170-171
+ui/test/nav-bar-navigation.test.ts
+  s_e827e256e15185::t_2e1d19c9e5d0d5 11-12,18-31,39-46,143
+ui/src/dashboard/NavBar.vue
+  s_e827e256e15185::t_75b28c31c19155 3,25-26,255-260,280,298,308-309,337,341-343,354,357-359,361,365-366,380,386
+  s_e827e256e15185::t_2ebada8b4869a6 335-336,338-340,372,374,376,385
+  s_e827e256e15185::t_e9ff20488e7ddd 360,362-363,367-371,373,381-383
+ui/test/store.test.ts
+  s_e827e256e15185::t_f686a9143b55b0 573
+ui/src/admin/ScreenInspector.vue
+  s_e827e256e15185::t_e226ca76782181 21-22,107-113,194-196
+  s_e827e256e15185::t_34debe85e4d58a 197
+ui/src/dashboard/App.vue
+  s_e827e256e15185::t_e226ca76782181 112
+ui/src/admin/Canvas.vue
+  s_e827e256e15185::t_e226ca76782181 91
+ui/src/shared/locales/en.ts
+  s_e827e256e15185::t_01aca6a50d988d 158-161,166,269
+ui/src/shared/locales/fr.ts
+  s_e827e256e15185::t_8cc4d6aace4446 158-161,166,269
+ui/test/nav-bar-admin.test.ts
+  s_e827e256e15185::t_9f25126cf87451 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "573ba0509659a35db05d25c5a675bf037e718dab",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
