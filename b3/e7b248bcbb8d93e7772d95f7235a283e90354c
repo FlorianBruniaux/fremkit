@@ -1,0 +1,21 @@
+server/src/connections/google-routes.ts
+  s_e827e256e15185::t_1a4be000b01222 62-63,70,109-112
+CHANGELOG.md
+  s_e827e256e15185::t_7803c64a360263 43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b3e7b248bcbb8d93e7772d95f7235a283e90354c",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
