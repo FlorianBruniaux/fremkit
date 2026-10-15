@@ -358,7 +358,7 @@ const OpenRowPayload = z.object({
   instanceId: z.string().min(1).max(200).optional(),
   kind: z.enum(['run', 'notification', 'review', 'pull']),
   id: z.string().regex(/^\d{1,20}$/),
-}).strict()
+})
 
 export interface GithubDeps {
   openRunner?: (cmd: string, args: string[]) => Promise<void>
@@ -607,7 +607,7 @@ export function createGithubProvider(ctx: ConnectionProviderContext, deps: Githu
       // The widget supplies an id, never a destination. Only rows already received for this
       // connection can be opened, on its own web host, from the local dashboard.
       open: async (payload, context) => {
-        if (!context?.loopback) return { ok: false }
+        if (!context?.loopback) return { ok: false, error: tr(undefined, 'provider.localOnly') }
         const parsed = OpenRowPayload.safeParse(payload)
         if (!parsed.success) throw new Error(tr(undefined, 'github.invalidCommand'))
         const { kind, id } = parsed.data
@@ -618,6 +618,8 @@ export function createGithubProvider(ctx: ConnectionProviderContext, deps: Githu
         let url: URL
         try { url = new URL(row.url) } catch { return { ok: false } }
         const host = base === GITHUB_DEFAULT_HOST ? 'github.com' : new URL(base).hostname
+        // Opening a snapshot URL on a non-standard port is deliberately unsupported,
+        // including for Enterprise hosts, until the configured API and web ports are paired.
         if (url.protocol !== 'https:' || url.hostname !== host || url.username || url.password || url.port ||
             !(url.pathname === `/${row.repo}` || url.pathname.startsWith(`/${row.repo}/`))) return { ok: false }
         try { await openRunner('/usr/bin/open', [url.href]); return { ok: true } }

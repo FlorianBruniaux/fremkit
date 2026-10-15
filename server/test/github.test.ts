@@ -14,6 +14,7 @@ import {
 } from '../src/providers/github.js'
 import { githubType } from '../src/connections/types/github.js'
 import { OptionsError } from '../src/connections/types.js'
+import { tr } from '../src/i18n.js'
 
 const fixture = (name: string): unknown =>
   JSON.parse(readFileSync(fileURLToPath(new URL(`./fixtures/${name}.json`, import.meta.url)), 'utf8'))
@@ -549,17 +550,24 @@ describe('opening GitHub rows', () => {
     }
     expect(calls.every(c => c.method === 'GET')).toBe(true)
   })
-  it('refuses remote callers, unknown ids, arbitrary URLs and foreign response hosts', async () => {
+  it('refuses remote callers, unknown ids and foreign response hosts', async () => {
     const { fetchFn } = responder()
     const opened: string[][] = []
     const provider = createGithubProvider(context(), { fetchFn, openRunner: async (cmd, args) => { opened.push([cmd, ...args]) } })
     const snapshot = await provider.poll!() as GhSnapshot
-    expect(await provider.commands!.open({ kind: 'run', id: snapshot.runs[0].id }, { loopback: false })).toEqual({ ok: false })
+    expect(await provider.commands!.open({ kind: 'run', id: snapshot.runs[0].id }, { loopback: false })).toEqual({ ok: false, error: tr(undefined, 'provider.localOnly') })
     expect(await provider.commands!.open({ kind: 'run', id: '999999' }, { loopback: true })).toEqual({ ok: false })
-    await expect(provider.commands!.open({ kind: 'run', id: snapshot.runs[0].id, url: 'https://evil.test' }, { loopback: true })).rejects.toThrow()
     const foreign = snapshot.notifications.find(n => n.url.includes('github.example.com'))!
     expect(await provider.commands!.open({ kind: 'notification', id: foreign.id }, { loopback: true })).toEqual({ ok: false })
-    expect(await provider.commands!.open({ kind: 'run', id: snapshot.runs[0].id })).toEqual({ ok: false })
+    expect(await provider.commands!.open({ kind: 'run', id: snapshot.runs[0].id })).toEqual({ ok: false, error: tr(undefined, 'provider.localOnly') })
     expect(opened).toEqual([])
+  })
+  it('ignores extra host-stamped fields and never uses a caller-supplied URL', async () => {
+    const { fetchFn } = responder()
+    const opened: string[][] = []
+    const provider = createGithubProvider(context(), { fetchFn, openRunner: async (cmd, args) => { opened.push([cmd, ...args]) } })
+    const snapshot = await provider.poll!() as GhSnapshot
+    expect(await provider.commands!.open({ kind: 'run', id: snapshot.runs[0].id, url: 'https://evil.test', futureHostField: true }, { loopback: true })).toEqual({ ok: true })
+    expect(opened).toEqual([['/usr/bin/open', snapshot.runs[0].url]])
   })
 })
