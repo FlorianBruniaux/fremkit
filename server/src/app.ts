@@ -37,6 +37,8 @@ import { ClaudeTracker } from './claude/tracker.js'
 import { ClaudeUsage } from './claude/usage.js'
 import { claudeRoutes } from './claude/routes.js'
 import { createClaudeSessionsProvider, createClaudeUsageProvider, createClaudeAccountProvider } from './claude/providers.js'
+import { createCodexProvider } from './providers/codex.js'
+import { createLocalChatValidator } from './codex/local-chats.js'
 import { createAttention } from './claude/attention.js'
 import { DockState } from './dock/state.js'
 import { dockRoutes } from './dock/routes.js'
@@ -153,6 +155,13 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     filePath: join(opts.dataDir, 'claude-account.json'),
     enabled: () => store.get().privacy.claudeAccountUsage,
   }))
+  const codex = createCodexProvider({
+    enabled: () => store.get().privacy.codexAccount || store.get().privacy.codexHistorySources.length > 0,
+    accountEnabled: () => store.get().privacy.codexAccount,
+    historySources: () => store.get().privacy.codexHistorySources,
+  }, { isLocalChat: createLocalChatValidator() })
+  registry.register(codex)
+  registry.register(codex.sessions)
   registry.register(createDockProvider(dock))
   // These two act on the user's behalf — opening an application, knocking on a host — so they
   // resolve what to act on from the saved dashboard rather than from the widget's message.

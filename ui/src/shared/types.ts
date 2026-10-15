@@ -80,6 +80,8 @@ export interface Privacy {
    * of every snapshot, so no widget and no screen ever sees it.
    */
   showAccountEmail: boolean
+  codexAccount: boolean
+  codexHistorySources: ('cli' | 'vscode' | 'exec' | 'appServer' | 'subAgent' | 'subAgentReview' | 'subAgentCompact' | 'subAgentThreadSpawn' | 'subAgentOther' | 'unknown')[]
 }
 
 export interface Config {

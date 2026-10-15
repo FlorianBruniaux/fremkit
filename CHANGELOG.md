@@ -10,6 +10,9 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 
 ## Unreleased
 
+### Added
+- Add read-only Codex account quotas, token usage, selected local chats and observed turns. Enable account reads or select history sources in the admin screen privacy settings; both start off. History selection explains that titles and labels reach subscribed widgets. A chat opens only after exact-ID validation against the local desktop catalog. Account email is not sent to widgets. Removing a history source or disabling account reads also removes its cached fields if the next Codex read fails.
+
 ### Changed
 - **Clock in the compact bar.** Show an accent-coloured clock icon beside the time, matching the weather icon.
 - **The system tiles show useful Mac capacity.** Disk usage uses the APFS data volume and shows available space; memory shows available RAM and swap.

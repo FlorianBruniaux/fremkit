@@ -288,6 +288,8 @@ What the installer checks, what a consent record is and how an update asks again
 How to obtain each credential, what is stored where, and what is never logged:
 **[docs/connections.md](docs/connections.md)**.
 
+The optional [Codex provider](docs/codex.md) reads selected local account and chat data after an explicit opt-in. Its dashboard widgets are distributed separately.
+
 ## Backup
 
 **/admin → Screen → Backup** downloads the whole dashboard — the configuration and the background
