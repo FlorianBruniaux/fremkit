@@ -95,8 +95,9 @@ agent's in-flight work. Say where the worktree is, and remove it once the work h
   validate every command payload with zod. Commands that run a program use `execFile` with an
   argument list, never a shell, and only accept what a closed list or a strict schema allows.
   An account provider never publishes the account's e-mail unless `privacy.showAccountEmail` is
-  on: build the snapshot with `withAccountEmail()` from `server/src/privacy.ts` (see
-  `docs/connections.md`).
+  on: build the snapshot with `withAccountEmail()` from `server/src/privacy.ts`, pass every
+  snapshot it returns — the error path's `{ ...last, error }` included — through
+  `gateAccountEmail()`, and set `publishesAccountEmail: true` (see `docs/connections.md`).
 - **Config schema** changes go through `server/src/config/schema.ts` with a migration in the
   same commit and a test; the store never rewrites a file it could not migrate.
 - **Commits**: small, one concern each — a native fix noticed *while I was in there* is its own

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { withAccountEmail } from '../src/privacy.js'
+import { gateAccountEmail, withAccountEmail } from '../src/privacy.js'
 import { ConfigSchema, DEFAULT_CONFIG } from '../src/config/schema.js'
 
 describe('withAccountEmail', () => {
@@ -26,5 +26,22 @@ describe('withAccountEmail', () => {
   it('is off on a fresh install', () => {
     expect(DEFAULT_CONFIG.privacy.showAccountEmail).toBe(false)
     expect(ConfigSchema.shape.privacy.parse(undefined).showAccountEmail).toBe(false)
+  })
+})
+
+describe('gateAccountEmail', () => {
+  const last = { plan: 'max', authMode: 'oauth', email: 'someone@example.com' }
+
+  it('drops an address already in a cached snapshot once the setting is off', () => {
+    // The error path: the last good snapshot, fetched while the box was ticked, republished.
+    const s = gateAccountEmail({ ...last, error: 'offline' }, false)
+    expect(s).toEqual({ plan: 'max', authMode: 'oauth', error: 'offline' })
+    expect(s).not.toHaveProperty('email')
+  })
+
+  it('keeps it while the setting is on, and leaves a snapshot without one alone', () => {
+    expect(gateAccountEmail(last, true)).toBe(last)
+    const plain = { plan: 'pro' }
+    expect(gateAccountEmail(plain, false)).toBe(plain)
   })
 })

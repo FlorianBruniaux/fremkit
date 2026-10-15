@@ -201,8 +201,13 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   retainCameras(store.get())
 
   hub.broadcast('config', store.get())
+  let showAccountEmail = store.get().privacy.showAccountEmail
   store.onChange((cfg) => {
     setServerLocale(cfg.locale)
+    if (cfg.privacy.showAccountEmail !== showAccountEmail) {
+      showAccountEmail = cfg.privacy.showAccountEmail
+      registry.reconsiderAccountEmail()
+    }
     syncDeclared()
     hub.broadcast('config', cfg)
     // Fire and forget: a failed sync must not break the save that triggered it.

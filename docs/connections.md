@@ -94,11 +94,25 @@ on every poll rather than once, so the admin's toggle takes effect without a res
 // server/src/app.ts
 registry.register(createExampleAccountProvider({
   showAccountEmail: () => store.get().privacy.showAccountEmail,
-}))
+}))  // the provider object sets publishesAccountEmail: true
 
 // in the provider, on each poll
 publish({ plan: profile.plan, authMode, ...withAccountEmail(profile.email, opts.showAccountEmail()) })
 ```
+
+Every snapshot the provider returns goes through `gateAccountEmail()` as well — the error path
+above all. A provider that answers a failure with its last good snapshot would otherwise go on
+publishing an address fetched while the box was ticked, after the user has unticked it:
+
+```ts
+return gateAccountEmail({ ...last, error: 'offline' }, opts.showAccountEmail())
+```
+
+Set `publishesAccountEmail: true` on the provider. Toggling the setting then polls it again at
+once instead of at its next tick, and drops the hub's cached value of a channel nobody is
+watching, so the address leaves the screen when the box is unticked rather than five minutes
+later. A provider whose endpoint is rate-limited should answer that extra poll from its last
+snapshot, gated, rather than fetch again.
 
 Off, the snapshot has no `email` key at all — not an empty string, not a masked address. The plan
 (Pro, Max, …) and the sign-in method are not covered by the setting and are published either way.

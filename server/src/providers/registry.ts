@@ -21,6 +21,8 @@ interface State {
   backoffMs: number
   lastJson: string | undefined
   inFlight: boolean
+  /** Poll again as soon as the one in flight returns: it may have read a setting since changed. */
+  pollAgain: boolean
 }
 
 export class ProviderRegistry {
@@ -43,7 +45,7 @@ export class ProviderRegistry {
     // away because the connection behind it was edited, so the replacement inherits them.
     const subscribers = previous?.subscribers ?? 0
     if (previous) this.teardown(previous, 'gone')
-    const state: State = { provider, subscribers, started: false, timer: null, backoffMs: 0, lastJson: undefined, inFlight: false }
+    const state: State = { provider, subscribers, started: false, timer: null, backoffMs: 0, lastJson: undefined, inFlight: false, pollAgain: false }
     this.states.set(provider.channel, state)
     if (state.subscribers > 0) this.activate(state)
   }
@@ -57,6 +59,27 @@ export class ProviderRegistry {
   }
 
   channels(): string[] { return [...this.states.keys()] }
+
+  /**
+   * `privacy.showAccountEmail` changed: every provider that can publish the address answers again
+   * now, rather than at its next tick — five minutes for an account endpoint, during which an
+   * address the user has just hidden would stay on screen. A watched channel is polled at once,
+   * or straight after the poll in flight, which may have read the old setting. A channel nobody
+   * watches has its cached value dropped, so the hub cannot replay the address to the next widget.
+   */
+  reconsiderAccountEmail(): void {
+    for (const s of this.states.values()) {
+      if (!s.provider.publishesAccountEmail) continue
+      if (s.subscribers === 0 || !s.provider.poll) {
+        s.lastJson = undefined
+        this.forget(s.provider.channel)
+      } else if (s.inFlight) {
+        s.pollAgain = true
+      } else {
+        this.schedule(s, 0)
+      }
+    }
+  }
 
   has(channel: string): boolean { return this.states.has(channel) }
 
@@ -167,6 +190,8 @@ export class ProviderRegistry {
       s.lastJson = json
       this.publish(s.provider.channel, data)
     }
-    if (s.subscribers > 0) this.schedule(s, s.backoffMs || s.provider.intervalMs || MAX_BACKOFF_MS)
+    const again = s.pollAgain
+    s.pollAgain = false
+    if (s.subscribers > 0) this.schedule(s, again ? 0 : s.backoffMs || s.provider.intervalMs || MAX_BACKOFF_MS)
   }
 }

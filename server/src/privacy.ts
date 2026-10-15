@@ -15,3 +15,17 @@
 export function withAccountEmail(email: string | null | undefined, show: boolean): { email?: string } {
   return show && email ? { email } : {}
 }
+
+/**
+ * The same rule for a snapshot that already exists: the address is dropped unless `show` is on.
+ *
+ * A provider that answers a failure with its last good snapshot — `{ ...last, error }` — would
+ * otherwise go on publishing an address the user has hidden since it was fetched. So every
+ * snapshot a provider returns goes through this, the error path and a cached answer included:
+ * `return gateAccountEmail({ ...last, error: 'offline' }, opts.showAccountEmail())`.
+ */
+export function gateAccountEmail<T extends object>(snapshot: T, show: boolean): T {
+  if (show || !('email' in snapshot)) return snapshot
+  const { email: _email, ...rest } = snapshot as T & { email?: unknown }
+  return rest as T
+}
