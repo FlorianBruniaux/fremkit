@@ -127,15 +127,29 @@ export class ConnectionManager {
     return generation.abort.signal
   }
 
+  /** An explicitly submitted OAuth bundle can repair a suspended generation. */
+  captureGenerationForRepair(id: string): AbortSignal | undefined {
+    const generation = this.active.get(id)
+    if (generation && !generation.abort.signal.aborted) return generation.abort.signal
+    if (this.failedSecrets.has(id)) return undefined
+    throw new Error('connection retired')
+  }
+
   /** OAuth uses the same durable quarantine and rollback as ordinary connection writes. */
-  updateSecretsIfCurrent(connection: Connection, expected: AbortSignal, submitted: Record<string, string>,
+  updateSecretsIfCurrent(connection: Connection, expected: AbortSignal | undefined, submitted: Record<string, string>,
     config: ConnectionConfigTransaction, isCurrent: () => boolean): Promise<void> {
+    const ownsGeneration = (afterRetirement: boolean) => {
+      const active = this.active.get(connection.id)?.abort.signal
+      return expected
+        ? active === expected && (afterRetirement || !expected.aborted)
+        : this.failedSecrets.has(connection.id) && (!active || active.aborted)
+    }
     return this.updateSecrets(connection, submitted, config, () => {
-      if (expected.aborted || this.active.get(connection.id)?.abort.signal !== expected || !isCurrent()) throw new Error('connection retired')
+      if (!ownsGeneration(false) || !isCurrent()) throw new Error('connection retired')
     }, () => {
-      // This transaction retired its own generation. Keep checking identity and consent,
-      // but do not mistake that intentional retirement for external cancellation.
-      if (this.active.get(connection.id)?.abort.signal !== expected || !isCurrent()) throw new Error('connection retired')
+      // This transaction intentionally retired its own generation. A repair remains authorized
+      // only while the account is still suspended and the same consent attempt owns the binding.
+      if (!ownsGeneration(true) || !isCurrent()) throw new Error('connection retired')
     })
   }
 

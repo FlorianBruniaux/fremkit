@@ -21,13 +21,16 @@ export async function googleOAuthRoutes(app: FastifyInstance, opts: GoogleOAuthR
   const broker = new GoogleOAuthBroker(opts.oauth)
   const bindings = new Map<string, Binding>()
   let ownConfigEvent = false
+  let previousConfig = store.get()
   const off = store.onChange(config => {
     const own=ownConfigEvent;ownConfigEvent=false
+    const unrelatedChange = JSON.stringify(previousConfig) !== JSON.stringify(config)
+    previousConfig = config
     for (const [id,binding] of bindings) {
       const observed=fingerprint(config.connections.find(c=>c.id===id))
       // Every external commit is an authority revision, including an absent-row save.
       // Comparing fingerprints alone cannot distinguish deletion or A-B-A during recovery.
-      if (!own) {
+      if (!own && !(observed === '' && binding.observed === '' && unrelatedChange)) {
         binding.revision++
         if (observed!==binding.observed || observed!==binding.fingerprint) {
           binding.valid=false;binding.configValid=false;broker.cancel(id,'replaced')
@@ -57,7 +60,7 @@ export async function googleOAuthRoutes(app: FastifyInstance, opts: GoogleOAuthR
     return {state: services.length===selected.length?'connected':'partial',email:b.email,services,requestedScopes:selected.flatMap(s=>GOOGLE_SCOPES[s]),...(services.length===selected.length?{}:{error:'partial'})}
   }
   // Both config copies lose the binding before the single atomic secret item is replaced.
-  const replace = async(c:Connection, expected:AbortSignal, value:string, binding:Binding, isAttemptCurrent:()=>boolean = ()=>true) => {
+  const replace = async(c:Connection, expected:AbortSignal|undefined, value:string, binding:Binding, isAttemptCurrent:()=>boolean = ()=>true) => {
     let quarantined=false
     let quarantineAttempted=false
     const initialRevision=binding.revision
@@ -132,9 +135,9 @@ export async function googleOAuthRoutes(app: FastifyInstance, opts: GoogleOAuthR
     const binding={fingerprint:fingerprint(c),valid:true,configValid:true,observed:fingerprint(c),revision:0};bindings.set(id,binding)
     try {
       parseGoogleServices(c.fields.services);parseCalendarIds(c.fields.calendarIds)
-      const expected=manager.captureGeneration(id)
+      const expected=manager.captureGenerationForRepair(id)
       const previous=parseGoogleBinding((await secrets.get(id+'/credentials'))??undefined)
-      const current=()=>binding.valid && bindings.get(id)===binding && !expected.aborted && fingerprint(connection(id))===binding.fingerprint
+      const current=()=>binding.valid && bindings.get(id)===binding && (expected===undefined || !expected.aborted) && fingerprint(connection(id))===binding.fingerprint
       if(!current()) throw new Error('connection retired')
       return await broker.start(id,c.fields,previous,parsed.data.clientSecret,(b,isAttemptCurrent)=>replace(c,expected,JSON.stringify(b),binding,isAttemptCurrent),current)
     } catch(error) {return reply.code(409).send({error:error instanceof GoogleClientError?error.code:'replaced'})}
@@ -152,7 +155,7 @@ export async function googleOAuthRoutes(app: FastifyInstance, opts: GoogleOAuthR
     broker.forget(id)
     const binding={fingerprint:fingerprint(c),valid:true,configValid:true,observed:fingerprint(c),revision:0};bindings.set(id,binding)
     try {
-      const expected=manager.captureGeneration(id)
+      const expected=manager.captureGenerationForRepair(id)
       const old=parseGoogleBinding((await secrets.get(id+'/credentials'))??undefined)
       const value=old?JSON.stringify({version:1,disconnected:true,clientId:old.clientId,subject:old.subject,email:old.email}):''
       await replace(c,expected,value,binding)

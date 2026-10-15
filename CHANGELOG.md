@@ -40,6 +40,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
   sessions after 30 minutes (on by default), and group the board by application.
 
 ### Fixed
+- A dashboard layout save during Google sign-in no longer removes the account. Reconnecting can repair an account suspended after a temporary credential-store failure.
 - Cancelling Google consent while its connection is being quarantined restores the previous account without needing a new sign-in.
 - Shortcut buttons draw the real icon of an application that is not in the Dock again. The widget
   read the list of installed applications itself, which the `connect-src 'none'` its frame is

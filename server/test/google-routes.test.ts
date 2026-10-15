@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { ConfigStore } from '../src/config/store.js'
 import { ConnectionManager } from '../src/connections/manager.js'
+import type { ConnectionAccount } from '../src/connections/types.js'
 import { ConnectionTypeRegistry } from '../src/connections/registry.js'
 import { ProviderRegistry } from '../src/providers/registry.js'
 import { createGoogleType } from '../src/connections/types/google.js'
@@ -20,12 +21,13 @@ async function setup(timeoutMs = 5000) {
   const values=new Map<string,string>()
   const secrets={get:async(k:string)=>values.get(k)??null,set:async(k:string,v:string)=>{values.set(k,v)},delete:async(k:string)=>{values.delete(k)}}
   const activated: Array<string | undefined>=[]
-  const types=new ConnectionTypeRegistry([createGoogleType([{id:'gmail',channelPrefix:'gmail',createProvider:ctx=>{activated.push(ctx.secrets.credentials);return {channel:ctx.channel}}}])])
+  const accounts: ConnectionAccount[]=[]
+  const types=new ConnectionTypeRegistry([createGoogleType([{id:'gmail',channelPrefix:'gmail',createProvider:ctx=>{activated.push(ctx.secrets.credentials);accounts.push(ctx.account);return {channel:ctx.channel}}}])])
   const registry=new ProviderRegistry(()=>{});const manager=new ConnectionManager({registry,types,secrets});await manager.sync(store.get().connections)
   let subject='account-a'
   let auth='';const app:FastifyInstance=Fastify({logger:false});cleanup.push(()=>app.close())
   await app.register(googleOAuthRoutes,{store,types,manager,secrets,oauth:{timeoutMs,openBrowser:async u=>{auth=u},fetch:async u=>String(u).endsWith('/token')?Response.json({access_token:'fake-access',refresh_token:'fake-refresh',expires_in:3600,token_type:'Bearer',scope:GOOGLE_SCOPES.gmail.join(' ')}):Response.json({sub:subject,email:'a@example.com',email_verified:true})}})
-  return {app,store,values,manager,secrets,connection,activated,types,dir,setSubject:(value:string)=>{subject=value},callback:()=>{const u=new URL(auth);const cb=new URL(u.searchParams.get('redirect_uri')!);cb.searchParams.set('state',u.searchParams.get('state')!);cb.searchParams.set('code','fake');return cb.href}}
+  return {app,store,values,manager,secrets,connection,activated,accounts,types,dir,setSubject:(value:string)=>{subject=value},callback:()=>{const u=new URL(auth);const cb=new URL(u.searchParams.get('redirect_uri')!);cb.searchParams.set('state',u.searchParams.get('state')!);cb.searchParams.set('code','fake');return cb.href}}
 }
 const url='/api/connections/account-a/google'
 it('connects, exposes only identity/grants, persists secret only and locally disconnects',async()=>{
@@ -138,6 +140,34 @@ it.each([['quarantine','timeout'],['secret write','timeout'],['commit','timeout'
   expect(s.activated.some(value=>value?.includes('fake-access'))).toBe(false)
   expect(s.store.get().connections).toEqual([s.connection])
   expect(s.manager.captureGeneration('account-a').aborted).toBe(false)
+})
+
+it('repairs a suspended Google account through an explicit new OAuth consent',async()=>{
+  const s=await setup()
+  const originalSet=s.secrets.set
+  s.secrets.set=async()=>{throw new Error('temporary storage failure')}
+  await expect(s.accounts[0]!.refresh(0,async()=>({credentials:'failed-refresh'}))).rejects.toThrow('temporary storage failure')
+  s.secrets.set=originalSet
+  expect(()=>s.manager.captureGeneration('account-a')).toThrow('connection retired')
+  expect((await s.app.inject({method:'POST',url:url+'/connect',payload:{}})).statusCode).toBe(200)
+  await fetch(s.callback())
+  await expect.poll(async()=> (await s.app.inject({method:'GET',url})).json().state).toBe('connected')
+  expect(s.manager.captureGeneration('account-a').aborted).toBe(false)
+})
+
+it('keeps a quarantined account when an unrelated layout save occurs during consent',async()=>{
+  const s=await setup(),entered=deferred(),release=deferred()
+  const set=s.secrets.set
+  s.secrets.set=async(k,v)=>{entered.resolve();await release.promise;await set(k,v)}
+  await s.app.inject({method:'POST',url:url+'/connect',payload:{}})
+  await fetch(s.callback())
+  await entered.promise
+  try { await s.store.update(config=>({...config,locale:config.locale==='fr'?'en':'fr'})) }
+  finally { release.resolve() }
+  await expect.poll(async()=> (await s.app.inject({method:'GET',url})).json().state).toBe('connected')
+  await s.app.close()
+  expect(s.store.get().connections).toEqual([s.connection])
+  expect(s.values.has('account-a/credentials')).toBe(true)
 })
 
 it.each(['deletion','replacement'] as const)('does not resurrect the quarantined config after external %s',async(change)=>{
