@@ -247,7 +247,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
 
   await app.register(configRoutes, { store, catalog })
   await app.register(connectionRoutes, { store, catalog, types: connectionTypes, manager: connections, secrets, connCache })
-  await app.register(widgetRoutes, { catalog, store })
+  await app.register(widgetRoutes, { catalog, store, port: opts.port, dev: process.env.FREMKIT_DEV === '1' })
   await app.register(themeRoutes, { catalog: themes })
   await app.register(proxyRoutes, { catalog, store, secrets, cache: connCache })
   const marketplaceRegistry = new Registry({

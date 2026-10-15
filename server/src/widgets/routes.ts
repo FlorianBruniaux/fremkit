@@ -11,7 +11,6 @@ import { SDK_VERSION } from '../bridge/sdk.js'
 import { tr } from '../i18n.js'
 
 const BRIDGE_PATH = fileURLToPath(new URL('../bridge/fremkit.js', import.meta.url))
-const BRIDGE_TAG = '<script src="/fremkit.js"></script>'
 
 /**
  * What a widget may do, said in a header rather than left to the iframe.
@@ -24,36 +23,47 @@ const BRIDGE_TAG = '<script src="/fremkit.js"></script>'
  *
  * `sandbox allow-scripts` without `allow-same-origin` puts the document in an opaque origin:
  * scripts run, but nothing they do counts as coming from us. Everything else is an allow-list of
- * what the widgets in this repository actually need — `'self'` for their own files and the
- * bridge, `data:`/`blob:` for what they generate, `i.scdn.co` for the album art the local
+ * what the widgets in this repository actually need. WebKit does not resolve `'self'` for
+ * opaque frames, so the server's loopback origins are listed explicitly for packaged files.
+ * `data:`/`blob:` cover what widgets generate, `i.scdn.co` covers album art the local
  * Spotify app hands us as an https URL. No `connect-src` at all: every network call goes through
  * `Fremkit.fetch`, which asks the host, which asks the proxy, which checks the manifest.
  */
-export const WIDGET_CSP = [
-  'sandbox allow-scripts',
-  "default-src 'none'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://i.scdn.co",
-  "media-src 'self' data:",
-  "font-src 'self'",
-  "connect-src 'none'",
-  "frame-src 'none'",
-  "form-action 'none'",
-  "base-uri 'none'",
-].join('; ')
+export function widgetCsp(port = 4242, dev = false): string {
+  const ownOrigins = [`http://127.0.0.1:${port}`, `http://localhost:${port}`]
+  if (dev) ownOrigins.push('http://127.0.0.1:5173', 'http://localhost:5173')
+  const own = ownOrigins.join(' ')
+  return [
+    'sandbox allow-scripts',
+    "default-src 'none'",
+    `script-src 'self' ${own} 'unsafe-inline'`,
+    `style-src 'self' ${own} 'unsafe-inline'`,
+    `img-src 'self' ${own} data: blob: https://i.scdn.co`,
+    `media-src 'self' ${own} data:`,
+    `font-src 'self' ${own}`,
+    "connect-src 'none'",
+    "frame-src 'none'",
+    "form-action 'none'",
+    "base-uri 'none'",
+  ].join('; ')
+}
+
+export const WIDGET_CSP = widgetCsp()
 
 export function injectBridge(html: string): string {
+  const tag = '<script src="/fremkit.js"></script>'
+
   const i = html.search(/<head[^>]*>/i)
   if (i >= 0) {
     const end = html.indexOf('>', i) + 1
-    return html.slice(0, end) + BRIDGE_TAG + html.slice(end)
+    return html.slice(0, end) + tag + html.slice(end)
   }
-  return BRIDGE_TAG + html
+  return tag + html
 }
 
-export async function widgetRoutes(app: FastifyInstance, opts: { catalog: WidgetCatalog; store: ConfigStore }): Promise<void> {
+export async function widgetRoutes(app: FastifyInstance, opts: { catalog: WidgetCatalog; store: ConfigStore; port?: number; dev?: boolean }): Promise<void> {
   const bridge = await readFile(BRIDGE_PATH, 'utf8')
+  const csp = widgetCsp(opts.port, opts.dev)
 
   app.get('/fremkit.js', async (_req, reply) => reply.type('application/javascript; charset=utf-8').send(bridge))
 
@@ -101,7 +111,7 @@ export async function widgetRoutes(app: FastifyInstance, opts: { catalog: Widget
     const rel = req.params['*'] || 'index.html'
     // On every answer, not just the entry point: a widget's second HTML file is the same
     // untrusted code, and on a case-insensitive filesystem so is `Index.html`.
-    reply.header('content-security-policy', WIDGET_CSP)
+    reply.header('content-security-policy', csp)
     // The folder rather than the root: a widget may be a built-in or one the user installed, and
     // which of the two owns an id is the catalogue's answer, decided once at scan time.
     const folder = opts.catalog.folderOf(id)
