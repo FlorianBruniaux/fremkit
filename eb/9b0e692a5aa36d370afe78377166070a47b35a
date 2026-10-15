@@ -1,0 +1,25 @@
+CHANGELOG.md
+  s_edae00164c4bc3::t_690e81ea3ff15c 13-14
+server/src/claude/focus.ts
+  s_edae00164c4bc3::t_c7f58ddce49a6d 54-55,57,62,106-107,192-203
+server/src/claude/tracker.ts
+  s_edae00164c4bc3::t_ff19e576029c22 23
+server/test/claude-focus.test.ts
+  s_edae00164c4bc3::t_250f5e449b061e 171-192
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "eb9b0e692a5aa36d370afe78377166070a47b35a",
+  "prompts": {},
+  "sessions": {
+    "s_edae00164c4bc3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a135ea-f172-7f02-944f-04532cb53a51",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
