@@ -1,0 +1,25 @@
+CHANGELOG.md
+  s_e827e256e15185::t_661191f78a2c2b 26
+README.md
+  s_e827e256e15185::t_0f89b9b8dcb94e 183-184,186-188,191
+docs/troubleshooting.md
+  s_e827e256e15185::t_27d55d6a0bb1c5 131
+docs/writing-widgets.md
+  s_e827e256e15185::t_77ac60c36b66be 452
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3658bbbe9142446bef013945c144f57037f98df6",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
