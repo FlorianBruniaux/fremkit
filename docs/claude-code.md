@@ -93,3 +93,8 @@ macOS keychain (the item "Claude Code-credentials") every 5 minutes and calls th
 endpoint for per-model weekly limits. The token is never stored or logged and is sent only to
 `api.anthropic.com`. macOS may ask once to allow keychain access. The endpoint is undocumented and
 may change without notice.
+
+Nothing the Claude providers publish carries the account's e-mail address. Should one ever do so,
+it is held to the rule every account provider is: the address is left out unless **/admin →
+Screen → Privacy → Show the account e-mail address** is ticked (see
+[connections.md](connections.md#the-accounts-e-mail-address)).

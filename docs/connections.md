@@ -78,6 +78,33 @@ are reduced to a phrase rather than passed through, because a network error can 
 the URL can carry the organisation or the calendar address. Deleting a connection a widget still
 points at is refused with a 409 naming the widgets.
 
+## The account's e-mail address
+
+A provider that signs in to an account — Claude, Codex, any service whose API answers with a
+profile — **never publishes the account's e-mail address unless `privacy.showAccountEmail` is
+on**, and it is off by default. The check belongs to the provider, on the server, not to the
+widget: whatever lands on a channel reaches every widget subscribed to it, a third-party widget
+from the marketplace with network access included, and that widget's consent dialog said "reads
+channel X", not "reads your e-mail". A widget that hides the field has already received it.
+
+Build the snapshot with `withAccountEmail()` from `server/src/privacy.ts`, and read the setting
+on every poll rather than once, so the admin's toggle takes effect without a restart:
+
+```ts
+// server/src/app.ts
+registry.register(createExampleAccountProvider({
+  showAccountEmail: () => store.get().privacy.showAccountEmail,
+}))
+
+// in the provider, on each poll
+publish({ plan: profile.plan, authMode, ...withAccountEmail(profile.email, opts.showAccountEmail()) })
+```
+
+Off, the snapshot has no `email` key at all — not an empty string, not a masked address. The plan
+(Pro, Max, …) and the sign-in method are not covered by the setting and are published either way.
+No provider built into Fremkit publishes an address today; this is the contract the first one is
+held to.
+
 ## Local Network
 
 macOS 15 and later gate LAN access per application. The server runs inside whatever launched it —
