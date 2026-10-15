@@ -23,6 +23,10 @@ export function withAccountEmail(email: string | null | undefined, show: boolean
  * otherwise go on publishing an address the user has hidden since it was fetched. So every
  * snapshot a provider returns goes through this, the error path and a cached answer included:
  * `return gateAccountEmail({ ...last, error: 'offline' }, opts.showAccountEmail())`.
+ *
+ * It looks at the top level of the object it is given, nothing deeper: apply it to the object
+ * that carries `email`. A snapshot holding the account under a key gates that object —
+ * `{ ...last, account: { ...last.account, data: gateAccountEmail(last.account.data, show) } }`.
  */
 export function gateAccountEmail<T extends object>(snapshot: T, show: boolean): T {
   if (show || !('email' in snapshot)) return snapshot

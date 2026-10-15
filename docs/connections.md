@@ -108,6 +108,19 @@ publishing an address fetched while the box was ticked, after the user has untic
 return gateAccountEmail({ ...last, error: 'offline' }, opts.showAccountEmail())
 ```
 
+`gateAccountEmail()` looks only at the top level of what it is given: apply it to **the object
+that carries `email`**, on the fresh path, the error path and any stale answer alike. A snapshot
+that holds the account under a key gates that object, not the snapshot around it:
+
+```ts
+const show = opts.showAccountEmail()
+return {
+  ...last,
+  error: 'offline',
+  account: { ...last.account, data: gateAccountEmail(last.account.data, show) },
+}
+```
+
 Set `publishesAccountEmail: true` on the provider. Toggling the setting then drops the hub's
 cached value of its channel and polls it again at once instead of at its next tick, and an answer
 from a poll that was already in flight is thrown away, since it may have read the old setting.

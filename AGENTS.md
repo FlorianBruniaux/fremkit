@@ -97,7 +97,7 @@ agent's in-flight work. Say where the worktree is, and remove it once the work h
   An account provider never publishes the account's e-mail unless `privacy.showAccountEmail` is
   on: build the snapshot with `withAccountEmail()` from `server/src/privacy.ts`, pass every
   snapshot it returns — the error path's `{ ...last, error }` included — through
-  `gateAccountEmail()`, and set `publishesAccountEmail: true` (see `docs/connections.md`).
+  `gateAccountEmail()`, applied to the object that carries `email` when it is nested, and set `publishesAccountEmail: true` (see `docs/connections.md`).
 - **Config schema** changes go through `server/src/config/schema.ts` with a migration in the
   same commit and a test; the store never rewrites a file it could not migrate.
 - **Commits**: small, one concern each — a native fix noticed *while I was in there* is its own
