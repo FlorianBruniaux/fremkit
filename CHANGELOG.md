@@ -23,6 +23,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
   rather than only the one that declared it.
 
 ### Added
+- Add read-only, demand-driven channels for local Docker containers and Ollama/MLX observations. Remote Docker contexts are refused, and missing tools show explicit unavailable states.
 - **Claude sessions: go to the session.** Touch a card and its window comes forward — the
   exact Orca pane, the Terminal.app or iTerm2 tab, the VS Code window on that folder, or at
   least the application — for every session, hooked or merely found running. The card also says which application the session lives in, which is what tells two panes of the

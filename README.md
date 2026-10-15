@@ -285,6 +285,8 @@ What the installer checks, what a consent record is and how an update asks again
 How to obtain each credential, what is stored where, and what is never logged:
 **[docs/connections.md](docs/connections.md)**.
 
+Optional local Docker and model observations are documented in [docs/local-operations.md](docs/local-operations.md). Their widgets are distributed through the registry.
+
 ## Backup
 
 **/admin → Screen → Backup** downloads the whole dashboard — the configuration and the background
