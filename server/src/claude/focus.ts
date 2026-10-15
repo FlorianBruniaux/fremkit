@@ -51,12 +51,15 @@ export async function clientOfProcess(pid: number, reader: Reader = read): Promi
   const bundleId = pick('__CFBundleIdentifier')
   const program = pick('TERM_PROGRAM')
   const terminal = pick('ORCA_TERMINAL_HANDLE')
+  const workspace = pick('CMUX_WORKSPACE_ID')
+  const surface = pick('CMUX_SURFACE_ID')
   const tty = await ttyOfProcess(pid, reader)
-  if (!bundleId && !program && !terminal) return undefined
+  if (!bundleId && !program && !terminal && !workspace) return undefined
   return {
     ...(bundleId && BUNDLE_RE.test(bundleId) ? { bundleId } : {}),
     ...(program ? { program } : {}),
     pid,
+    ...(workspace && surface && UUID_RE.test(workspace) && UUID_RE.test(surface) ? { cmux: { workspace, surface } } : {}),
     ...(tty ? { tty } : {}),
     ...(terminal && ORCA_TERMINAL_RE.test(terminal) ? { orca: { terminal } } : {}),
   }
@@ -100,6 +103,9 @@ export async function appOfProcess(pid: number, reader: Reader = read): Promise<
 const ORCA_CLI = '/Applications/Orca.app/Contents/Resources/bin/orca'
 const ORCA_BUNDLE = 'com.stablyai.orca'
 const VSCODE_BUNDLE = 'com.microsoft.VSCode'
+const CMUX_BUNDLE = 'com.cmuxterm.app'
+const CMUX_CLI = '/Applications/cmux.app/Contents/Resources/bin/cmux'
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** A bundle id, as `open -b` will take it. */
 const BUNDLE_RE = /^[A-Za-z0-9.-]{1,120}$/
@@ -184,11 +190,44 @@ export async function focusClient(
   reader: Reader = read,
 ): Promise<FocusResult> {
   try {
+    // Hooks written before cmux support already identify the app. Read the live process once
+    // to recover its panel and reuse its client details for the no-hook fallback below.
+    const livePid = pid ?? client?.pid
+    let live: SessionClient | undefined
+    if (livePid && Number.isSafeInteger(livePid) && livePid > 1 &&
+        (!client?.bundleId || client.bundleId.toLowerCase() === CMUX_BUNDLE)) {
+      live = await clientOfProcess(livePid, reader)
+    }
+    if (client?.bundleId?.toLowerCase() === CMUX_BUNDLE && live?.bundleId &&
+        live.bundleId.toLowerCase() !== CMUX_BUNDLE) {
+      client = { ...client, bundleId: live.bundleId, cmux: undefined }
+    }
+    // A terminal launched from cmux can inherit its bundle id and panel IDs.
+    // TERM_PROGRAM identifies the actual host in that case.
+    const program = (live?.program ?? client?.program)?.toLowerCase()
+    const otherProgramBundle = program === 'vscode' ? VSCODE_BUNDLE
+      : program === 'iterm.app' ? 'com.googlecode.iterm2'
+      : program === 'apple_terminal' ? 'com.apple.Terminal' : undefined
+    if (otherProgramBundle && client?.bundleId?.toLowerCase() === CMUX_BUNDLE) {
+      client = { ...client, bundleId: otherProgramBundle, program, cmux: undefined }
+    }
+    const panel = live?.cmux ?? client?.cmux
+    // A shell launched inside cmux may pass CMUX_* to an unrelated client. The bundle must
+    // still identify cmux, and an explicit Orca pane takes precedence.
+    if (panel && UUID_RE.test(panel.workspace) && UUID_RE.test(panel.surface) &&
+        !otherProgramBundle && (live?.bundleId ?? client?.bundleId)?.toLowerCase() === CMUX_BUNDLE &&
+        !live?.orca?.terminal && !client?.orca?.terminal) {
+      try {
+        await runner(CMUX_CLI, ['focus-panel', '--panel', panel.surface, '--workspace', panel.workspace])
+        await runner('/usr/bin/open', ['-b', CMUX_BUNDLE])
+        return { ok: true, how: 'pane' }
+      } catch { return await focusApp(CMUX_BUNDLE, runner) }
+    }
     if (!client?.bundleId && pid) {
       // No report from a hook: the process's own environment says the same things the hook
       // would have — the exact Orca pane, the terminal, the tty. Failing that, the process tree
       // still says which application owns it.
-      const fromEnv = await clientOfProcess(pid, reader)
+      const fromEnv = livePid === pid ? live : await clientOfProcess(pid, reader)
       if (fromEnv && (fromEnv.orca?.terminal || fromEnv.program)) {
         client = fromEnv
       } else {
