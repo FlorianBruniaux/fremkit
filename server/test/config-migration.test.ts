@@ -152,9 +152,10 @@ describe('privacy.showAccountEmail on an older config', () => {
   it('starts off for every config written before it existed', () => {
     // Even next to the Claude opt-in being inferred on: reading the usage is not showing the e-mail.
     const v3 = migrateConfig({ ...migrateConfig(v1), privacy: { claudeAccountUsage: true } })
-    expect(v3.privacy).toEqual({ claudeAccountUsage: true, showAccountEmail: false })
+    // toMatchObject: other privacy keys arrive in other branches and must not break this.
+    expect(v3.privacy).toMatchObject({ claudeAccountUsage: true, showAccountEmail: false })
     expect(migrateConfig({ version: 2, pages: [page([widget('claude-usage')])] }).privacy)
-      .toEqual({ claudeAccountUsage: true, showAccountEmail: false })
+      .toMatchObject({ claudeAccountUsage: true, showAccountEmail: false })
     expect(migrateConfig(v1).privacy.showAccountEmail).toBe(false)
   })
 
