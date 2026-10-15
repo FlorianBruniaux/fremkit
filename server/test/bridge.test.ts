@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { SDK_VERSION } from '../src/bridge/sdk.js'
+import { SDK_GENERATIONS, SDK_VERSION } from '../src/bridge/sdk.js'
 
 /**
  * The bridge is a plain browser script, injected into every widget. It is evaluated here against
@@ -93,6 +93,25 @@ describe('Fremkit.sdk', () => {
     // literal. A bump on one side and not the other would have the server accept a manifest the
     // bridge cannot honour, which is exactly what the number exists to prevent.
     expect(F.sdk).toBe(SDK_VERSION)
+  })
+
+  it('lists every member of the bridge under a generation this build speaks', () => {
+    // A helper added to the bridge without a generation is one a registry widget could call on
+    // an older Fremkit, which would install it and leave it broken. Listing it forces the call:
+    // a new generation (and a bump of SDK_VERSION), or a member nothing may rely on.
+    const generations = Object.keys(SDK_GENERATIONS).map(Number)
+    expect(Math.max(...generations)).toBe(SDK_VERSION)
+    const listed = new Set(Object.values(SDK_GENERATIONS).flat())
+    expect(Object.keys(F).filter((name) => !listed.has(name))).toEqual([])
+  })
+
+  it('exposes what each generation after the first added', () => {
+    // The first generation includes `tokens`, set only once a theme arrives; the later ones are
+    // methods, there from the start, and a widget asking for their generation calls them blind.
+    for (const [generation, names] of Object.entries(SDK_GENERATIONS)) {
+      if (Number(generation) === 1) continue
+      for (const name of names) expect(typeof (F as unknown as Record<string, unknown>)[name], name).toBe('function')
+    }
   })
 })
 

@@ -75,6 +75,15 @@ describe('readPackage', () => {
     expect(() => readPackage(zip, expected(zip))).toThrow(expect.objectContaining({ key: 'marketplace.idMismatch' }))
   })
 
+  it('accepts every generation up to this build, the first included', () => {
+    // Generations only add to the bridge, so a widget published for an older one keeps working.
+    for (let sdk = 1; sdk <= SDK_VERSION; sdk++) {
+      const zip = packageOf({ sdk })
+      const read = readPackage(zip, expected(zip))
+      expect(read.kind === 'widget' && read.manifest.sdk).toBe(sdk)
+    }
+  })
+
   it('refuses an SDK newer than this build', () => {
     const zip = packageOf({ sdk: SDK_VERSION + 1 })
     expect(() => readPackage(zip, expected(zip))).toThrow(expect.objectContaining({ key: 'marketplace.sdkTooNew' }))

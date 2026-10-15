@@ -11,6 +11,10 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 ## Unreleased
 
 ### Added
+- **Widget SDK 2.** For widget authors: `Fremkit.sdk` is now `2`, the generation that brought
+  `favicon()`, `image()`, `installedApps()` and `appIcon()`. A widget that calls them declares
+  `"sdk": 2`, and an older Fremkit then says it needs an update instead of installing it broken.
+  Widgets declaring `1` keep installing as before.
 - Add read-only Codex account quotas, token usage, selected local chats and observed turns. Enable account reads or select history sources in the admin screen privacy settings; both start off. History selection explains that titles and labels reach subscribed widgets. A chat opens only after exact-ID validation against the local desktop catalog. Account email is not sent to widgets. Removing a history source or disabling account reads also removes its cached fields if the next Codex read fails.
 
 ### Changed

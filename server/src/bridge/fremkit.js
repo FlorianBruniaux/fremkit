@@ -129,7 +129,7 @@
      * lowest generation it needs, and the server refuses to install one asking for more than it
      * has. Kept in step with `SDK_VERSION` in ./sdk.ts by bridge.test.ts.
      */
-    sdk: 1,
+    sdk: 2,
     instanceId: null,
     settings: {},
     /**
