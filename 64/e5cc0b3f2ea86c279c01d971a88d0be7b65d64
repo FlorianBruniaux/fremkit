@@ -1,0 +1,37 @@
+ui/test/page-badges.test.ts
+  s_e827e256e15185::t_49f1921c7f58ef 1-57
+CHANGELOG.md
+  s_e827e256e15185::t_878457474da8f8 13-14
+ui/src/dashboard/App.vue
+  s_e827e256e15185::t_af7b067c7085c3 15,22,111
+ui/src/dashboard/NavBar.vue
+  s_e827e256e15185::t_407ea97d525407 10-12,26,31,256-266,421-423,425-428
+ui/src/dashboard/pageBadges.ts
+  s_e827e256e15185::t_030fffcbbfa80b 1-49
+ui/src/dashboard/pageVisuals.ts
+  s_e827e256e15185::t_3ac5d2ff2ee3a6 1-28
+ui/src/dashboard/usePageBadges.ts
+  s_e827e256e15185::t_6f13cd342b5d2e 1-33
+ui/src/shared/icons.ts
+  s_e827e256e15185::t_b92e212f8f408a 6,8-12
+ui/src/shared/locales/en.ts
+  s_e827e256e15185::t_24276aacab5e17 284-290
+ui/src/shared/locales/fr.ts
+  s_e827e256e15185::t_c3e2a1248ee203 284-290
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "64e5cc0b3f2ea86c279c01d971a88d0be7b65d64",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
