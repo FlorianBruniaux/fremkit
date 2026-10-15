@@ -87,6 +87,14 @@ function normalizeSource(source: string | Record<string, unknown>): HistorySourc
   }
   return 'subAgentOther'
 }
+function selectedSource(source: HistorySource, sources: HistorySource[]): boolean {
+  return sources.includes(source) || (sources.includes('subAgent') && source.startsWith('subAgent'))
+}
+function selectedHistory(part: SnapshotPart<History>, sources: HistorySource[]): SnapshotPart<History> {
+  if (!sources.length) return emptyPart('unconfigured')
+  if (!part.data) return part
+  return { ...part, data: { ...part.data, threads: part.data.threads.filter((thread) => selectedSource(thread.sourceKind, sources)) } }
+}
 /** Opt-in core channel. The caller owns configuration and trusted local-chat validation. */
 export function createCodexProvider(
   options: CodexProviderOptions = {},
@@ -103,7 +111,17 @@ export function createCodexProvider(
     if (!parsed.success) return emptySnapshot('invalid')
     if (!parsed.data.enabled) return emptySnapshot()
     const epoch = generation
-    const next: CodexSnapshot = { ...last, checkedAt: now(), error: null }
+    const sources = parsed.data.historySources
+    const next: CodexSnapshot = {
+      ...last,
+      checkedAt: now(),
+      error: null,
+      history: selectedHistory(last.history, sources),
+      ...(!parsed.data.accountEnabled
+        ? { account: emptyPart(), quotas: emptyPart(), usage: emptyPart(), authMode: null }
+        : {}),
+    }
+    if (!parsed.data.accountEnabled) authIdentity = undefined
     try {
       if (!client) {
         const created = deps.clientFactory
@@ -197,7 +215,6 @@ export function createCodexProvider(
         next.authMode = null
         authIdentity = undefined
       }
-      const sources = parsed.data.historySources
       next.history = sources.length
         ? await read<History>(
             'thread/list',
@@ -209,8 +226,7 @@ export function createCodexProvider(
                 const sourceKind = normalizeSource(thread.source)
                 return (
                   !thread.ephemeral &&
-                  (sources.includes(sourceKind) ||
-                    (sources.includes('subAgent') && sourceKind.startsWith('subAgent')))
+                  selectedSource(sourceKind, sources)
                 )
               })
               let localIds = new Set<string>()
@@ -244,7 +260,7 @@ export function createCodexProvider(
       next.account = stale(next.account, reason)
       next.quotas = stale(next.quotas, reason)
       next.usage = stale(next.usage, reason)
-      next.history = parsed.data.historySources.length ? stale(next.history, reason) : emptyPart()
+      next.history = sources.length ? stale(next.history, reason) : emptyPart('unconfigured')
     }
     // A poll owns its app-server child. Closing here avoids a second long-lived auth process
     // alongside the desktop app; injected test clients remain under the caller's control.
@@ -265,7 +281,12 @@ export function createCodexProvider(
         const current = resolveOptions(options)
         return current.success && current.data.enabled && current.data.historySources.length > 0
       },
-      history: () => last.history.data,
+      history: () => {
+        const current = resolveOptions(options)
+        return current.success && current.data.enabled
+          ? selectedHistory(last.history, current.data.historySources).data
+          : null
+      },
       read: deps.readSessions,
       now,
     }),
@@ -323,6 +344,7 @@ export function createCodexProvider(
           history.updatedAt === null ||
           now() - history.updatedAt > 120000 ||
           thread?.navigation !== 'localChat' ||
+          !selectedSource(thread.sourceKind, parsed.data.historySources) ||
           !deps.isLocalChat
         )
           return { ok: false, error: 'unavailable' }

@@ -206,6 +206,20 @@ describe('Selected Codex local session reader', () => {
     })
   })
 
+  it('recovers after an oversized record arrives in chunks before a completion event', async () => {
+    const f = await fixture()
+    const read = createSessionReader({ codexHome: f.home })
+    await read([A], now)
+    const large = line('response_item', { type: 'message', content: 'x'.repeat(600000) })
+    await appendFile(f.parent, large.slice(0, 400000))
+    expect((await read([A], now)).sessions[0].state).toBe('working')
+    await appendFile(f.parent, large.slice(400000) + line('event_msg', {
+      type: 'task_complete', turn_id: 'turn-a', completed_at: now / 1000,
+    }))
+    const finished = await read([A], now)
+    expect(finished.sessions[0]).toMatchObject({ state: 'done', finishedAt: now })
+  })
+
   it('retains a turn start beyond a large recent output on initial observation', async () => {
     const f = await fixture()
     await appendFile(

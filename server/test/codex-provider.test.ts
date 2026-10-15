@@ -133,6 +133,48 @@ describe('Codex provider snapshots', () => {
     historySources = []
     expect((await p.poll!()).history.data).toBeNull()
   })
+  it('removes revoked history sources even when the next list fails', async () => {
+    const h = harness()
+    let sources: Array<'appServer' | 'cli'> = ['appServer', 'cli']
+    const provider = createCodexProvider(
+      { enabled: true, accountEnabled: false, historySources: () => sources },
+      {
+        client: { supports: () => true, close() {}, request: async (method) => {
+          const value = h.values[method]
+          if (value instanceof Error) throw value
+          return value
+        } },
+        isLocalChat: async () => true,
+      },
+    )
+    expect((await provider.poll!()).history.data?.threads.map((item) => item.id)).toContain(C)
+    sources = ['appServer']
+    h.values['thread/list'] = new CodexError('offline')
+    const changed = await provider.poll!()
+    expect(changed.history.freshness).toBe('stale')
+    expect(changed.history.data?.threads.map((item) => item.id)).not.toContain(C)
+    expect(await provider.commands!.open({ threadId: C }, { loopback: true })).toMatchObject({ ok: false })
+  })
+  it('clears account sections before a new client fails after account reads are disabled', async () => {
+    const h = harness()
+    let accountEnabled = true
+    let factoryFails = false
+    const provider = createCodexProvider(
+      { enabled: true, accountEnabled: () => accountEnabled, historySources: ['appServer'] },
+      { clientFactory: async () => {
+        if (factoryFails) throw new Error('unavailable')
+        return { supports: () => true, close() {}, request: async (method) => h.values[method] }
+      } },
+    )
+    expect((await provider.poll!()).account.data).not.toBeNull()
+    accountEnabled = false
+    factoryFails = true
+    const changed = await provider.poll!()
+    expect(changed.account.data).toBeNull()
+    expect(changed.quotas.data).toBeNull()
+    expect(changed.usage.data).toBeNull()
+    expect(changed.authMode).toBeNull()
+  })
   it('passes the configured absolute binary to its local client factory', async () => {
     const h = harness()
     const local = vi
