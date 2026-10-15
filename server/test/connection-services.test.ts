@@ -190,6 +190,43 @@ describe('account credential concurrency', () => {
     expect(values.get('account-a/token')).toBe('initial')
     expect((await contexts[0].account.refresh(0, async () => ({ token: 'valid' }))).secrets.token).toBe('valid')
   })
+
+  it('keeps existing subscribers suspended through a failed refresh and resumes after repair', async () => {
+    const { manager, contexts, providers, secrets, cached, values } = setup()
+    await manager.sync([connection()])
+    providers.addSubscriber('gmail:account-a')
+    await vi.advanceTimersByTimeAsync(0)
+    secrets.set = async () => { throw new Error('store unavailable') }
+    await expect(contexts[0].account.refresh(0, async () => ({ token: 'renewed' }))).rejects.toThrow('store unavailable')
+    expect(cached.size).toBe(0)
+    await expect(providers.runCommand('gmail:account-a', 'read', null)).rejects.toThrow(/inconnu/)
+    secrets.set = async (key, value) => { values.set(key, value) }
+    await manager.updateSecrets(connection(), { token: 'repaired' })
+    await manager.sync([connection()])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(cached.get('gmail:account-a')).toBe('repaired')
+    providers.stop()
+  })
+
+  it('restores the previous binding if quarantine fails before any secret write', async () => {
+    const { manager, providers, values } = setup()
+    const original = connection()
+    let saved = [original]
+    let quarantineWrites = 0
+    await manager.sync(saved)
+    await expect(manager.updateSecrets(original, { token: 'replacement' }, {
+      quarantine: async () => {
+        saved = []
+        if (++quarantineWrites === 1) throw new Error('backup unavailable')
+      },
+      commit: async () => { saved = [original] },
+      rollback: async () => { saved = [original] },
+    })).rejects.toThrow('backup unavailable')
+    expect(saved).toEqual([original])
+    expect(values.get('account-a/token')).toBe('initial')
+    await manager.sync(saved)
+    expect(await providers.runCommand('gmail:account-a', 'read', null)).toBe('initial')
+  })
 })
 
 it('refuses multi-key refresh before any credential is written', async () => {

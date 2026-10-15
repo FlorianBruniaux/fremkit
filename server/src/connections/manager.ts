@@ -69,11 +69,14 @@ export class ConnectionManager {
     return out
   }
 
-  private retire(id: string): void {
+  private retire(id: string, preserveSubscribers = false): void {
     const generation = this.active.get(id)
     if (!generation) return
     generation.abort.abort()
-    for (const channel of generation.channels) this.deps.registry.unregister(channel)
+    for (const channel of generation.channels) {
+      if (preserveSubscribers) this.deps.registry.suspend(channel)
+      else this.deps.registry.unregister(channel)
+    }
     this.active.delete(id)
   }
 
@@ -132,14 +135,21 @@ export class ConnectionManager {
       for (const key of Object.keys(values)) original.set(key, await this.deps.secrets.get(connection.id + '/' + key))
       // Persist absence before the first secret mutation, including in the config backup.
       // A process restarted halfway through the batch therefore cannot create a provider.
-      await config?.quarantine()
+      let secretMutationStarted = false
       try {
+        await config?.quarantine()
         for (const [key, value] of Object.entries(values)) {
+          secretMutationStarted = true
           if (value === '') await this.deps.secrets.delete(connection.id + '/' + key)
           else await this.deps.secrets.set(connection.id + '/' + key, value)
         }
         await config?.commit()
       } catch (error) {
+        if (!secretMutationStarted) {
+          try { await config?.rollback() }
+          catch { this.failedSecrets.set(connection.id, new Set(Object.keys(values))) }
+          throw error
+        }
         this.failedSecrets.set(connection.id, new Set(Object.keys(values)))
         if (config) {
           try {
@@ -212,7 +222,7 @@ export class ConnectionManager {
             } catch (error) {
               // A partial store failure cannot leave services using mixed credentials.
               this.failedSecrets.set(connection.id, new Set(Object.keys(replacement)))
-              this.retire(connection.id)
+              this.retire(connection.id, true)
               throw error
             }
             Object.assign(secrets, replacement)

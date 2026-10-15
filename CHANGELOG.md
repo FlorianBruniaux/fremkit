@@ -12,6 +12,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 
 ### Changed
 - Support explicit service channels for multi-service accounts, with generation-safe credential replacement and widget authorization.
+- Account service widgets require an explicit account selection for wildcard channels. Failed credential refreshes keep their subscribers ready for recovery, and a failed config quarantine restores the previous binding before secrets are changed.
 - **Homey is a declared connection now.** The Homey connection type built into Fremkit is gone:
   both Homey widgets bring their own, so one API key serves the two of them. An existing Homey
   connection is migrated when the server starts — same name, same address, same key — and the

@@ -101,11 +101,14 @@ export function useWidgetBridge(
     const m = manifest()
     if (!m || !channelAllowed(m[kind] ?? [], channel)) return false
     const family = channel.split(':')[0]
-    // These families always require explicit account selection, even if a widget removes its
-    // service setting. Defaults in a downloaded manifest never count as the user's selection.
+    // A wildcard account channel always needs an explicit selected connection. A downloaded
+    // manifest cannot bypass this by omitting connectionService from its settings schema.
     const serviceFields = Object.entries(m.settingsSchema).filter(([, field]) => field.connectionService === family)
-    if (!['gmail', 'google-calendar', 'google-tasks'].includes(family) && !serviceFields.length) return true
-    return serviceFields.some(([key, field]) => {
+    if (!(m[kind] ?? []).includes(family + ':*') && !serviceFields.length) return true
+    const legacyConnectionType = family === 'calendar' ? 'ics' : family
+    const accountFields = serviceFields.length ? serviceFields : Object.entries(m.settingsSchema)
+      .filter(([, field]) => field.connectionService === undefined && field.connectionType === legacyConnectionType)
+    return accountFields.some(([key, field]) => {
       if (field.type !== 'connection' && field.type !== 'connections') return false
       const selected = instance().settings[key]
       const ids = field.type === 'connections' && Array.isArray(selected) ? selected : [selected]

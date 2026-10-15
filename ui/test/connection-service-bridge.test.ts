@@ -73,14 +73,31 @@ describe('selected service and account authorization', () => {
     expect(relays.size).toBe(0)
   })
 
+  it('requires selection for an arbitrary declared wildcard service', () => {
+    const { manifest, send, relays, selected } = load()
+    manifest.value.subscriptions = ['custom-mail:*']
+    manifest.value.settingsSchema.account.connectionType = 'custom'
+    manifest.value.settingsSchema.account.connectionService = 'custom-mail'
+    send('fremkit:subscribe', 'custom-mail:account-b')
+    expect(relays.size).toBe(0)
+    delete manifest.value.settingsSchema.account.connectionService
+    send('fremkit:subscribe', 'custom-mail:account-a')
+    expect(relays.size).toBe(0)
+    manifest.value.settingsSchema.account.connectionService = 'custom-mail'
+    selected.value = { account: 'account-b' }
+    send('fremkit:subscribe', 'custom-mail:account-b')
+    expect([...relays.keys()]).toEqual(['custom-mail:account-b'])
+  })
+
   it('drops a relay when consent is removed and preserves legacy single-provider behavior', async () => {
-    const { manifest, send, relays } = load()
+    const { manifest, send, relays, selected } = load()
     send('fremkit:subscribe', 'gmail:account-a')
     manifest.value.subscriptions = []
     await nextTick()
     expect(relays.size).toBe(0)
     manifest.value.subscriptions = ['calendar:*']
     manifest.value.settingsSchema = { calendars: { type: 'connections', connectionType: 'ics', label: 'Calendars' } }
+    selected.value = { calendars: ['ics-a'] }
     send('fremkit:subscribe', 'calendar:ics-a')
     expect([...relays.keys()]).toEqual(['calendar:ics-a'])
   })
