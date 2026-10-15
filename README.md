@@ -234,6 +234,7 @@ above state lines such as "Server: running" and "Touch: active".
 | `cpu` | CPU load and temperature | — | ● |
 | `disk` | Disk usage and available space | — | — |
 | `memory` | Memory usage, available RAM and swap | — | ● |
+| `uptime` | Time since the Mac last booted | — | — |
 | `network` | Live network throughput, with a sparkline | — | ● |
 | `notifications` | Unread badges read from the Dock | — | — |
 | `pomodoro` | A work and break timer, driven by touch | — | ● |
