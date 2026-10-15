@@ -1,0 +1,51 @@
+CHANGELOG.md
+  s_e827e256e15185::t_91ef6d1f53637d 13-15
+README.md
+  s_e827e256e15185::t_553dd919a73c90 288-289
+docs/codex.md
+  s_e827e256e15185::t_febc672b6ba36c 1-130
+server/src/codex/adapter.ts
+  s_e827e256e15185::t_b74b39c1548796 1-177
+server/src/codex/config.ts
+  s_e827e256e15185::t_bb5167b2d246b4 1-36
+server/src/codex/local-chats.ts
+  s_e827e256e15185::t_90b9880bfeaf34 1-18
+server/src/codex/observations.ts
+  s_e827e256e15185::t_b362eebb7c0eaf 1-111
+server/src/codex/projects.ts
+  s_e827e256e15185::t_5d8da11be7a894 1-73
+server/src/codex/snapshot.ts
+  s_e827e256e15185::t_178437ccb5fe3f 1-23
+server/src/index.ts
+  s_e827e256e15185::t_383ca54848413d 5-7,31-35,62
+server/src/providers/codex.ts
+  s_e827e256e15185::t_4e8131e4110ee7 1-128
+server/test/codex-adapter.test.ts
+  s_e827e256e15185::t_7d63848bf4527a 1-125
+server/test/codex-config.test.ts
+  s_e827e256e15185::t_8eb0ae8655e8b5 1-58
+server/test/codex-local-chats.test.ts
+  s_e827e256e15185::t_ec78aa8a64b666 1-43
+server/test/codex-observations.test.ts
+  s_e827e256e15185::t_f72b1b0ff3947f 1-34
+server/test/codex-projects.test.ts
+  s_e827e256e15185::t_a9ac3307006587 1-69
+server/test/codex-provider.test.ts
+  s_e827e256e15185::t_722e61a628970b 1-200
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e7cce06150743b45397e8dffc1eb4747eec748de",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
