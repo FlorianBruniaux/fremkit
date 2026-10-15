@@ -16,10 +16,10 @@ function harness() {
 }
 describe('read-only Google Tasks', () => {
   it('normalizes tasks, dates, hidden completed and subtasks without publishing remote links', async () => {
-    const h = harness(); h.responses['/lists/l1/tasks'] = { items: [task(), { ...task('child'), parent: 't1', position: '2', status: 'completed', hidden: true }, { ...task('deleted'), deleted: true }] }
+    const h = harness(); h.responses['/lists/l1/tasks'] = { items: [{ ...task(), notes: 'PRIVATE TASK NOTE' }, { ...task('child'), parent: 't1', position: '2', status: 'completed', hidden: true }, { ...task('deleted'), deleted: true }] }
     const s = await h.p.poll!()
     expect(s).toMatchObject({ connectionId: 'a', freshness: 'fresh', account: { email: 'a@example.com' }, lists: [{ id: 'l1', tasks: [{ dueDate: '2026-10-12', open: { available: true } }, { parent: 't1', position: '2', status: 'completed' }] }] })
-    expect(s.lists![0].tasks).toHaveLength(2); expect(JSON.stringify(s)).not.toContain('webViewLink')
+    expect(s.lists![0].tasks).toHaveLength(2); expect(JSON.stringify(s)).not.toContain('webViewLink'); expect(JSON.stringify(s)).not.toContain('PRIVATE TASK NOTE'); expect(h.calls[1].query.fields).not.toContain('notes')
     expect(h.calls[1]).toMatchObject({ service: 'tasks', query: { showCompleted: 'true', showHidden: 'true', showDeleted: 'false', showAssigned: 'true' } })
     expect(Object.keys(h.p.commands!)).toEqual(['open'])
   })

@@ -8,10 +8,10 @@ import type { Provider } from './types.js'
 
 const resourceId = z.string().regex(/^[A-Za-z0-9_@.+~!=\-]{1,512}$/).refine(s => s !== '.' && s !== '..')
 const pageToken = z.string().min(1).max(2048).optional()
-const taskSchema = z.object({ id: resourceId, title: z.string().max(1024).default(''), status: z.enum(['needsAction', 'completed']), parent: resourceId.optional(), position: z.string().max(256).optional(), due: z.string().datetime({ offset: true }).optional(), completed: z.string().datetime({ offset: true }).optional(), notes: z.string().max(8192).optional(), deleted: z.boolean().optional(), webViewLink: z.string().max(8192).optional() })
+const taskSchema = z.object({ id: resourceId, title: z.string().max(1024).default(''), status: z.enum(['needsAction', 'completed']), parent: resourceId.optional(), position: z.string().max(256).optional(), due: z.string().datetime({ offset: true }).optional(), completed: z.string().datetime({ offset: true }).optional(), deleted: z.boolean().optional(), webViewLink: z.string().max(8192).optional() })
 const listPage = z.object({ items: z.array(z.object({ id: resourceId, title: z.string().max(1024).default('') })).max(50).default([]), nextPageToken: pageToken })
 const tasksPage = z.object({ items: z.array(taskSchema).max(100).default([]), nextPageToken: pageToken })
-export interface GoogleTask { id: string; title: string; status: 'needsAction' | 'completed'; parent: string | null; position: string; dueDate: string | null; completed: string | null; notes: string | null; open: GoogleAction }
+export interface GoogleTask { id: string; title: string; status: 'needsAction' | 'completed'; parent: string | null; position: string; dueDate: string | null; completed: string | null; open: GoogleAction }
 export interface GoogleTaskList { id: string; title: string; tasks: GoogleTask[] | null; truncated: boolean; updatedAt: number | null; freshness: Freshness; error: GoogleFailure | null }
 export interface GoogleTasksSnapshot { connectionId: string; account: { email: string; color: string } | null; lists: GoogleTaskList[] | null; truncated: boolean; updatedAt: number | null; checkedAt: number | null; freshness: Freshness; error: GoogleFailure | null }
 export interface GoogleTasksDeps { client?: GoogleApiClient; now?: () => number; openUrl?: (url: string) => Promise<void> }
@@ -50,11 +50,11 @@ export function createGoogleTasksProvider(ctx: ConnectionServiceContext, deps: G
     try {
       for (let page = 0; page < 3; page++) {
         if (!current(epoch, subject)) throw { code: 'unauthorized' }
-        const raw = tasksPage.parse(await client.get('tasks', '/lists/' + encodeURIComponent(id) + '/tasks', { maxResults: '100', showCompleted: 'true', showHidden: 'true', showDeleted: 'false', showAssigned: 'true', fields: 'items(id,title,status,parent,position,due,completed,notes,deleted,webViewLink),nextPageToken', ...(token ? { pageToken: token } : {}) }))
+        const raw = tasksPage.parse(await client.get('tasks', '/lists/' + encodeURIComponent(id) + '/tasks', { maxResults: '100', showCompleted: 'true', showHidden: 'true', showDeleted: 'false', showAssigned: 'true', fields: 'items(id,title,status,parent,position,due,completed,deleted,webViewLink),nextPageToken', ...(token ? { pageToken: token } : {}) }))
         if (!current(epoch, subject)) throw { code: 'unauthorized' }
         for (const task of raw.items) {
           if (task.deleted) continue
-          tasks.set(task.id, { id: task.id, title: task.title, status: task.status, parent: task.parent ?? null, position: task.position ?? '', dueDate: task.due?.slice(0, 10) ?? null, completed: task.completed ?? null, notes: task.notes ?? null, open: { available: googleTaskUrl(task.webViewLink, email) !== null, reason: googleTaskUrl(task.webViewLink, email) ? null : 'unsupportedDestination' } })
+          tasks.set(task.id, { id: task.id, title: task.title, status: task.status, parent: task.parent ?? null, position: task.position ?? '', dueDate: task.due?.slice(0, 10) ?? null, completed: task.completed ?? null, open: { available: googleTaskUrl(task.webViewLink, email) !== null, reason: googleTaskUrl(task.webViewLink, email) ? null : 'unsupportedDestination' } })
         }
         token = raw.nextPageToken
         if (!token) break
