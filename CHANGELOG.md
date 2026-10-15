@@ -58,7 +58,7 @@ tagged `vX.Y.Z`.
 
 ### Fixed
 - **Application icon access.** Widgets that subscribe to `dock` receive icons through the dashboard host; cross-site requests to the icon route are refused, so other widget frames cannot probe installed applications.
-- **Fresh widget data after a provider retires.** A newly opened tile no longer replays a retired channel snapshot, including after a server disconnect.
+- **Fresh widget data after a provider retires.** Tiles already open and newly opened discard a retired channel snapshot before the replacement provider publishes again, including after a server disconnect.
 - **Widgets load on the native dashboard again.** WebKit can now load the bridge and a widget's
   own script, style, image, font and media files inside the sandboxed frame.
 - Shortcut buttons draw the real icon of an application that is not in the Dock again. The widget

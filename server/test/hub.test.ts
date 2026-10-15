@@ -103,6 +103,25 @@ describe('the cached last value of a channel', () => {
     expect(subscribe(hub, 'homey:old').sent).toEqual([])
   })
 
+  it('invalidates only live subscribers when a provider is replaced', () => {
+    let hub!: Hub
+    const registry = new ProviderRegistry((c, d) => hub.broadcast(c, d), (c) => hub.forget(c))
+    hub = new Hub(registry)
+    registry.register({ channel: 'homey:x', intervalMs: 1000 })
+    const active = subscribe(hub, 'homey:x')
+    const unrelated = subscribe(hub, 'config')
+    hub.broadcast('homey:x', { devices: ['old host'] })
+
+    registry.register({ channel: 'homey:x', intervalMs: 1000 })
+
+    expect(active.sent).toEqual([
+      { type: 'data', channel: 'homey:x', data: { devices: ['old host'] } },
+      { type: 'invalidate', channel: 'homey:x' },
+    ])
+    expect(unrelated.sent).toEqual([])
+    expect(subscribe(hub, 'homey:x').sent).toEqual([])
+  })
+
   it('is dropped when the provider is replaced, so the old host is not shown', () => {
     let hub!: Hub
     const registry = new ProviderRegistry((c, d) => hub.broadcast(c, d), (c) => hub.forget(c))
