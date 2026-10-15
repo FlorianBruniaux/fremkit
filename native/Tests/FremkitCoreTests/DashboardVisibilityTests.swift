@@ -22,4 +22,18 @@ final class DashboardVisibilityTests: XCTestCase {
         state.displayAvailable = true
         XCTAssertTrue(state.shouldShow)
     }
+    func testApplicationHideDoesNotClearUserPreference() {
+        var state = DashboardVisibility()
+        state.hide()
+        state.applicationDidHide()
+        state.applicationDidUnhide()
+        XCTAssertTrue(state.hiddenByUser)
+        XCTAssertFalse(state.shouldShow)
+        state.show()
+        XCTAssertTrue(state.shouldShow)
+        state.applicationDidHide()
+        XCTAssertFalse(state.shouldShow)
+        state.applicationDidUnhide()
+        XCTAssertTrue(state.shouldShow)
+    }
 }

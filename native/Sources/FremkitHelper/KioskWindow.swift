@@ -151,6 +151,7 @@ final class KioskWindow: NSObject, WKNavigationDelegate {
 
     private var visibility = DashboardVisibility()
     var isHiddenByUser: Bool { visibility.hiddenByUser }
+    var isShowingDashboard: Bool { visibility.shouldShow }
     var onVisibilityChange: (() -> Void)?
 
     /// Lends the Edge to the windows behind the dashboard until the user shows it again.
@@ -163,10 +164,22 @@ final class KioskWindow: NSObject, WKNavigationDelegate {
     /// Returns the dashboard without taking keyboard focus from the current application.
     func showDashboard() {
         visibility.show()
+        if NSApp.isHidden { NSApp.unhideWithoutActivation() }
         if visibility.shouldShow {
-            if NSApp.isHidden { NSApp.unhide(nil) }
             window.orderFrontRegardless()
         }
+        onVisibilityChange?()
+    }
+
+    func applicationDidHide() {
+        visibility.applicationDidHide()
+        window.orderOut(nil)
+        onVisibilityChange?()
+    }
+
+    func applicationDidUnhide() {
+        visibility.applicationDidUnhide()
+        if visibility.shouldShow { window.orderFrontRegardless() }
         onVisibilityChange?()
     }
 

@@ -182,12 +182,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Display
 
-    // Cmd-H in the admin also hides the accessory app; keep the dashboard and menu in sync.
-    func applicationDidHide(_ notification: Notification) { kiosk?.hideDashboard() }
-    func applicationDidUnhide(_ notification: Notification) { kiosk?.showDashboard() }
+    // Cmd-H temporarily hides the app without changing the user's dashboard preference.
+    func applicationDidHide(_ notification: Notification) { kiosk?.applicationDidHide() }
+    func applicationDidUnhide(_ notification: Notification) { kiosk?.applicationDidUnhide() }
 
     private func syncMouseFence() {
-        if config.fence && kiosk?.isHiddenByUser != true { fence?.start() }
+        if config.fence && kiosk?.isShowingDashboard == true { fence?.start() }
         else { fence?.stop() }
     }
 
