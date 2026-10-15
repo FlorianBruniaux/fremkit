@@ -168,3 +168,25 @@ describe('the focus command', () => {
     await expect(provider(new ClaudeTracker()).commands!.focus({}, { loopback: true })).rejects.toThrow()
   })
 })
+
+
+describe('cmux session navigation', () => {
+  const workspace = '85F7E39D-4EC1-43B6-ADA7-CDCDF7A354EB'
+  const surface = '22C82604-948E-469D-B2B4-849070102A18'
+  it('uses the live process panel even when the hook already named cmux', async () => {
+    const calls: string[][] = []
+    const reader = async (_cmd: string, args: string[]) => args[0] === 'eww'
+      ? `claude TERM_PROGRAM=ghostty __CFBundleIdentifier=com.cmuxterm.app CMUX_WORKSPACE_ID=${workspace} CMUX_SURFACE_ID=${surface}` : 'ttys003'
+    const result = await focusClient({ bundleId: 'com.cmuxterm.app', program: 'ghostty', pid: 123 }, '/x',
+      async (cmd, args) => { calls.push([cmd, ...args]) }, 123, reader)
+    expect(result).toEqual({ ok: true, how: 'pane' })
+    expect(calls).toEqual([['/usr/bin/open', '-b', 'com.cmuxterm.app', `cmux://workspace/${workspace}/surface/${surface}`]])
+  })
+  it('never puts invalid process handles into a link', async () => {
+    const calls: string[][] = []
+    const reader = async () => 'CMUX_WORKSPACE_ID=--bad CMUX_SURFACE_ID=../../evil __CFBundleIdentifier=com.cmuxterm.app'
+    expect(await focusClient({ bundleId: 'com.cmuxterm.app' }, '/x', async (cmd, args) => { calls.push([cmd, ...args]) }, 123, reader))
+      .toEqual({ ok: true, how: 'app' })
+    expect(calls).toEqual([['/usr/bin/open', '-b', 'com.cmuxterm.app']])
+  })
+})

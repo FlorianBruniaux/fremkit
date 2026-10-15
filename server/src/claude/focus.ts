@@ -51,12 +51,15 @@ export async function clientOfProcess(pid: number, reader: Reader = read): Promi
   const bundleId = pick('__CFBundleIdentifier')
   const program = pick('TERM_PROGRAM')
   const terminal = pick('ORCA_TERMINAL_HANDLE')
+  const workspace = pick('CMUX_WORKSPACE_ID')
+  const surface = pick('CMUX_SURFACE_ID')
   const tty = await ttyOfProcess(pid, reader)
-  if (!bundleId && !program && !terminal) return undefined
+  if (!bundleId && !program && !terminal && !workspace) return undefined
   return {
     ...(bundleId && BUNDLE_RE.test(bundleId) ? { bundleId } : {}),
     ...(program ? { program } : {}),
     pid,
+    ...(workspace && surface && UUID_RE.test(workspace) && UUID_RE.test(surface) ? { cmux: { workspace, surface } } : {}),
     ...(tty ? { tty } : {}),
     ...(terminal && ORCA_TERMINAL_RE.test(terminal) ? { orca: { terminal } } : {}),
   }
@@ -100,6 +103,8 @@ export async function appOfProcess(pid: number, reader: Reader = read): Promise<
 const ORCA_CLI = '/Applications/Orca.app/Contents/Resources/bin/orca'
 const ORCA_BUNDLE = 'com.stablyai.orca'
 const VSCODE_BUNDLE = 'com.microsoft.VSCode'
+const CMUX_BUNDLE = 'com.cmuxterm.app'
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** A bundle id, as `open -b` will take it. */
 const BUNDLE_RE = /^[A-Za-z0-9.-]{1,120}$/
@@ -184,6 +189,18 @@ export async function focusClient(
   reader: Reader = read,
 ): Promise<FocusResult> {
   try {
+    // Hooks written before cmux support already identify the app. Read its live process to
+    // recover the exact panel without requiring a hook rebuild or socket permission changes.
+    const livePid = pid ?? client?.pid
+    if (livePid && Number.isSafeInteger(livePid) && livePid > 1 &&
+        (!client?.bundleId || client.bundleId.toLowerCase() === CMUX_BUNDLE)) {
+      const live = await clientOfProcess(livePid, reader)
+      if (live?.cmux) {
+        const { workspace, surface } = live.cmux
+        await runner('/usr/bin/open', ['-b', CMUX_BUNDLE, `cmux://workspace/${workspace}/surface/${surface}`])
+        return { ok: true, how: 'pane' }
+      }
+    }
     if (!client?.bundleId && pid) {
       // No report from a hook: the process's own environment says the same things the hook
       // would have — the exact Orca pane, the terminal, the tty. Failing that, the process tree
