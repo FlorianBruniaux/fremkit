@@ -37,7 +37,8 @@
     padding:0 calc(var(--h,80px) * .10)}
   /* One run of inline text rather than a flex row: only that way does the ellipsis land on the
      line as a whole when the bar runs out of room, instead of on each span separately. */
-  .clock-icon{display:inline-block;width:1em;height:1em;margin-right:.4em;vertical-align:-.12em;color:var(--text-muted,#8b93a0)}
+  .clock-icon{display:inline-block;width:1em;height:1em;margin-right:.4em;vertical-align:-.12em;color:var(--accent,#d9b36a)}
+  html.accent-fill .clock-icon{color:var(--on-surface,#0b0d10)}
   html.compact .cline{min-width:0;font-size:calc(clamp(13px, calc(var(--h,80px) * .30), 26px) * var(--text-scale, 1));
     font-weight:600;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* The date and the cities read at the time's own size, set apart by their weight and colour. */
