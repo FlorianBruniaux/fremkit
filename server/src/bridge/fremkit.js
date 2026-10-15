@@ -222,7 +222,7 @@
     },
     /**
      * The applications installed on this Mac, as `{ name, bundleId, file }` — enough to name one
-     * and to ask for its icon at `/api/apps/icon/<bundleId>`, and nothing about where it lives.
+     * and to ask for its icon with `appIcon(bundleId)`, and nothing about where it lives.
      *
      * Asked of the host for the same reason as a favicon, one step earlier: a widget's frame is
      * served with `connect-src 'none'`, so a `fetch` from here never leaves the page at all. The
@@ -230,6 +230,10 @@
      */
     installedApps: function () {
       return request({ type: 'fremkit:apps' })
+    },
+    /** A local application's icon as a data URL. Requires a Dock subscription. */
+    appIcon: function (bundleId) {
+      return request({ type: 'fremkit:app-icon', bundleId: bundleId })
     },
     /**
      * Escapes a string for HTML.

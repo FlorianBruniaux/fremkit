@@ -9,6 +9,7 @@ import { SDK_VERSION } from '../src/bridge/sdk.js'
  * widget now relies on for escaping can be exercised without a DOM.
  */
 interface Bridge {
+  appIcon(bundleId: string): Promise<string>
   sdk: number
   esc(value: unknown): string
   el(tag: string, className?: string, text?: unknown): { tagName: string; className: string; textContent: string }
@@ -17,6 +18,7 @@ interface Bridge {
 
 /** What the loaded bridge did to its document, for the kiosk-behaviour tests. */
 interface LoadResult {
+  posted: Record<string, unknown>[]
   bridge: Bridge
   listeners: string[]
   styles: { attrs: Record<string, string>; textContent: string }[]
@@ -29,8 +31,9 @@ interface LoadResult {
 async function loadBridge(): Promise<LoadResult> {
   const src = await readFile(fileURLToPath(new URL('../src/bridge/fremkit.js', import.meta.url)), 'utf8')
   let onMessage: ((event: { source: unknown; data: unknown }) => void) | null = null
+  const posted: Record<string, unknown>[] = []
   const window: Record<string, unknown> = {
-    parent: { postMessage: () => {} },
+    parent: { postMessage: (message: Record<string, unknown>) => { posted.push(message) } },
     addEventListener: (type: string, cb: (event: { source: unknown; data: unknown }) => void) => {
       if (type === 'message') onMessage = cb
     },
@@ -71,6 +74,7 @@ async function loadBridge(): Promise<LoadResult> {
   }
   new Function('window', 'document', 'console', src)(window, document, console)
   return {
+    posted,
     bridge: window.Fremkit as Bridge,
     listeners,
     styles,
@@ -228,5 +232,16 @@ describe('a widget under a theme', () => {
     expect(loaded.properties.get('--accent')).toBe('#a2622a')
     // The theme that follows leaves the token out: back to the widget's own fallback.
     expect(loaded.properties.has('--text')).toBe(false)
+  })
+})
+
+describe('Fremkit.appIcon', () => {
+  it('requests a bundle id from the host and returns its image data', async () => {
+    const loaded = await loadBridge()
+    const promise = loaded.bridge.appIcon('com.apple.mail')
+    const message = loaded.posted.at(-1)!
+    expect(message).toMatchObject({ type: 'fremkit:app-icon', bundleId: 'com.apple.mail' })
+    loaded.send({ type: 'fremkit:result', id: message.id, result: 'data:image/png;base64,aWNvbg==' })
+    await expect(promise).resolves.toBe('data:image/png;base64,aWNvbg==')
   })
 })

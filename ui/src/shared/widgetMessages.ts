@@ -13,6 +13,12 @@ export function nonEmptyString(value: unknown): string | null {
   return typeof value === 'string' && value !== '' ? value : null
 }
 
+/** The bundle id whose local icon the host may retrieve, never a path or URL. */
+export function appIconTarget(message: { bundleId?: unknown }): string | null {
+  const id = nonEmptyString(message.bundleId)
+  return id && /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(id) ? id : null
+}
+
 /**
  * The origin a `fremkit:favicon` request is about, or null.
  *

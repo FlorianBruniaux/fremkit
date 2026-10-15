@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FrameTrust, faviconTarget, fetchTarget, imageTarget, mayListApps, nonEmptyString, stampInstance } from '../src/shared/widgetMessages'
+import { FrameTrust, appIconTarget, faviconTarget, fetchTarget, imageTarget, mayListApps, nonEmptyString, stampInstance } from '../src/shared/widgetMessages'
 
 describe('nonEmptyString', () => {
   it('accepts a non-empty string and nothing else', () => {
@@ -148,5 +148,15 @@ describe('FrameTrust', () => {
     expect(trust.trusted).toBe(true)
     trust.onLoad(null)
     expect(trust.trusted).toBe(false)
+  })
+})
+
+describe('appIconTarget', () => {
+  it('accepts bundle ids and refuses paths, URLs and other values', () => {
+    expect(appIconTarget({ bundleId: 'com.apple.mail' })).toBe('com.apple.mail')
+    expect(appIconTarget({ bundleId: 'com.example.app-2_1' })).toBe('com.example.app-2_1')
+    for (const bundleId of ['', '../config', 'https://evil.example/', '/com.apple.mail', 'a'.repeat(129), 42, null]) {
+      expect(appIconTarget({ bundleId })).toBeNull()
+    }
   })
 })
