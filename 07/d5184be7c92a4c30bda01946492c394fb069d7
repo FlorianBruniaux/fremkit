@@ -1,0 +1,25 @@
+CHANGELOG.md
+  s_74418aba14810b::t_58fa9487cb84b8 27
+docs/claude-code.md
+  s_74418aba14810b::t_a3cd000b548707 44-47,64,69-74
+server/src/claude/focus.ts
+  s_74418aba14810b::t_9c2c6816b5c420 205-213,218
+server/test/claude-focus.test.ts
+  s_74418aba14810b::t_2b0952aaf84122 188-201
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "07d5184be7c92a4c30bda01946492c394fb069d7",
+  "prompts": {},
+  "sessions": {
+    "s_74418aba14810b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_74418aba14810b",
+        "model": "unknown"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
