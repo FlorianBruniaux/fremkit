@@ -12,6 +12,8 @@ tagged `vX.Y.Z`.
 
 ## Unreleased
 
+## 0.3.0 — 2026-10-15
+
 ### Added
 - **Codex quotas, usage and chats.** For registry widgets: your Codex account's quotas and token
   usage, and the chats and turns of the local history sources you pick (Codex desktop, VS Code,
