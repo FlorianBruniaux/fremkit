@@ -58,7 +58,7 @@ export class Hub {
    * channel last said belonged to a connection or a provider that is gone, and replaying it to
    * the next subscriber would show data from credentials that no longer exist. A widget that
    * subscribes after this waits for the first fresh poll instead, which the registry runs at once.
-   * Current subscribers must also discard their local replay cache.
+   * Current socket clients also discard their replay cache; already open widgets keep their rendered value until the next publish.
    */
   forget(channel: string): void {
     this.lastValues.delete(channel)
