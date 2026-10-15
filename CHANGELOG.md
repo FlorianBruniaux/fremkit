@@ -13,105 +13,137 @@ tagged `vX.Y.Z`.
 ## Unreleased
 
 ### Added
+- **Codex quotas, usage and chats.** For registry widgets: your Codex account's quotas and token
+  usage, and the chats and turns of the local history sources you pick (Codex desktop, VS Code,
+  the CLI, subagents). Both start off, under **/admin → Screen → Privacy**, which says that a
+  picked source sends chat titles, model and folder or branch labels to every widget that
+  subscribes. Fremkit only reads: a chat opens only once it is found in the Codex desktop
+  catalog, and turning a source or account reads off also drops what was cached for it
+  (@FlorianBruniaux, #14).
+- **Local Docker and AI models.** Registry widgets can show up to 200 local containers and the
+  Ollama or MLX models running on the Mac. Fremkit refuses remote Docker contexts, tells a
+  missing Docker apart from a stopped one, and keeps the container list when stats fail
+  (@FlorianBruniaux, #17).
+- **CPU temperature on Apple Silicon, if you want it.** Install macmon yourself
+  (`brew install macmon`) and tick the box under **/admin → Screen → Privacy**; off by default.
+  The reading stays on the Mac, and a slow sample never holds up the other system metrics
+  (@FlorianBruniaux, #22).
+- **Uptime.** A tile that shows how long the Mac has been up, read from macOS; it says so when
+  the system cannot tell (@FlorianBruniaux, #16).
+- **Your Claude plan on the Claude limits tile.** When the local Claude CLI reports a known
+  subscription, a small badge beside the footer names it, histogram shown or not
+  (@FlorianBruniaux, #19).
+- **Claude sessions: go to the session.** Touch a card and its window comes forward — the
+  exact Orca pane, the Terminal.app or iTerm2 tab, the VS Code window on that folder, or at
+  least the application — for every session, hooked or merely found running. In cmux, the card
+  selects the session's own panel when the process says which workspace and surface it is in,
+  and brings cmux forward otherwise (@FlorianBruniaux, #11). The card also says which
+  application the session lives in, which is what tells two panes of the same folder apart. The
+  hook reports that from inside the session; it stays on the server, and the dashboard is told
+  only the kind and the name.
+- **Claude sessions can chime.** One of the macOS system sounds when a session starts waiting,
+  for a question or for any prompt, played by Fremkit rather than by the widget so you hear it
+  when the dashboard is not in front of you. At most one every five seconds.
+- **Hear a sound before choosing it.** A ▶ beside the sound setting plays the chosen sound once,
+  so you pick it by ear. (Any widget can offer the same on an `enum` setting: `preview` in its
+  manifest names the command.)
+- **Claude sessions board options.** Show only what is waiting, hide finished sessions after
+  30 minutes (on by default), and group the board by application.
+- **GitHub rows open on the Mac.** A saved run, notification or pull request opens from its
+  widget without being marked read (@FlorianBruniaux, #13).
+- **Borrow the Edge display.** Hide or show the dashboard from the helper's menu without
+  quitting it. It stays hidden across display rearrangements, and the mouse fence pauses while
+  the Edge is borrowed; touch and data collection go on, and a helper restart brings the
+  dashboard back (@FlorianBruniaux, #15).
+- **A shortcut button's own icon.** An emoji, the address of an image, or that of a site whose
+  icon it borrows — for a link whose site shows its icon only once you are signed in, or one on
+  the LAN.
+- **Shortcut button backgrounds.** None, the tile's accent, or a colour of your choosing (the
+  text picks black or white to stay readable).
+- **What an update changes.** A registry package says what each version changed, and the admin
+  shows it: under the chip on a card with an update waiting, and beside the permissions in the
+  install, update and *Update all* dialogs. An update several versions behind lists every
+  version it is taking. The text is the package's own `CHANGELOG.md` entry, carried by the
+  registry as plain text and rendered as text.
 - **Widget SDK 2.** For widget authors: `Fremkit.sdk` is now `2`, the generation that brought
-  `favicon()`, `image()`, `installedApps()` and `appIcon()`. A widget that calls them declares
-  `"sdk": 2`, and an older Fremkit then says it needs an update instead of installing it broken.
-  Widgets declaring `1` keep installing as before.
-- Add read-only Codex account quotas, token usage, selected local chats and observed turns. Enable account reads or select history sources in the admin screen privacy settings; both start off. History selection explains that titles and labels reach subscribed widgets. A chat opens only after exact-ID validation against the local desktop catalog. Account email is not sent to widgets. Removing a history source or disabling account reads also removes its cached fields if the next Codex read fails.
+  `favicon(url)` (a site's icon), `image(url)` (an image whose address the user typed into the
+  widget's settings), `installedApps()` (an application name to the bundle id its icon is filed
+  under) and `appIcon()` (that icon), the last two for a widget that subscribes to `dock`. The
+  host page fetches all four for the widget, whose sandboxed frame cannot. A widget that calls
+  them declares `"sdk": 2`, and an older Fremkit then says it needs an update instead of
+  installing it broken. Widgets declaring `1` keep installing as before.
 
 ### Changed
-- **Clock in the compact bar.** Show an accent-coloured clock icon beside the time, matching the weather icon.
-- **The system tiles show useful Mac capacity.** Disk usage uses the APFS data volume and shows available space; memory shows available RAM and swap.
+- **Clock in the compact bar.** An accent-coloured clock icon beside the time, matching the
+  weather icon (@FlorianBruniaux, #21).
+- **System tiles show what the Mac has left.** Disk usage reads the APFS data volume and shows
+  the space available; memory shows available RAM and swap (@FlorianBruniaux, #16).
 - **Homey is a declared connection now.** The Homey connection type built into Fremkit is gone:
   both Homey widgets bring their own, so one API key serves the two of them. An existing Homey
   connection is migrated when the server starts — same name, same address, same key — and the
   tiles keep pointing at it. Nothing to redo. Update *Homey devices* from Sietch to get the
-  version that uses it.
-- The Homey devices widget lost its device picker: the list of devices came from the connection
-  type built into Fremkit, and a declared connection serves none. Name the devices by id, or show
-  every device and filter by zone. A selection made with the old picker keeps working.
-- A connection form declared by a widget now names every widget that connection would serve,
-  rather than only the one that declared it.
-
-### Added
-- **GitHub rows open on the Mac.** Open a saved run, notification or pull request from a widget without marking it read.
-- **cmux session navigation.** A Claude card selects its cmux panel through the bundled CLI when the running process identifies both workspace and surface and socket access allows it. Otherwise it brings cmux forward.
-- **Optional Apple Silicon CPU temperature.** Install macmon separately and enable it in Screen privacy settings. Sampling stays local and off by default; a recent reading does not delay system metrics.
-- **Local Docker and AI models.** Registry widgets can show up to 200 local containers and observed Ollama or MLX models. Fremkit refuses remote Docker contexts, distinguishes a missing CLI from a stopped daemon, and keeps the container list when stats fail.
-- **The Uptime tile shows time since boot.** The reading comes from macOS and remains unavailable when the system cannot provide it.
-- **The Claude limits tile shows your plan.** When the local Claude CLI reports a known
-  subscription, the tile shows a compact badge beside the footer, visible even when the hourly
-  histogram is displayed, without publishing the account email.
-- **Borrow the Edge display.** Hide or show the dashboard from the helper menu without quitting it. Hidden state survives display rearrangements, and the mouse fence pauses while the Edge is borrowed. Touch and data collection continue; the dashboard reappears after a helper restart.
-- **Account e-mail stays private.** A new box in **/admin → Screen → Privacy**, *Show the account
-  e-mail address*, off by default. Until you tick it, a widget that shows an account gets its plan
-  and how you signed in, never its e-mail address: the server does not send it, so no widget —
-  one from the marketplace included — can show it or pass it on.
-- **Claude sessions: go to the session.** Touch a card and its window comes forward — the
-  exact Orca pane, the Terminal.app or iTerm2 tab, the VS Code window on that folder, or at
-  least the application — for every session, hooked or merely found running. The card also says which application the session lives in, which is what tells two panes of the
-  same folder apart. The hook reports that from inside the session; it stays on the server, and
-  the dashboard is told only the kind and the name.
-- **Claude sessions can chime.** One of the macOS system sounds when a session starts waiting,
-  for a question or for any prompt, played by Fremkit rather than by the widget so you hear it
-  when the dashboard is not in front of you. At most one every five seconds.
-- A ▶ beside the sound setting plays the chosen sound once, so you pick it by ear. (Any
-  widget can offer the same on an `enum` setting: `preview` in its manifest names the command.)
-- Three more settings on the Claude sessions widget: show only what is waiting, hide finished
-  sessions after 30 minutes (on by default), and group the board by application.
-
-### Fixed
-- The Claude limits tile draws its hourly histogram again: the bars were laid out with no width,
-  so the row under the footer showed only the peak label.
-- **Application icon access.** Widgets that subscribe to `dock` receive icons through the dashboard host; cross-site requests to the icon route are refused, so other widget frames cannot probe installed applications.
-- **Fresh widget data after a provider retires.** Socket replay caches discard a retired channel snapshot for newly opened tiles and after a server disconnect. Already open tiles keep their last rendered value until the replacement provider publishes fresh data.
-- **Widgets load on the native dashboard again.** WebKit can now load the bridge and a widget's
-  own script, style, image, font and media files inside the sandboxed frame.
-- Shortcut buttons draw the real icon of an application that is not in the Dock again. The widget
-  read the list of installed applications itself, which the `connect-src 'none'` its frame is
-  served with has always refused, so anything the user had never docked fell back to the kind's
-  glyph. The host page reads that list for it now, as it already does for a link's favicon
-  (@mcouzinet, #6).
-- For widget authors: `Fremkit.installedApps()` is how a widget turns an application name into the
-  bundle id its icon is filed under; it answers a widget that subscribes to `dock`.
-- The Claude limits widget shows today's tokens and its hourly histogram again. It reached for the
-  bridge's escaping helper by the wrong name, so every render threw where the footer begins and
-  everything under the gauges stayed empty (@mcouzinet, #5).
-- The helper keeps its Input Monitoring and Accessibility grants across rebuilds again, on Macs
-  where `scripts/create-signing-identity.sh` failed at the import step ("MAC verification failed").
-  The identity was never created, so every build stayed ad-hoc signed and lost the permissions
-  granted to the one before, which shows up as the touch panel clicking on another display
-  (@mcouzinet, #8).
-- Spotify's progress bar moves: on a Mac whose number format uses a decimal comma the position
-  read as nothing, and the bar sat at zero. It now glides across each second instead of stepping,
-  lands at once on a seek, a new track or a pause, and empties when Spotify closes (@mcouzinet, #4).
-- A link to a site that answers the icon request with anything but HTML — a workspace's login
-  page, for one — gets its icon: the server asks the page for HTML first, as a browser does. A
-  site that yields no icon is left alone for fifteen minutes rather than asked on every retry. A
-  site whose icon is declared far down a long page head (a WordPress site, for one) gets it too.
-  So does one that turned Fremkit's icon requests away for not looking like a browser's.
-- Link buttons on the shortcuts widget show their favicon again. The cross-site refusal on the
-  favicon route (0.2.0) also caught the widget's own request, since a sandboxed widget frame
-  counts as another site; the host page now fetches the icon for it. A site that is down when the
-  dashboard loads gets its icon within a minute of coming back, instead of at the next reload.
-- For widget authors: `Fremkit.favicon(url)` is how a widget gets a site's icon now.
-  `Fremkit.image(url)` fetches an image whose address the user typed into the widget's settings.
-
-### Changed
-- The Spotify tile fits its shape: a row when wide, the transport under the cover and the song
-  from 440 × 340, a column when square or taller; minimum size 8 × 4 (@mcouzinet, #4).
-- Shortcut buttons fill the tile: the rows share its height, and the icons and labels grow
+  version that uses it. That widget lost its device picker, since a declared connection serves
+  none: name the devices by id, or show every device and filter by zone. A selection made with
+  the old picker keeps working.
+- **A connection form names every widget it serves.** A connection declared by a widget lists
+  every widget it would serve, rather than only the one that declared it.
+- **The Spotify tile fits its shape.** A row when wide, the transport under the cover and the
+  song from 440 × 340, a column when square or taller; minimum size 8 × 4 (@mcouzinet, #4).
+- **Shortcut buttons fill the tile.** The rows share its height, and the icons and labels grow
   with them, down to a finger-sized minimum past which the grid scrolls as before.
 
-### Added
-- A shortcut button can be given its own icon: an emoji, the address of an image, or that of a
-  site whose icon it borrows — for a link whose site shows its icon only once you are signed in, or one on the LAN.
-- Shortcut buttons can be drawn with no background, on the tile's accent, or on a colour of
-  your choosing (the text picks black or white to stay readable).
-- A registry package says what each version changed, and the admin shows it: under the chip on a
-  card with an update waiting, and beside the permissions in the install, update and *Update all*
-  dialogs. An update several versions behind lists every version it is taking. The text is the
-  package's own `CHANGELOG.md` entry, carried by the registry as plain text and rendered as text.
+### Fixed
+- **Widgets load on the native dashboard again.** WebKit can now load the bridge and a widget's
+  own script, style, image, font and media files inside the sandboxed frame
+  (@FlorianBruniaux, #10).
+- **The Claude limits tile shows today's tokens and its hourly histogram again.** It reached for
+  the bridge's escaping helper by the wrong name, so every render threw where the footer begins
+  and everything under the gauges stayed empty (@mcouzinet, #5); and the histogram's bars were
+  then laid out with no width, so its row showed only the peak label.
+- **Application icons in shortcuts and notifications.** Shortcut buttons draw the real icon of
+  an application that is not in the Dock again, and the notifications widget draws its apps'
+  icons: a widget frame cannot fetch them itself, so they fell back to a glyph. The host page
+  fetches them for it now (@FlorianBruniaux, #12; @mcouzinet, #6).
+- **Link icons on the shortcuts widget.** Link buttons show their favicon again: the cross-site
+  refusal on the favicon route (0.2.0) also caught the widget's own request, and the host page
+  now fetches the icon for it. A site that answers the icon request with anything but HTML — a
+  workspace's login page, for one — declares its icon far down a long page head, or turned away
+  requests that did not look like a browser's gets its icon too. A site that is down when the
+  dashboard loads gets its icon within a minute of coming back; one that yields no icon is left
+  alone for fifteen minutes rather than asked on every retry.
+- **Fresh data after a provider is replaced.** A tile opened after a widget's data source was
+  retired, or after the dashboard reconnects to the server, no longer starts from the retired
+  source's last reading. A tile already open keeps its value until the new source publishes
+  (@FlorianBruniaux, #24).
+- **The helper keeps its permissions across rebuilds again.** On Macs where
+  `scripts/create-signing-identity.sh` failed at the import step ("MAC verification failed"),
+  the identity was never created, so every build stayed ad-hoc signed and lost the Input
+  Monitoring and Accessibility grants of the one before, which shows up as the touch panel
+  clicking on another display (@mcouzinet, #8).
+- **Spotify's progress bar moves.** On a Mac whose number format uses a decimal comma the
+  position read as nothing, and the bar sat at zero. It now glides across each second instead
+  of stepping, lands at once on a seek, a new track or a pause, and empties when Spotify closes
+  (@mcouzinet, #4).
+- **Delete and restore work in the helper's admin window.** Deleting a connection or a page and
+  restoring a backup asked with a browser dialog the helper never shows, so the button did
+  nothing. The first tap now arms it — red, "Confirm?" — and a second within four seconds does
+  it; a refusal from the server shows in the banner.
+- **Connections a widget declares can be saved.** Saving one failed with "invalid connection
+  id", since the admin built the id from the type's, which a declared type writes with colons.
+- **A Homey that refuses its key says so.** It showed as offline, which sent you to check the
+  network when the Homey wanted a new key.
+
+### Security
+- **Application icons cannot be used to probe the Mac.** Cross-site requests to the icon route
+  are refused, and only a widget that subscribes to `dock` gets the list of installed
+  applications, so another widget's frame cannot find out what is installed
+  (@FlorianBruniaux, #12).
+- **Account e-mail addresses stay private by default.** A rule for every provider that reads an
+  account: the e-mail address leaves the server only when **/admin → Screen → Privacy → Show
+  the account e-mail address** is ticked, and the box is off by default. Until then a widget
+  gets the plan and how you signed in, and no widget — one from the marketplace included — can
+  show the address or pass it on. In 0.3.0 no provider publishes an address yet, so ticking the
+  box changes nothing on screen; it decides for the providers that will.
 
 ## 0.2.0 — 2026-09-21
 
