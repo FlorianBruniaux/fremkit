@@ -1,0 +1,21 @@
+server/test/app.test.ts
+  s_e827e256e15185::t_1a89424baeccfe 181
+server/src/widgets/routes.ts
+  s_e827e256e15185::t_1868aaa97b8e5b 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "13b0269d19935ae50d406a34f828f1e74abedca3",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
