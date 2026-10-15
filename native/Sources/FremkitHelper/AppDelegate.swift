@@ -11,6 +11,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let poster = EventPoster()
     private var driver: TouchDriver?
     private var fence: MouseFence?
+    /// A future window fence can register here and share the dashboard visibility rule.
+    private var fenceUpdates: [(Bool) -> Void] = []
     private var dockBadges: DockBadges?
     private var watcher: EdgeDisplay.Watcher?
     private var kiosk: KioskWindow?
@@ -55,6 +57,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.menu?.update { $0.fence = state }
         }
         self.fence = fence
+        fenceUpdates.append { [weak fence] active in
+            if active { _ = fence?.start() }
+            else { fence?.stop() }
+        }
 
         let dockBadges = DockBadges(port: config.port)
         dockBadges.onState = { [weak self] state in
@@ -80,7 +86,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if config.touch { driver.start() }
-        if config.fence { fence.start() }
+        syncFences()
         if config.dock { dockBadges.start() }
 
         // An orphan from a crashed helper still holds the port and would be mistaken for an
@@ -186,9 +192,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidHide(_ notification: Notification) { kiosk?.applicationDidHide() }
     func applicationDidUnhide(_ notification: Notification) { kiosk?.applicationDidUnhide() }
 
-    private func syncMouseFence() {
-        if config.fence && kiosk?.isShowingDashboard == true { fence?.start() }
-        else { fence?.stop() }
+    private func syncFences() {
+        let active = config.fence && kiosk?.isShowingDashboard == true
+        for update in fenceUpdates { update(active) }
     }
 
     private func refreshDashboardMenu() {
@@ -214,7 +220,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let url = Self.parseURL(config.url, what: "url")
                 kiosk = KioskWindow(frame: frame, url: url)
                 kiosk?.onVisibilityChange = { [weak self] in
-                    self?.syncMouseFence()
+                    self?.syncFences()
                     self?.refreshDashboardMenu()
                 }
             }
@@ -222,7 +228,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             admin?.kioskFrame = nil
             kiosk?.setEdgeFrame(nil)
         }
-        syncMouseFence()
+        syncFences()
         refreshDashboardMenu()
     }
 
@@ -275,7 +281,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             self.config.fence = on
             self.saveConfig()
-            self.syncMouseFence()
+            self.syncFences()
             self.refreshMenu()
         }
 
