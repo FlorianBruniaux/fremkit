@@ -202,11 +202,20 @@ export async function focusClient(
         live.bundleId.toLowerCase() !== CMUX_BUNDLE) {
       client = { ...client, bundleId: live.bundleId, cmux: undefined }
     }
+    // A terminal launched from cmux can inherit its bundle id and panel IDs.
+    // TERM_PROGRAM identifies the actual host in that case.
+    const program = (live?.program ?? client?.program)?.toLowerCase()
+    const otherProgramBundle = program === 'vscode' ? VSCODE_BUNDLE
+      : program === 'iterm.app' ? 'com.googlecode.iterm2'
+      : program === 'apple_terminal' ? 'com.apple.Terminal' : undefined
+    if (otherProgramBundle && client?.bundleId?.toLowerCase() === CMUX_BUNDLE) {
+      client = { ...client, bundleId: otherProgramBundle, program, cmux: undefined }
+    }
     const panel = live?.cmux ?? client?.cmux
     // A shell launched inside cmux may pass CMUX_* to an unrelated client. The bundle must
     // still identify cmux, and an explicit Orca pane takes precedence.
     if (panel && UUID_RE.test(panel.workspace) && UUID_RE.test(panel.surface) &&
-        (live?.bundleId ?? client?.bundleId)?.toLowerCase() === CMUX_BUNDLE &&
+        !otherProgramBundle && (live?.bundleId ?? client?.bundleId)?.toLowerCase() === CMUX_BUNDLE &&
         !live?.orca?.terminal && !client?.orca?.terminal) {
       try {
         await runner(CMUX_CLI, ['focus-panel', '--panel', panel.surface, '--workspace', panel.workspace])

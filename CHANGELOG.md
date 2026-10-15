@@ -26,7 +26,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 
 ### Added
 - **GitHub rows open on the Mac.** Open a saved run, notification or pull request from a widget without marking it read.
-- **cmux session navigation.** A Claude card selects its cmux panel through the bundled CLI when the running process identifies both workspace and surface. If selection fails, it brings cmux forward.
+- **cmux session navigation.** A Claude card selects its cmux panel through the bundled CLI when the running process identifies both workspace and surface and socket access allows it. Otherwise it brings cmux forward.
 - **Local Docker and AI models.** Registry widgets can show up to 200 local containers and observed Ollama or MLX models. Fremkit refuses remote Docker contexts, distinguishes a missing CLI from a stopped daemon, and keeps the container list when stats fail.
 - **The Uptime tile shows time since boot.** The reading comes from macOS and remains unavailable when the system cannot provide it.
 - **Borrow the Edge display.** Hide or show the dashboard from the helper menu without quitting it. Hidden state survives display rearrangements, and the mouse fence pauses while the Edge is borrowed. Touch and data collection continue; the dashboard reappears after a helper restart.

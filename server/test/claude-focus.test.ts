@@ -185,6 +185,20 @@ describe('cmux session navigation', () => {
       ['/usr/bin/open', '-b', 'com.cmuxterm.app'],
     ])
   })
+  it.each([
+    ['vscode', 'com.microsoft.VSCode', ['/usr/bin/open', '-b', 'com.microsoft.VSCode', '/project']],
+    ['iTerm.app', 'com.googlecode.iterm2', ['/usr/bin/open', '-b', 'com.googlecode.iterm2']],
+    ['Apple_Terminal', 'com.apple.Terminal', ['/usr/bin/open', '-b', 'com.apple.Terminal']],
+  ])('honours %s over inherited cmux IDs', async (program, _bundle, expected) => {
+    const calls: string[][] = []
+    const reader = async (_cmd: string, args: string[]) => args[0] === 'eww'
+      ? `claude TERM_PROGRAM=${program} __CFBundleIdentifier=com.cmuxterm.app CMUX_WORKSPACE_ID=${workspace} CMUX_SURFACE_ID=${surface}` : 'ttys003'
+    const result = await focusClient({ bundleId: 'com.cmuxterm.app', pid: 123 }, '/project',
+      async (cmd, args) => { calls.push([cmd, ...args]) }, 123, reader)
+    expect(result.ok).toBe(true)
+    expect(calls.some(call => call[0].endsWith('/cmux'))).toBe(false)
+    expect(calls.at(-1)).toEqual(expected)
+  })
   it('falls back to fronting cmux when selecting the panel fails', async () => {
     const calls: string[][] = []
     const reader = async (_cmd: string, args: string[]) => args[0] === 'eww'
