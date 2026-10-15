@@ -2,11 +2,13 @@
 
 What changed for the person using Fremkit, release by release. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow semver, and the
-version is the one `FREMKIT_VERSION` carries — the registry compares a widget's `sdk` against it.
+version is the one `FREMKIT_VERSION` carries. A widget's `sdk` is a separate number,
+`SDK_VERSION` in `server/src/bridge/sdk.ts`, that moves only when the bridge grows.
 
 Anything that changes what the dashboard, the admin or a widget can do gets a line under
-**Unreleased** in the same commit. A release renames that section, bumps the three `0.x.y`
-(`package.json`, `server/package.json`, `server/src/version.ts`) and is tagged `vX.Y.Z`.
+**Unreleased** in the same commit. A release renames that section, bumps the four `0.x.y`
+(`package.json`, `server/package.json`, `ui/package.json`, `server/src/version.ts`) and is
+tagged `vX.Y.Z`.
 
 ## Unreleased
 

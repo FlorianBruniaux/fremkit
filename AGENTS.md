@@ -112,8 +112,11 @@ agent's in-flight work. Say where the worktree is, and remove it once the work h
 - **Changelog**: anything that changes what the dashboard, the admin or a widget can do gets a
   line under `## Unreleased` in `CHANGELOG.md`, in the same commit, written for the person
   using Fremkit (not the commit subject). A release is its own commit: rename the section,
-  bump the four `version` fields (`package.json`, `server/`, `ui/`, `server/src/version.ts` —
-  the registry compares a widget's `sdk` against that one) and tag `vX.Y.Z`.
+  bump the four `version` fields (`package.json`, `server/`, `ui/`, `server/src/version.ts`)
+  and tag `vX.Y.Z`. A widget's `sdk` is compared against `SDK_VERSION` in
+  `server/src/bridge/sdk.ts`, not against the release: it goes up when the bridge gains a member
+  a widget may rely on, in the commit that adds it (`bridge.test.ts` refuses a member no
+  generation lists).
 - **Tests before done**: `pnpm typecheck` and `pnpm test` green, the UI rebuilt if touched, a
   rescan if a manifest changed, and — for anything visible — a look at `/admin` or `/` in a
   browser. The widget catalogue test in `server/test/` reads the real `widgets/` folder, so a
