@@ -1,0 +1,64 @@
+ui/test/marketplace-modal.test.ts
+  s_e827e256e15185::t_8538c95014d49a 62
+server/src/providers/mac-thermals.ts
+  s_e827e256e15185::t_241d50e67fc308 1-56,58-59
+  s_e827e256e15185::t_fe143bf693fef5 57
+  s_e827e256e15185::t_9cbf23e96c0fdf 60-67
+docs/widgets.md
+  s_e827e256e15185::t_5a14568454b21c 165
+server/src/providers/system.ts
+  s_e827e256e15185::t_0c43a3244a30d6 3,7-15
+  s_e827e256e15185::t_aba718dad94fdd 16-25
+  s_e827e256e15185::t_1f6e20a340cf8c 26-39
+CHANGELOG.md
+  s_e827e256e15185::t_deb40fd74ec5cd 27
+ui/src/shared/locales/en.ts
+  s_e827e256e15185::t_ac7acdd6c6a49c 185-186
+server/src/config/migrate.ts
+  s_e827e256e15185::t_0c43a3244a30d6 152
+server/test/mac-thermals.test.ts
+  s_e827e256e15185::t_fe143bf693fef5 42-52,54
+  s_e827e256e15185::t_a7794ba3308e92 64-74
+  s_e827e256e15185::t_2039c2d5f15d3c 1-41,53,55-63
+server/test/config-migration.test.ts
+  s_e827e256e15185::t_31fb9d0cd478e6 146-156
+  s_e827e256e15185::t_683ec5865adfd1 102
+ui/src/shared/types.ts
+  s_e827e256e15185::t_0c43a3244a30d6 78-79
+ui/test/permissions-asks.test.ts
+  s_e827e256e15185::t_d1ab95551e95b0 44
+server/test/system-thermals.test.ts
+  s_e827e256e15185::t_7bec32039391fa 25-35
+  s_e827e256e15185::t_2588a15c3ec0b6 1-24
+widgets/cpu/index.html
+  s_e827e256e15185::t_89cb0613b25549 36,39-46,58-62
+server/src/app.ts
+  s_e827e256e15185::t_0c43a3244a30d6 55
+  s_e827e256e15185::t_4f6821d2602266 151-152
+ui/test/store.test.ts
+  s_e827e256e15185::t_b27d14bd9254c5 31
+ui/test/theme-repaint.test.ts
+  s_e827e256e15185::t_e5d69ecd60fc35 21
+server/src/config/schema.ts
+  s_e827e256e15185::t_0c43a3244a30d6 240-241,346
+ui/src/shared/locales/fr.ts
+  s_e827e256e15185::t_df3456f58e9f88 185-186
+ui/src/admin/ScreenInspector.vue
+  s_e827e256e15185::t_0c43a3244a30d6 65-67,269-272
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cffdd63b1ac44c0817ca96f86e856f5614674189",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
