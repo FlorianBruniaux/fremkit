@@ -158,8 +158,27 @@ describe('widget routes', () => {
     expect(res.statusCode).toBe(200)
     expect(res.headers['content-type']).toContain('text/html')
     expect(res.headers['content-security-policy']).toBe(WIDGET_CSP)
-    expect(res.body).toContain('<head><script src="/fremkit.js"></script>')
+    expect(res.body).toContain('<head><script>')
     expect(res.body).toContain('hi')
+  })
+  it('boots the widget bridge without a same-origin script request', async () => {
+    const res = await app.inject({ url: '/widgets/clock/index.html' })
+    const script = res.body.match(/<head><script>([\s\S]*?)<\/script>/)?.[1]
+    expect(script).toBeDefined()
+    const messages: unknown[] = []
+    const window: Record<string, unknown> = {
+      parent: { postMessage: (message: unknown) => messages.push(message) },
+      addEventListener: () => {},
+    }
+    const document = {
+      querySelector: () => null,
+      addEventListener: () => {},
+      createElement: () => ({ setAttribute: () => {} }),
+      head: { appendChild: () => {} },
+    }
+    new Function('window', 'document', script!)(window, document)
+    expect(messages).toContainEqual({ type: 'fremkit:hello' })
+    expect(window.Fremkit).toBeDefined()
   })
   it('sandboxes a widget however it is reached', async () => {
     // Opening a widget top-level, or as a second HTML file, or as Index.html on a
@@ -217,7 +236,7 @@ describe('widget routes', () => {
     const html = await app.inject({ url: '/widgets/synology/index.html' })
     expect(html.statusCode).toBe(200)
     expect(html.headers['content-security-policy']).toBe(WIDGET_CSP)
-    expect(html.body).toContain('<head><script src="/fremkit.js"></script>')
+    expect(html.body).toContain('<head><script>')
     expect((await app.inject({ url: '/widgets/synology/app.js' })).body).toBe('console.log(1)')
 
     const dotfile = await app.inject({ url: '/widgets/synology/.env' })

@@ -11,7 +11,6 @@ import { SDK_VERSION } from '../bridge/sdk.js'
 import { tr } from '../i18n.js'
 
 const BRIDGE_PATH = fileURLToPath(new URL('../bridge/fremkit.js', import.meta.url))
-const BRIDGE_TAG = '<script src="/fremkit.js"></script>'
 
 /**
  * What a widget may do, said in a header rather than left to the iframe.
@@ -43,13 +42,17 @@ export const WIDGET_CSP = [
   "base-uri 'none'",
 ].join('; ')
 
-export function injectBridge(html: string): string {
+export function injectBridge(html: string, bridge: string): string {
+  // Inline the trusted bridge: affected WebKit versions refuse a self-origin script inside
+  // an opaque sandbox. Keep the sandbox and CSP intact, and escape HTML script end tags.
+  const tag = '<script>' + bridge.replace(/<\/script/gi, '<\\/script') + '</script>'
+
   const i = html.search(/<head[^>]*>/i)
   if (i >= 0) {
     const end = html.indexOf('>', i) + 1
-    return html.slice(0, end) + BRIDGE_TAG + html.slice(end)
+    return html.slice(0, end) + tag + html.slice(end)
   }
-  return BRIDGE_TAG + html
+  return tag + html
 }
 
 export async function widgetRoutes(app: FastifyInstance, opts: { catalog: WidgetCatalog; store: ConfigStore }): Promise<void> {
@@ -119,7 +122,7 @@ export async function widgetRoutes(app: FastifyInstance, opts: { catalog: Widget
       return reply
         .type('text/html; charset=utf-8')
         .header('cache-control', 'no-store')
-        .send(injectBridge(html))
+        .send(injectBridge(html, bridge))
     }
     // A widget folder has no business serving its own dotfiles, whatever an author drops in it.
     // `folder` is the widget's own, so `root` is it: @fastify/static still refuses a path that

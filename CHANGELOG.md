@@ -10,6 +10,8 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 
 ## Unreleased
 
+- Start sandboxed widgets on WebKit versions that refuse a bridge script request from an opaque frame.
+
 ### Changed
 - **Clock in the compact bar.** Show an accent-coloured clock icon beside the time, matching the weather icon.
 - **Homey is a declared connection now.** The Homey connection type built into Fremkit is gone:
