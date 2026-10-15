@@ -1,7 +1,9 @@
-import { isAbsolute } from 'node:path'
+import { isAbsolute, join } from 'node:path'
+import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { buildApp } from './app.js'
 import { createYouTubeBridge } from './youtube/bridge.js'
+import { createSecretStore, defaultSecretsBackend, type SecretsBackend } from './secrets/index.js'
 import { providers } from './providers/index.js'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
@@ -46,7 +48,12 @@ if (requestedRegistry && !dev) {
   console.error(`fremkit: FREMKIT_DEV=1, installing widgets from ${requestedRegistry}`)
 }
 
-const youtube = await createYouTubeBridge({ dataDir, port: port + 1 })
+let secretBackend: SecretsBackend = defaultSecretsBackend()
+try {
+  const saved = JSON.parse(await readFile(join(dataDir, 'fremkit.json'), 'utf8'))
+  if (saved?.secrets?.backend === 'keychain' || saved?.secrets?.backend === 'file') secretBackend = saved.secrets.backend
+} catch { /* A new dashboard uses the platform default. */ }
+const youtube = await createYouTubeBridge({ dataDir, port: port + 1, secrets: createSecretStore(secretBackend, dataDir) })
 const app = await buildApp({
   dataDir,
   widgetsDir: `${root}/widgets`,
