@@ -1,0 +1,27 @@
+server/src/providers/mac-thermals.ts
+  s_e827e256e15185::t_a489f9ad0cba43 32
+server/test/mac-thermals.test.ts
+  s_e827e256e15185::t_0f24a55d5da16a 22
+server/test/system-uptime.test.ts
+  s_e827e256e15185::t_23bdfbbaa0a35b 3,15
+ui/src/shared/locales/en.ts
+  s_e827e256e15185::t_6f28b2007691f6 187-188
+ui/src/shared/locales/fr.ts
+  s_e827e256e15185::t_1b89af8875116d 187-188
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "94c42d4054688471cab7eb4b319ad8c6e2d2c23a",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
