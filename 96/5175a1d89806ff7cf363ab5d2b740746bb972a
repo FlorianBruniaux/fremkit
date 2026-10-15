@@ -1,0 +1,19 @@
+native/Sources/FremkitHelper/AppDelegate.swift
+  s_a40a3d06fae758::t_8e8188e32919db 14-15,60-63,89,195-197,223,231,284
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "965175a1d89806ff7cf363ab5d2b740746bb972a",
+  "prompts": {},
+  "sessions": {
+    "s_a40a3d06fae758": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13987-56fc-7163-a771-05b90c005330",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
