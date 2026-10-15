@@ -35,6 +35,8 @@ export function useSocket(): Socket {
       try { m = JSON.parse(ev.data) }
       catch { console.warn('socket: invalid JSON message', ev.data); return }
       if (m.type === 'data' && m.channel) { last.set(m.channel, m.data); subs.get(m.channel)?.forEach((cb) => cb(m.data)) }
+      // A provider can retire a channel while widgets remain subscribed. Do not replay its old snapshot.
+      else if (m.type === 'invalidate' && m.channel) last.delete(m.channel)
       else if (m.type === 'result' || m.type === 'error') {
         if (!m.id) return
         const p = pending.get(m.id)
@@ -45,6 +47,8 @@ export function useSocket(): Socket {
     }
     ws.onclose = () => {
       status.value = 'closed'
+      // Invalidation messages may have been missed; wait for fresh data after reconnect.
+      last.clear()
       for (const p of pending.values()) p.reject(new Error(t('socket.lost')))
       pending.clear()
       setTimeout(connect, retryMs)
