@@ -1,0 +1,46 @@
+server/test/codex-observations.test.ts
+  s_e827e256e15185::t_649d6a2a3e463d 7,30-79
+server/src/codex/snapshot.ts
+  s_e827e256e15185::t_2d7d011d8f950f 4-54,57-67
+  s_e827e256e15185::t_3a21284817804f 2-3
+server/src/codex/adapter.ts
+  s_e827e256e15185::t_d379f905fcc392 175-180,182-200,203-206,208-211,214-220,225-229,231-235
+  s_e827e256e15185::t_3a21284817804f 6,20-26
+  s_e827e256e15185::t_ebb3319d8de2e0 11-14,51-53,67-70,72-81,84-87,97-101,105-108,110-119,124-131,138-139,151-159,166-168
+server/src/providers/codex.ts
+  s_e827e256e15185::t_3a21284817804f 7-8,190-194,224
+  s_e827e256e15185::t_46ee545697c5e5 11-22,29-31,42-47,51-54,58-60,66-69,80-83,93-95,108-112,123-130,152-154,163-167,171-174
+  s_e827e256e15185::t_3d5bb4b44c5cf4 180-188,198-201,205-211,214-223
+ui/src/shared/locales/en.ts
+  s_e827e256e15185::t_a3f48a0e69bd7f 187-188
+ui/src/shared/locales/fr.ts
+  s_e827e256e15185::t_a3f48a0e69bd7f 187-188
+ui/src/admin/ScreenInspector.vue
+  s_e827e256e15185::t_cc0aa4377529c5 65-67,282,289-297,305-306
+server/src/codex/sources.ts
+  s_e827e256e15185::t_3a21284817804f 1-9
+server/src/config/schema.ts
+  s_e827e256e15185::t_3a21284817804f 2
+server/test/codex-provider.test.ts
+  s_e827e256e15185::t_fe881c9c3aaaa2 24-35
+CHANGELOG.md
+  s_e827e256e15185::t_9f09740d15e5bb 14
+docs/codex.md
+  s_e827e256e15185::t_6cb1a886b5425e 9,40,46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a23903b107fa97559773fcab3bd340b4cc2dbb2d",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
