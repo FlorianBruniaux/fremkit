@@ -1,0 +1,28 @@
+native/Sources/FremkitHelper/AppDelegate.swift
+  s_e827e256e15185::t_1813a5f001d4e2 185,189-193,197,216-219,253,277
+native/Sources/FremkitCore/L10n.swift
+  s_e827e256e15185::t_95c8a20fd23590 105-106,158-159
+native/Sources/FremkitHelper/KioskWindow.swift
+  s_e827e256e15185::t_8d3c1402da4540 150-171
+  s_e827e256e15185::t_2b2e3e6173e680 172
+CHANGELOG.md
+  s_e827e256e15185::t_5fe99609525d92 28
+README.md
+  s_e827e256e15185::t_9170e441238105 219-221
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cebab450a47c66ead9d7c5ac35c66eb22124b158",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
