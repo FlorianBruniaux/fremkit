@@ -14,6 +14,8 @@ export interface ConnectionManagerDeps {
 /** Persisted absence is the safe recovery state while a form writes several secret items. */
 export interface ConnectionConfigTransaction {
   quarantine(): Promise<unknown>
+  /** Recovery may need to quarantine a row whose ownership changed during a secret write. */
+  quarantineRollback?(): Promise<unknown>
   commit(): Promise<unknown>
   rollback(): Promise<unknown>
 }
@@ -118,10 +120,44 @@ export class ConnectionManager {
     return this.enqueue(() => revision === this.syncRevision ? this.syncNow(snapshot) : Promise.resolve())
   }
 
+  /** Opaque identity, distinct after every retirement including A-B-A edits. */
+  captureGeneration(id: string): AbortSignal {
+    const generation = this.active.get(id)
+    if (!generation || generation.abort.signal.aborted) throw new Error('connection retired')
+    return generation.abort.signal
+  }
+
+  /** An explicitly submitted OAuth bundle can repair a suspended generation. */
+  captureGenerationForRepair(id: string): AbortSignal | undefined {
+    const generation = this.active.get(id)
+    if (generation && !generation.abort.signal.aborted) return generation.abort.signal
+    if (this.failedSecrets.has(id)) return undefined
+    throw new Error('connection retired')
+  }
+
+  /** OAuth uses the same durable quarantine and rollback as ordinary connection writes. */
+  updateSecretsIfCurrent(connection: Connection, expected: AbortSignal | undefined, submitted: Record<string, string>,
+    config: ConnectionConfigTransaction, isCurrent: () => boolean): Promise<void> {
+    const ownsGeneration = (afterRetirement: boolean) => {
+      const active = this.active.get(connection.id)?.abort.signal
+      return expected
+        ? active === expected && (afterRetirement || !expected.aborted)
+        : this.failedSecrets.has(connection.id) && (!active || active.aborted)
+    }
+    return this.updateSecrets(connection, submitted, config, () => {
+      if (!ownsGeneration(false) || !isCurrent()) throw new Error('connection retired')
+    }, () => {
+      // This transaction intentionally retired its own generation. A repair remains authorized
+      // only while the account is still suspended and the same consent attempt owns the binding.
+      if (!ownsGeneration(true) || !isCurrent()) throw new Error('connection retired')
+    })
+  }
+
   /** Route writes share the mutation queue with provider writes and generation replacement. */
-  async updateSecrets(connection: Connection, submitted: Record<string, string>, config?: ConnectionConfigTransaction): Promise<void> {
+  async updateSecrets(connection: Connection, submitted: Record<string, string>, config?: ConnectionConfigTransaction, guard?: () => void, mutationGuard?: () => void): Promise<void> {
     const values = { ...submitted }
     return this.enqueue(async () => {
+      guard?.()
       const type = this.deps.types.get(connection.type)
       if (!type || Object.keys(values).some((key) => !this.deps.types.secretKeys(type).includes(key))) {
         throw new Error('unknown connection secret')
@@ -131,21 +167,26 @@ export class ConnectionManager {
       }
       if (!Object.keys(values).length && !config) return
       const generation = this.active.get(connection.id)
-      generation?.abort.abort()
-      for (const channel of generation?.channels ?? []) this.deps.registry.suspend(channel)
       const original = new Map<string, string | null>()
       for (const key of Object.keys(values)) original.set(key, await this.deps.secrets.get(connection.id + '/' + key))
+      guard?.()
+      generation?.abort.abort()
+      for (const channel of generation?.channels ?? []) this.deps.registry.suspend(channel)
       // Persist absence before the first secret mutation, including in the config backup.
       // A process restarted halfway through the batch therefore cannot create a provider.
       let secretMutationStarted = false
       try {
+        mutationGuard?.()
         await config?.quarantine()
+        mutationGuard?.()
         for (const [key, value] of Object.entries(values)) {
           secretMutationStarted = true
           if (value === '') await this.deps.secrets.delete(connection.id + '/' + key)
           else await this.deps.secrets.set(connection.id + '/' + key, value)
+          mutationGuard?.()
         }
         await config?.commit()
+        mutationGuard?.()
       } catch (error) {
         if (!secretMutationStarted) {
           try { await config?.rollback() }
@@ -157,7 +198,7 @@ export class ConnectionManager {
           try {
             // Commit may have persisted before a config listener failed. Re-establish durable
             // absence before restoring any old secret, including during an interrupted rollback.
-            await config.quarantine()
+            await (config.quarantineRollback ? config.quarantineRollback() : config.quarantine())
             for (const [key, value] of original) {
               if (value === null) await this.deps.secrets.delete(connection.id + '/' + key)
               else await this.deps.secrets.set(connection.id + '/' + key, value)
@@ -166,7 +207,7 @@ export class ConnectionManager {
             this.failedSecrets.delete(connection.id)
           } catch {
             // Never restore a binding to secrets whose rollback could not be confirmed.
-            await config.quarantine()
+            await (config.quarantineRollback ? config.quarantineRollback() : config.quarantine())
           }
         }
         throw error

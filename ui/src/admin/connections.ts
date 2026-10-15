@@ -164,3 +164,23 @@ export function useConnectionsStore(): ConnectionsStore {
   if (!singleton) singleton = createConnectionsStore({ api: realApi })
   return singleton
 }
+
+export interface GoogleAccountStatus {
+  state: 'disconnected' | 'pending' | 'connected' | 'partial' | 'error'
+  error?: string
+  email?: string
+  services?: string[]
+  requestedScopes?: string[]
+}
+/** The credential bundle never crosses this API. Only the initial desktop secret is submitted. */
+export async function googleAccountRequest(id: string, action?: 'connect' | 'cancel' | 'disconnect', clientSecret?: string): Promise<GoogleAccountStatus> {
+  try {
+    const response = await fetch('/api/connections/' + encodeURIComponent(id) + '/google' + (action ? '/' + action : ''), {
+      method: action ? 'POST' : 'GET',
+      ...(action ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(action === 'connect' && clientSecret ? { clientSecret } : {}) } : {}),
+    })
+    const value = await response.json() as GoogleAccountStatus
+    if (!response.ok) return { state: 'error', error: value.error ?? 'offline' }
+    return value
+  } catch { return { state: 'error', error: 'offline' } }
+}

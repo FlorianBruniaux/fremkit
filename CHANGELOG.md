@@ -11,6 +11,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 ## Unreleased
 
 ### Changed
+- Add multi-account Google desktop OAuth connections with separate Gmail and Calendar consent, read-only data providers, partial authorization feedback and local secret storage. Gmail and Calendar opening actions use the verified account email in the browser URL; account selection still needs a real multi-account browser check.
 - Support explicit service channels for multi-service accounts, with generation-safe credential replacement and widget authorization.
 - Account service widgets require an explicit account selection for account channels. Failed credential refreshes and quarantined accounts keep their subscribers ready for recovery; a concurrent layout save cannot restore a quarantined binding; and a failed quarantine restores the previous binding before secrets are changed. A command cancelled by an account or permission change now reports the cancellation to its widget.
 - **Homey is a declared connection now.** The Homey connection type built into Fremkit is gone:
@@ -39,6 +40,8 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
   sessions after 30 minutes (on by default), and group the board by application.
 
 ### Fixed
+- A dashboard layout save during Google sign-in no longer removes the account. Reconnecting can repair an account suspended after a temporary credential-store failure.
+- Cancelling Google consent while its connection is being quarantined restores the previous account without needing a new sign-in.
 - Shortcut buttons draw the real icon of an application that is not in the Dock again. The widget
   read the list of installed applications itself, which the `connect-src 'none'` its frame is
   served with has always refused, so anything the user had never docked fell back to the kind's
