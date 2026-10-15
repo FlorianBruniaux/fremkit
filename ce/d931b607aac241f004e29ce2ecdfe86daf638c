@@ -1,0 +1,25 @@
+widgets/clock/index.html
+  s_e827e256e15185::t_5b845537c958ac 40-41
+CHANGELOG.md
+  s_e827e256e15185::t_b2144c8fc4301a 14
+widgets/claude-sessions/index.html
+  s_e827e256e15185::t_da7d14bfa4343d 56
+widgets/claude-sessions/manifest.json
+  s_e827e256e15185::t_3847250e9e7b33 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ced931b607aac241f004e29ce2ecdfe86daf638c",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
