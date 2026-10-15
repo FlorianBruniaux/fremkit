@@ -54,6 +54,7 @@ import { backupRoutes } from './backup/routes.js'
 import { bambuRoutes } from './bambu/routes.js'
 import { createShortcutsProvider } from './providers/shortcuts.js'
 import { createServiceStatusProvider } from './providers/service-status.js'
+import { createSystemProvider } from './providers/system.js'
 import { findInstance, findInstances } from './config/instances.js'
 import { migrateHomeySecret } from './config/migrate.js'
 import { BYTES_CSP, isByteRoute } from './http/headers.js'
@@ -149,6 +150,8 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   )
   hub = new Hub(registry)
   for (const p of opts.providers ?? []) registry.register(p)
+  // Consent lives in the config store, so this provider is registered beside the Claude providers.
+  registry.register(createSystemProvider({ macmonTemperatureEnabled: () => store.get().privacy.macmonTemperature }))
   registry.register(createClaudeSessionsProvider(tracker))
   registry.register(createClaudeUsageProvider(usage))
   registry.register(createClaudeAccountProvider({

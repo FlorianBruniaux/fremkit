@@ -163,7 +163,7 @@ Each `cities` item: `label` (string), `timezone` (timezone), `hour12` (boolean, 
 
 ## cpu
 
-*CPU* — load and, when the machine reports one, temperature.
+*CPU* — load and, when the machine reports one, temperature. On Apple Silicon, install the third-party open-source tool with `brew install macmon`, then enable **Read the CPU temperature with macmon** in Screen privacy settings. Fremkit does not install macmon. After opt-in, it runs only `/opt/homebrew/bin/macmon` or `/usr/local/bin/macmon` locally every 10 seconds, returns the last reading without delaying CPU load, and falls back to the system value if no recent macmon sample is available.
 
 Minimum size 8 × 4, default 8 × 4. Compact width 4 cells.
 

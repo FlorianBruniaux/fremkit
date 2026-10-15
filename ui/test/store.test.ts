@@ -28,7 +28,7 @@ function config(): Config {
     display: { cols: 64, rows: 16, cell: 40, autoCycleSeconds: 0 },
     connections: [],
     secrets: { backend: 'file' },
-    privacy: { claudeAccountUsage: false, showAccountEmail: false, codexAccount: false, codexHistorySources: [] },
+    privacy: { claudeAccountUsage: false, showAccountEmail: false, codexAccount: false, codexHistorySources: [], macmonTemperature: false },
     pages: [{ id: 'home', name: 'Accueil', widgets: [
       { instanceId: 'clock-1', widgetId: 'clock', x: 0, y: 0, w: 16, h: 4, showTitle: true, settings: {} },
     ] }],

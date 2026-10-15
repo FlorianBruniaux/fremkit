@@ -197,6 +197,8 @@ export const en: Record<string, string> = {
   'admin.inspector.screen.codexSource.subAgentOther': 'Other subagents',
   'admin.inspector.screen.codexSource.unknown': 'Unknown source',
   'admin.inspector.screen.privacy': 'Privacy',
+  'admin.inspector.screen.macmonTemperature': 'Read the CPU temperature with macmon',
+  'admin.inspector.screen.macmonTemperature.hint': 'Off by default. macmon is a third-party open-source tool that Fremkit does not install. Install it yourself with brew install macmon. On Apple Silicon, the server runs only /opt/homebrew/bin/macmon or /usr/local/bin/macmon every 10 seconds for one sample. The reading stays on this Mac. If unavailable, Fremkit shows the system temperature when known.',
   'admin.inspector.screen.claudeUsage': 'Read the Claude account usage',
   'admin.inspector.screen.claudeUsage.hint': 'Off for a new install. A dashboard that already showed the Claude widget before this setting existed keeps it on, so the gauges do not go blank on an upgrade. Once on, the server reads Claude Code’s OAuth token from the “Claude Code-credentials” keychain item and presents it to api.anthropic.com to get the account’s usage — nothing is sent anywhere else, and the token is never stored or logged. The endpoint is not documented by Anthropic and may disappear.',
   'admin.inspector.screen.accountEmail': 'Show the account e-mail address',

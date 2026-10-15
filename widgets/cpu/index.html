@@ -33,10 +33,17 @@
   /* Right cluster: the bar pushes the iframe against the dots, so its content hugs that edge too. */
   html.compact.slot-right .cwrap{align-items:flex-end;text-align:right}
   html.compact.slot-right .cbar{align-self:stretch}
-</style></head><body><div class="wrap"><div class="big"><span id="load">--</span>%<span class="muted" id="temp" style="font-size:20px;margin-left:12px"></span></div><div class="bar"><i id="bar"></i></div></div>
+</style></head><body><div class="wrap"><div class="big"><span id="load">--</span>%<span class="muted" id="temp" style="font-size:20px;margin-left:12px"></span></div><div class="bar"><i id="bar"></i></div><div class="note" id="tempNote" hidden></div></div>
 <div class="cwrap"><div class="cline" id="cline">CPU --</div><div class="cbar"><i id="cbar"></i></div></div>
 <script>
-  var L = { compact: { fr: 'CPU {n} %', en: 'CPU {n}%' } }
+  var L = {
+    compact: { fr: 'CPU {n} %', en: 'CPU {n}%' },
+    missing: { fr: 'macmon absent : brew install macmon', en: 'macmon missing: brew install macmon' },
+    unavailable: { fr: 'macmon indisponible', en: 'macmon unavailable' },
+    invalid: { fr: 'Mesure macmon invalide', en: 'Invalid macmon reading' },
+    unsupported: { fr: 'macmon : Apple Silicon requis', en: 'macmon: Apple Silicon required' },
+    fallback: { fr: 'Température système', en: 'System temperature' }
+  }
   Fremkit.whenReady(function () {
     var last = null
     /** The bar's height drives every compact size; the full layout ignores it. */
@@ -48,6 +55,11 @@
       document.getElementById('load').textContent = load
       document.getElementById('bar').style.width = d.cpu.load + '%'
       document.getElementById('temp').textContent = (Fremkit.settings.showTemp && d.cpu.temp != null) ? d.cpu.temp + '°C' : ''
+      var note = document.getElementById('tempNote')
+      var errors = { unconfigured: L.missing, offline: L.unavailable, invalid: L.invalid, unsupported: L.unsupported }
+      note.hidden = !Fremkit.settings.showTemp || !d.cpu.tempError
+      if (!note.hidden) note.textContent = Fremkit.t(errors[d.cpu.tempError] || L.unavailable) +
+        (d.cpu.tempSource === 'system' ? ' · ' + Fremkit.t(L.fallback) : '')
       document.getElementById('cline').textContent = Fremkit.t(L.compact, { n: load })
       document.getElementById('cbar').style.width = d.cpu.load + '%'
     }

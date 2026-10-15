@@ -73,6 +73,9 @@ function setCodexSource(source: CodexSource, on: boolean): void {
     ? [...new Set([...c.privacy.codexHistorySources, source])]
     : c.privacy.codexHistorySources.filter(value => value !== source) })
 }
+function setMacmonTemperature(on: boolean): void {
+  s.apply((c) => { c.privacy.macmonTemperature = on })
+}
 /**
  * Off, the server leaves the account e-mail out of every snapshot it publishes; this box does
  * not hide it in a widget, it decides whether any widget is sent it at all.
@@ -306,6 +309,10 @@ function setBackground(patch: Partial<Background>): void {
         @update:model-value="setCodexSource(source, $event)" />
     </div>
   </details>
+  <BaseCheckbox :model-value="privacy.macmonTemperature"
+    :label="t('admin.inspector.screen.macmonTemperature')"
+    @update:model-value="setMacmonTemperature($event)" />
+  <p class="ro">{{ t('admin.inspector.screen.macmonTemperature.hint') }}</p>
   </BaseSection>
 </template>
 
