@@ -121,6 +121,10 @@ describe('YouTube bridge boundaries', () => {
       }))
       time = 31001
       await Promise.race([detached, new Promise<never>((_, reject) => setTimeout(() => reject(Error('receiver did not expire')), 500))])
+      socket.send(JSON.stringify({ type: 'offer', sessionId, receiverId, sdp: 'v=0\r\n' }))
+      await new Promise(resolve => setTimeout(resolve, 20))
+      expect(socket.readyState).toBe(1)
+      expect(await b.provider.commands!.view({ instanceId: 'video', receiverId: '00000000-0000-4000-8000-000000000003', sessionId }, { loopback: true })).toEqual({ ok: true })
       expect(await b.provider.commands!.control({ instanceId: 'video', sessionId, action: 'stop' }, { loopback: true })).toEqual({ ok: true })
       socket.send(JSON.stringify({ type: 'metadata', sessionId, meta }))
       await new Promise(resolve => setTimeout(resolve, 20))

@@ -92,7 +92,7 @@ export async function createYouTubeBridge(options:{dataDir:string;port:number;se
     if(socket!==sender){socket.close(1008);return}
     if(data.type==='started'){const p=z.object({type:z.literal('started'),sessionId:Id,meta:Meta}).strict().parse(data);clear();recentlyStopped=null;sessionId=p.sessionId;meta=p.meta;updatedAt=now()}
     else if(data.type==='metadata'){const p=z.object({type:z.literal('metadata'),sessionId:Id,meta:Meta}).strict().parse(data);if(p.sessionId!==sessionId){if(recentlyStopped?.id===p.sessionId&&now()<=recentlyStopped.expires)return;throw Error('Session mismatch')}meta=p.meta;updatedAt=now()}
-    else if(data.type==='offer'){const p=z.object({type:z.literal('offer'),sessionId:Id,receiverId:Id,sdp:Sdp}).strict().parse(data),r=receivers.get(p.receiverId);if(p.sessionId!==sessionId||!r){if(recentlyStopped?.id===p.sessionId&&now()<=recentlyStopped.expires)return;throw Error('Receiver missing')}r.offer=p.sdp}
+    else if(data.type==='offer'){const p=z.object({type:z.literal('offer'),sessionId:Id,receiverId:Id,sdp:Sdp}).strict().parse(data),r=receivers.get(p.receiverId);if(p.sessionId!==sessionId){if(recentlyStopped?.id===p.sessionId&&now()<=recentlyStopped.expires)return;throw Error('Session mismatch')}if(!r)return;r.offer=p.sdp}
     else if(data.type==='stopped'){z.object({type:z.literal('stopped')}).strict().parse(data);rememberStop();clear()}
     else throw Error('Unknown message')
    }catch{if(sender===socket){sender=null;clear()}socket.close(1008)}
