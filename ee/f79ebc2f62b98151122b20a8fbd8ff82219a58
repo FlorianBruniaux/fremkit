@@ -1,0 +1,25 @@
+server/src/providers/github.ts
+  s_e827e256e15185::t_33c36ffae20d19 361,610,621-622
+server/test/github.test.ts
+  s_e827e256e15185::t_26a92b7d4dbd73 553,558,562,565-571
+  s_e827e256e15185::t_e11d2001a1f45b 17
+  s_e827e256e15185::t_c3ebeb0e058b44 572
+CHANGELOG.md
+  s_e827e256e15185::t_7c8fd5302d2f4e 26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "eef79ebc2f62b98151122b20a8fbd8ff82219a58",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
