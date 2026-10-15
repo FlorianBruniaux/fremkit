@@ -63,6 +63,13 @@ function setClaudeAccountUsage(on: boolean): void {
   s.apply((c) => { c.privacy.claudeAccountUsage = on })
 }
 /**
+ * Off, the server leaves the account e-mail out of every snapshot it publishes; this box does
+ * not hide it in a widget, it decides whether any widget is sent it at all.
+ */
+function setShowAccountEmail(on: boolean): void {
+  s.apply((c) => { c.privacy.showAccountEmail = on })
+}
+/**
  * Backup and restore.
  *
  * The archive holds the config and the background library and never a secret: those live in the
@@ -263,6 +270,10 @@ function setBackground(patch: Partial<Background>): void {
     :label="t('admin.inspector.screen.claudeUsage')"
     @update:model-value="setClaudeAccountUsage($event)" />
   <p class="ro">{{ t('admin.inspector.screen.claudeUsage.hint') }}</p>
+  <BaseCheckbox :model-value="privacy.showAccountEmail"
+    :label="t('admin.inspector.screen.accountEmail')"
+    @update:model-value="setShowAccountEmail($event)" />
+  <p class="ro">{{ t('admin.inspector.screen.accountEmail.hint') }}</p>
   </BaseSection>
 </template>
 

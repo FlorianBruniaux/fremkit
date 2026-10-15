@@ -184,6 +184,8 @@ export const en: Record<string, string> = {
   'admin.inspector.screen.privacy': 'Privacy',
   'admin.inspector.screen.claudeUsage': 'Read the Claude account usage',
   'admin.inspector.screen.claudeUsage.hint': 'Off for a new install. A dashboard that already showed the Claude widget before this setting existed keeps it on, so the gauges do not go blank on an upgrade. Once on, the server reads Claude Code’s OAuth token from the “Claude Code-credentials” keychain item and presents it to api.anthropic.com to get the account’s usage — nothing is sent anywhere else, and the token is never stored or logged. The endpoint is not documented by Anthropic and may disappear.',
+  'admin.inspector.screen.accountEmail': 'Show the account e-mail address',
+  'admin.inspector.screen.accountEmail.hint': 'Off by default. Widgets that show an account then get the plan and the sign-in method, never the e-mail address: the server leaves it out of what it sends. Once on, the address is sent to every widget that reads an account channel — a widget installed from the marketplace included — and appears on the screen.',
   'admin.inspector.screen.navWidgets': 'Navigation bar widgets',
   'admin.inspector.screen.navWidgets.hint': 'Drawn on either side of the dots, in this order.',
   'admin.inspector.screen.navWidgets.slot.left': 'Left',
