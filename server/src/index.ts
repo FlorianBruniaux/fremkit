@@ -1,6 +1,7 @@
 import { isAbsolute } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildApp } from './app.js'
+import { createYouTubeBridge } from './youtube/bridge.js'
 import { providers } from './providers/index.js'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
@@ -45,14 +46,18 @@ if (requestedRegistry && !dev) {
   console.error(`fremkit: FREMKIT_DEV=1, installing widgets from ${requestedRegistry}`)
 }
 
+const youtube = await createYouTubeBridge({ dataDir, port: port + 1 })
 const app = await buildApp({
   dataDir,
   widgetsDir: `${root}/widgets`,
   ...(registryUrl ? { registryUrl, registryDev: true } : {}),
   themesDir: `${root}/themes`,
   uiDist: `${root}/ui/dist`,
-  providers,
+  providers: [...providers, youtube.provider],
   logger: true,
   port,
 })
+app.addHook('onClose', async () => { await youtube.app.close() })
 await app.listen({ port, host: '127.0.0.1' })
+try { await youtube.app.listen({ port: port + 1, host: '127.0.0.1' }) }
+catch { app.log.warn('YouTube extension bridge unavailable; other providers remain available') }

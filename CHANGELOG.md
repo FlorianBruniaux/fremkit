@@ -11,6 +11,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 ## Unreleased
 
 ### Changed
+- Add a local, paired YouTube extension bridge for displaying the chosen Chrome tab on XENEON. It binds to loopback and does not route media through the server.
 - **Clock in the compact bar.** Show an accent-coloured clock icon beside the time, matching the weather icon.
 - **Homey is a declared connection now.** The Homey connection type built into Fremkit is gone:
   both Homey widgets bring their own, so one API key serves the two of them. An existing Homey
