@@ -290,7 +290,7 @@ export const navWidgetsIn = (display: Display, slot: NavSlot): NavWidget[] =>
 
 /** A sanity ceiling on the bar's widget count; mirrors the server's `MAX_NAV_WIDGETS`. */
 export const MAX_NAV_WIDGETS = 12
-/** The centre is capped at ten cells for either navigation style. */
+/** Conservative ten-cell allowance for page navigation when adding compact bar widgets. */
 export const NAV_CENTRE_RESERVE_CELLS = 10
 /**
  * The two settings that make a compact widget need more room than its manifest asks for, and
@@ -317,7 +317,7 @@ export function navCellsUsed(display: Display, manifests: Record<string, WidgetM
   return navWidgetsOf(display).reduce((sum, w) => sum + compactWidth(manifests[w.widgetId], mergeSettings(manifests[w.widgetId], w.settings)), 0)
 }
 
-/** Whether one more compact widget of that width still leaves the dots their room. */
+/** Whether one more compact widget of that width stays within the bar's widget budget. */
 export function navHasRoom(display: Display, manifests: Record<string, WidgetManifest>, width: number): boolean {
   return navCellsUsed(display, manifests) + width <= display.cols - NAV_CENTRE_RESERVE_CELLS
 }

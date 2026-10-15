@@ -271,11 +271,11 @@ function scrollNames(direction: -1 | 1): void {
   const el = names.value
   if (!el) return
   cancelNavigation()
-  const edge = direction === 1 ? el.scrollLeft + el.clientWidth : el.scrollLeft
+  const edge = direction === 1 ? el.scrollLeft + el.clientWidth : Math.max(0, el.scrollLeft - el.clientWidth)
   const buttons = [...el.children] as HTMLElement[]
   const target = direction === 1
     ? buttons.find(button => button.offsetLeft - el.offsetLeft + button.offsetWidth > edge + 1)
-    : buttons.reverse().find(button => button.offsetLeft - el.offsetLeft < edge - 1)
+    : buttons.find(button => button.offsetLeft - el.offsetLeft >= edge - 1)
   if (target) {
     const left = target.offsetLeft - el.offsetLeft
     el.scrollLeft = Math.max(0, Math.min(el.scrollWidth - el.clientWidth, left))
@@ -332,8 +332,8 @@ const style = computed<Record<string, string | number>>(() => {
   <nav :style="style" :class="{ named: (navStyle ?? DEFAULT_NAV_STYLE) === 'names' }"
     @pointerdown="s.down" @pointerup="s.up" @pointercancel="cancelNavigation" @wheel="s.wheel">
     <!--
-      Dots use equal outside columns to stay centred on the screen. Named pages give the clusters
-      their natural widths and use the remaining centre width. Each
+      Equal outside columns keep page navigation centred. Named pages also reserve each cluster's
+      natural width before the centre takes the remaining space. Each
       cluster sits above the bar's own swipe listeners; a gesture on the rest of the bar still
       reaches them, and one inside a widget is the widget's own.
     -->
@@ -378,7 +378,7 @@ const style = computed<Record<string, string | number>>(() => {
 nav { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); grid-template-areas: "left pages right";
   align-items: center; box-sizing: border-box; background: var(--nav-bg, var(--nav-surface, #0b0d10)); border-top: 1px solid var(--nav-border, var(--nav-outline, #1f2329));
   touch-action: none; user-select: none; }
-nav.named { grid-template-columns: max-content minmax(0, 1fr) max-content; }
+nav.named { grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr); }
 /* Dots retain their natural width; named pages use a larger, bounded centre. */
 .page-navigation { grid-area: pages; display: flex; height: 100%; width: min(100%, calc(var(--page-count) * 64px * var(--nav-scale, 1)));
   min-width: 0; justify-self: center; }
