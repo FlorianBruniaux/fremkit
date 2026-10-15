@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { uptime } from 'node:os'
-import { systemProvider } from '../src/providers/system.js'
+import { createSystemProvider } from '../src/providers/system.js'
 
 vi.mock('node:os', () => ({ uptime: vi.fn() }))
 vi.mock('systeminformation', () => ({ default: {
@@ -12,6 +12,7 @@ vi.mock('systeminformation', () => ({ default: {
 } }))
 
 describe('OS uptime in the system snapshot', () => {
+  const systemProvider = createSystemProvider()
   beforeEach(() => vi.mocked(uptime).mockReset())
 
   it.each([0, 90061.9])('publishes system uptime %s seconds rather than process uptime', async (seconds) => {

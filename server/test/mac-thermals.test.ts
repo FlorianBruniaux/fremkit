@@ -19,7 +19,7 @@ describe('measured Apple Silicon CPU temperature', () => {
     let clock = now
     const run = vi.fn(async () => reading(67, clock))
     const read = createMacTemperatureReader({ platform: 'darwin', arch: 'arm64', now: () => clock, run })
-    expect(read().cpuCelsius).toBeNull()
+    expect(read()).toMatchObject({ cpuCelsius: null, error: null })
     expect(read().cpuCelsius).toBeNull()
     await flush()
     expect(read().cpuCelsius).toBe(67)

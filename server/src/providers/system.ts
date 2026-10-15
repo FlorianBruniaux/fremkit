@@ -87,5 +87,3 @@ export function createSystemProvider(options: {
     },
   }
 }
-
-export const systemProvider = createSystemProvider()

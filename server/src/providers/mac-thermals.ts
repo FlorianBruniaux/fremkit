@@ -29,7 +29,7 @@ export function createMacTemperatureReader(options: { run?: Runner; now?: () => 
   const execute = options.run ?? run
   const now = options.now ?? Date.now
   const supported = (options.platform ?? process.platform) === 'darwin' && (options.arch ?? process.arch) === 'arm64'
-  let cached = unknown('unconfigured')
+  let cached = unknown(null)
   let checkedAt = -Infinity
   let pending: Promise<void> | null = null
   function failed(error: MacTemperature['error']): void {
