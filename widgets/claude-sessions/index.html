@@ -17,6 +17,7 @@
   /* A bar painted in the accent vanishes when the body *is* the accent, so it flips to the text colour. */
   html.on-light .bar,html.accent-fill .bar{background:rgba(128,128,128,.35)}
   html.accent-fill .bar>i{background:var(--on-surface,#0b0d10)}
+.service-heading{display:flex;align-items:center;gap:8px;flex:0 0 auto;font-size:calc(14px * var(--text-scale,1));font-weight:600;color:var(--text,#e6e8eb)}.service-icon{width:24px;height:24px;flex:0 0 auto;color:var(--accent,#d9b36a)}html.on-light .service-heading,html.on-light .service-icon,html.accent-fill .service-icon{color:var(--on-surface,#0b0d10)}html.compact .service-heading{display:none}
 </style>
 <style>
   .wrap{justify-content:flex-start;gap:8px}
@@ -53,7 +54,7 @@
   .q{font-size:calc(14px * var(--text-scale, 1));color:var(--text, #e6e8eb);white-space:normal}.q b{display:block;font-size:calc(12px * var(--text-scale, 1));color:#f0a020;text-transform:uppercase;letter-spacing:.06em}.q ul{margin:2px 0 0 16px;padding:0;color:#c3c8d0;font-size:calc(13px * var(--text-scale, 1))}
 </style>
 </head>
-<body><div class="wrap"><div class="hdr"><span class="note" id="count"></span><span class="stats" id="stats"></span></div><div class="cards" id="cards"></div></div>
+<body><div class="wrap"><div class="service-heading"><svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2v20M2 12h20M5 5l14 14M5 19L19 5M8 3l8 18M3 8l18 8M3 16l18-8M8 21l8-18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>Claude</span></div><div class="hdr"><span class="note" id="count"></span><span class="stats" id="stats"></span></div><div class="cards" id="cards"></div></div>
 <script>
   var L = {
     working: { fr: 'en travail', en: 'working' },
