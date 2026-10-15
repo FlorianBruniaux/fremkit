@@ -1,0 +1,21 @@
+CHANGELOG.md
+  s_e827e256e15185::t_e46acc43399427 14
+docs/google-services.md
+  s_e827e256e15185::t_f70ad72bf61020 59-60,63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "022912b7f27a96d07c4df0865d06ec944967146e",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
