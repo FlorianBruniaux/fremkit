@@ -1,0 +1,23 @@
+CHANGELOG.md
+  s_e827e256e15185::t_885d8daa7930ed 42
+server/src/ws/hub.ts
+  s_e827e256e15185::t_6bbaa31b854487 50,61,65-68
+server/test/hub.test.ts
+  s_e827e256e15185::t_a8585e2e6ac0c8 106-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1d77b382a9e2b649d4a8ef936e26af97da20d61a",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
