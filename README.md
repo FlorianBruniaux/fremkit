@@ -46,6 +46,7 @@ The name is the Fremen survival kit from *Dune*.
   and the widgets all wear the one you pick.
 - **Two languages** — the whole interface is French or English, switched in the admin.
 - **A widget SDK** that is a folder, a JSON file and an HTML page.
+- **Optional local operations** show Docker containers and Ollama/MLX models through registry widgets. See [docs/local-operations.md](docs/local-operations.md).
 
 ## Requirements
 
@@ -284,8 +285,6 @@ What the installer checks, what a consent record is and how an update asks again
 
 How to obtain each credential, what is stored where, and what is never logged:
 **[docs/connections.md](docs/connections.md)**.
-
-Optional local Docker and model observations are documented in [docs/local-operations.md](docs/local-operations.md). Their widgets are distributed through the registry.
 
 ## Backup
 
