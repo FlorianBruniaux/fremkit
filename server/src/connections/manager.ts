@@ -77,7 +77,9 @@ export class ConnectionManager {
       if (preserveSubscribers) this.deps.registry.suspend(channel)
       else this.deps.registry.unregister(channel)
     }
-    this.active.delete(id)
+    // A suspended generation still owns its registered channels. A later removal must
+    // unregister them even if credential repair never succeeds.
+    if (!preserveSubscribers) this.active.delete(id)
   }
 
   private async forgetNow(connection: Connection): Promise<void> {

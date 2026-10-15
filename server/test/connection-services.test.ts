@@ -208,6 +208,16 @@ describe('account credential concurrency', () => {
     providers.stop()
   })
 
+  it('unregisters suspended channels when their account is deleted after a failed refresh', async () => {
+    const { manager, contexts, providers, secrets } = setup()
+    await manager.sync([connection()])
+    secrets.set = async () => { throw new Error('store unavailable') }
+    await expect(contexts[0].account.refresh(0, async () => ({ token: 'renewed' }))).rejects.toThrow('store unavailable')
+    expect(providers.channels()).toEqual(['gmail:account-a', 'google-calendar:account-a'])
+    await manager.removeConnection(async () => connection(), () => [])
+    expect(providers.channels()).toEqual([])
+  })
+
   it('restores the previous binding if quarantine fails before any secret write', async () => {
     const { manager, providers, values } = setup()
     const original = connection()

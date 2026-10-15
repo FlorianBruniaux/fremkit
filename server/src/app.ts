@@ -207,7 +207,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     hub.broadcast('config', cfg)
     // Fire and forget: a failed sync must not break the save that triggered it.
     void connections.sync(cfg.connections)
-      .then(() => retainCameras(cfg))
+      .then(() => retainCameras(store.get()))
       .catch((err: Error) => app.log.warn({ err }, 'connection sync failed'))
   })
 
@@ -267,7 +267,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     secrets,
     // A restored config brings its own connections; the manager rebuilds their providers, which
     // then report `unauthorized` until the secrets are typed back in.
-    onRestored: async (config) => { await connections.sync(config.connections); retainCameras(config) },
+    onRestored: async (config) => { await connections.sync(config.connections); retainCameras(store.get()) },
   })
   await app.register(faviconRoutes, { dir: join(opts.dataDir, 'icons', 'favicons') })
   await app.register(claudeRoutes, { tracker, usage })
