@@ -1,0 +1,73 @@
+CHANGELOG.md
+  s_ff3dff62f4ff19::t_bd0b0b4667afa7 14
+docs/account-services.md
+  s_ff3dff62f4ff19::t_950d2843fa0e35 1-7
+server/src/connections/manager.ts
+  s_e827e256e15185::t_01234ac096a0aa 6,14-25,27-31,33,43-58,66,72-88,90-94,96-103,109-163,167-168,170,172-173,176-191,193-222,224-257,265
+server/src/connections/registry.ts
+  s_e827e256e15185::t_c053b2c044886b 24,39-53,77
+server/src/connections/routes.ts
+  s_e827e256e15185::t_8c631354eae580 22-29,204-212,216-238,240-242,246,257-278
+server/src/connections/types.ts
+  s_e827e256e15185::t_1b455fc4606515 29-54,138-139
+server/src/providers/registry.ts
+  s_e827e256e15185::t_0776bac347b3c8 24-25,48,63-72,79,91,97-99,127,136,167,181-185
+server/src/widgets/manifest.ts
+  s_e827e256e15185::t_7ede38d74db2f3 106-107,120-122
+server/src/ws/hub.ts
+  s_e827e256e15185::t_3448414a40a26b 64-69
+server/test/connection-credential-recovery.test.ts
+  s_edae00164c4bc3::t_b95356b1fd875a 1-92
+server/test/connection-service-manifest.test.ts
+  s_edae00164c4bc3::t_df3d63291e248a 1-15
+server/test/connection-service-routes.test.ts
+  s_edae00164c4bc3::t_c6ce904bcde9e2 1-150
+server/test/connection-services.test.ts
+  s_edae00164c4bc3::t_ff9dd44439ce61 1-252
+server/test/service-cache-invalidation.test.ts
+  s_edae00164c4bc3::t_667adc5dfb0ef2 1-29
+server/test/service-provider-registry.test.ts
+  s_edae00164c4bc3::t_5d7e461a2e4659 1-36
+ui/src/shared/socket.ts
+  s_e827e256e15185::t_fb5fbac3626ad5 38-40,51-52
+ui/src/shared/types.ts
+  s_e827e256e15185::t_9872eb1c9b0e63 159-160,197
+ui/src/shared/useWidgetBridge.ts
+  s_ff3dff62f4ff19::t_f4aca5ef38d9d8 100-132,164,166-170,187-188,190-194
+ui/test/connection-service-bridge.test.ts
+  s_edae00164c4bc3::t_34c3719ba66aaf 1-125
+ui/test/service-socket-cache.test.ts
+  s_edae00164c4bc3::t_0545b58d652666 1-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ca4b04201596982c33cd0e55cf774423994d0905",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    },
+    "s_edae00164c4bc3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a135ea-f172-7f02-944f-04532cb53a51",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    },
+    "s_ff3dff62f4ff19": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13f3e-7b62-7742-a7c5-083cab4a1c36",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
