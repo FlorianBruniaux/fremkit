@@ -1,0 +1,143 @@
+CHANGELOG.md
+  s_e827e256e15185::t_00b223a0c424d5 15
+  s_fbb2579959ac64::t_0cffe5407c220b 14
+docs/google-accounts.md
+  s_edae00164c4bc3::t_181c5263734ceb 1-43
+docs/google-services.md
+  s_e827e256e15185::t_cdbee0a80de4e0 1-73
+server/src/app.ts
+  s_ff3dff62f4ff19::t_9396b44c440644 15,251
+server/src/connections/google-client.ts
+  s_edae00164c4bc3::t_c77cffe6984a7d 1-4,6-12,14-55,57-89,92,94-150
+  s_1c07bc650abb4a::t_923ee7f564cb8e 5,13,56,90-91,93
+server/src/connections/google-oauth.ts
+  s_edae00164c4bc3::t_8ad7bc30280213 1-146
+server/src/connections/google-routes.ts
+  s_edae00164c4bc3::t_64c27ba5a9a2fd 1-23,25-26,29-32,34-62,64,67-72,74-111,116-137,139,141-157,159-167
+server/src/connections/manager.ts
+  s_1c07bc650abb4a::t_1500de99a6e74c 17-18,123-129,138,140,147,149,153-155,157,160,172-174,179-181,186,189,201,210
+server/src/connections/types/google.ts
+  s_edae00164c4bc3::t_50ff0f94d9d924 1-7,9-28
+  s_1c07bc650abb4a::t_f34333c26ac20b 8
+server/src/connections/types/index.ts
+  s_4d9bf9782c201f::t_fe7e4dec386a89 4-6,14-16,18
+  s_fbb2579959ac64::t_2cf7fca7bd4554 7,17
+server/src/i18n.ts
+  s_1c07bc650abb4a::t_446149513b8b89 22-25,273-276
+server/src/providers/gmail.ts
+  s_4d9bf9782c201f::t_2537fc497ac4d5 1-97
+server/src/providers/google-calendar.ts
+  s_4d9bf9782c201f::t_86bd9b5018a956 1-149
+server/src/providers/google-links.ts
+  s_4d9bf9782c201f::t_095c50855b3d8f 1-36
+server/test/connections.test.ts
+  s_e827e256e15185::t_7038c5d479f141 487
+server/test/gmail.test.ts
+  s_4d9bf9782c201f::t_ae4140395963a9 1-116
+server/test/google-calendar.test.ts
+  s_4d9bf9782c201f::t_bb7b489e4b199f 1-140
+server/test/google-client.test.ts
+  s_edae00164c4bc3::t_9420b20e274366 1-102
+server/test/google-generation.test.ts
+  s_edae00164c4bc3::t_85d3833aaa15eb 1-22
+server/test/google-integration.test.ts
+  s_e827e256e15185::t_3fe33f6ee6ad43 1-22,24-25,27-63
+  s_ff3dff62f4ff19::t_dd04f38b82f9c6 23,26
+server/test/google-oauth.test.ts
+  s_edae00164c4bc3::t_0cce91877e03cb 1-18,20-37,39-127
+  s_e827e256e15185::t_2fd7a943d91a50 19,38,128-136
+server/test/google-open-actions.test.ts
+  s_4d9bf9782c201f::t_31740c6fdcdbc0 1-82
+server/test/google-routes.test.ts
+  s_edae00164c4bc3::t_b9854c343edb89 1-7,9-23,26-29,31-144,173-234
+ui/src/admin/ConnectionsInspector.vue
+  s_1c07bc650abb4a::t_7a1d56ab4aa813 7,74-75
+ui/src/admin/GoogleCalendarSelector.vue
+  s_edae00164c4bc3::t_b837887a5aa7b8 1-54
+ui/src/admin/GoogleConnectionForm.vue
+  s_edae00164c4bc3::t_c37e78da350391 1-18,20-80,82-120
+  s_1c07bc650abb4a::t_6a893cbbb3590b 19,81
+ui/src/admin/connections.ts
+  s_1c07bc650abb4a::t_69d31e8d17544d 167-186
+ui/src/shared/locales/en.ts
+  s_1c07bc650abb4a::t_60a8fc31d56f2a 3-15,17-47
+  s_3897878139c0ab::t_76cd7812b2e064 16
+ui/src/shared/locales/fr.ts
+  s_1c07bc650abb4a::t_825bf09673596e 3-15,17-47
+  s_3897878139c0ab::t_a31051f4f4f4ec 16
+ui/test/google-calendar-selector.test.ts
+  s_edae00164c4bc3::t_e3d178d2c026c1 1-18
+ui/test/google-connection-form.test.ts
+  s_edae00164c4bc3::t_af7f62087c6969 1-49
+  s_e827e256e15185::t_b7b0acff337e27 50-61
+docs/google-tasks.md
+  s_e827e256e15185::t_97ecc335cf5be9 1-7
+server/src/providers/google-tasks.ts
+  s_1c07bc650abb4a::t_8efceceefbc863 1-119
+server/test/google-tasks.test.ts
+  s_fbb2579959ac64::t_84b9387b4002e2 1-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9f38b758e201b014933c3b24dbe6f202cd6dba14",
+  "prompts": {},
+  "sessions": {
+    "s_1c07bc650abb4a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13ecc-26b7-7fc2-88c5-5b726fab0740",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    },
+    "s_3897878139c0ab": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13f44-d04e-7ed3-a930-cc3216505433",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    },
+    "s_4d9bf9782c201f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c90f38ea-0a7a-4a51-ae4b-c61d7812de28",
+        "model": "unknown"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    },
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    },
+    "s_edae00164c4bc3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a135ea-f172-7f02-944f-04532cb53a51",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    },
+    "s_fbb2579959ac64": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13eeb-f3c7-74d3-9458-f02898e43b16",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    },
+    "s_ff3dff62f4ff19": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13f3e-7b62-7742-a7c5-083cab4a1c36",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
