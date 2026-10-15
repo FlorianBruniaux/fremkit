@@ -1,0 +1,28 @@
+server/src/app.ts
+  s_e827e256e15185::t_93168f7430e1fe 250
+server/test/app.test.ts
+  s_e827e256e15185::t_7207efeec0ff7c 185-193
+  s_e827e256e15185::t_6f6f6a89121039 6,161,164-167,169-181,183-184,252
+server/src/widgets/routes.ts
+  s_e827e256e15185::t_204b3bbcb37846 26-28,32-36,48-51,53-54
+  s_e827e256e15185::t_93168f7430e1fe 64,66,114,132
+  s_e827e256e15185::t_729a48ce3dd750 37-47
+CHANGELOG.md
+  s_e827e256e15185::t_2ddd2ce90aa252 40-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "04f3d5e66583825219df7f442744b243c7778e6d",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
