@@ -1,0 +1,23 @@
+server/src/claude/identity.ts
+  s_e827e256e15185::t_2d3b7472b5bf9f 85
+server/test/claude-identity.test.ts
+  s_e827e256e15185::t_d890b9dbe2c5ff 18-23,26-31,33-34,36,40-43,57-61
+widgets/claude-usage/index.html
+  s_e827e256e15185::t_f599aafc0337ce 20,42-43,107,173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4fb389fc2e901d225347580869971f6c6c95f87b",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
