@@ -41,8 +41,8 @@ Only the tool name and a short summary reach Fremkit. Tool inputs and outputs ar
 never stored.
 
 The hook also adds a `client` object saying where the session lives: the terminal application's
-bundle id, `TERM_PROGRAM`, the pid of the `claude` process, its tty, and — under Orca — the pane
-and tab it runs in. It is the only way anything can know: the server otherwise sees a session id
+bundle id, `TERM_PROGRAM`, the pid of the `claude` process, its tty, the Orca pane handle
+when present, and cmux workspace and surface ids when present. It is the only way anything can know: the server otherwise sees a session id
 and a working directory, and two sessions in two panes of the same folder are the same pair of
 strings. It is what makes the ↗ on a card work.
 
@@ -61,6 +61,7 @@ corner. What happens depends on the application:
 | Client | What is raised |
 |---|---|
 | Orca | the exact pane, through `orca terminal switch --terminal <handle>` |
+| cmux | the exact panel, through the bundled `cmux focus-panel` CLI, with application fallback |
 | Terminal.app, iTerm2 | the tab whose tty matches, through AppleScript — macOS asks once to allow it |
 | VS Code | the window already open on that folder |
 | anything else | the application, by its bundle id |
