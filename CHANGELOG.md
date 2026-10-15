@@ -61,6 +61,8 @@ tagged `vX.Y.Z`.
   sessions after 30 minutes (on by default), and group the board by application.
 
 ### Fixed
+- The Claude limits tile draws its hourly histogram again: the bars were laid out with no width,
+  so the row under the footer showed only the peak label.
 - **Application icon access.** Widgets that subscribe to `dock` receive icons through the dashboard host; cross-site requests to the icon route are refused, so other widget frames cannot probe installed applications.
 - **Fresh widget data after a provider retires.** Socket replay caches discard a retired channel snapshot for newly opened tiles and after a server disconnect. Already open tiles keep their last rendered value until the replacement provider publishes fresh data.
 - **Widgets load on the native dashboard again.** WebKit can now load the bridge and a widget's
