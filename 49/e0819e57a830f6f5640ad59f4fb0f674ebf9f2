@@ -1,0 +1,40 @@
+server/src/providers/system.ts
+  s_e827e256e15185::t_0e98f75d4a7b49 37-42
+  s_e827e256e15185::t_517ad622ce56f7 7-29,31-32,49-50,54
+  s_e827e256e15185::t_ced485ee760d15 30
+server/test/system-disks.test.ts
+  s_e827e256e15185::t_df107d60985aad 1-19
+widgets/disk/index.html
+  s_e827e256e15185::t_376693e31602ac 9-11
+  s_e827e256e15185::t_95abd0e99ff379 5,7,24,41,43
+widgets/uptime/index.html
+  s_e827e256e15185::t_178d5b2d1a7a22 4-48
+widgets/uptime/manifest.json
+  s_e827e256e15185::t_7130369ae999e4 1-2,4,6
+server/test/system-uptime.test.ts
+  s_e827e256e15185::t_47e65c1dfd89a0 1-34
+CHANGELOG.md
+  s_e827e256e15185::t_131c8434cc1b52 14,27
+docs/widgets.md
+  s_e827e256e15185::t_9e0ea58fd02636 166,176
+widgets/disk/manifest.json
+  s_e827e256e15185::t_55c07c64406f91 1-2,4,6
+widgets/memory/manifest.json
+  s_e827e256e15185::t_f290ece5dfdfa3 1-2,4,6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "49e0819e57a830f6f5640ad59f4fb0f674ebf9f2",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
