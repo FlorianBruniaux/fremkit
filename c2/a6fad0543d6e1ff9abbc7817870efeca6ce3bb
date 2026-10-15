@@ -1,0 +1,21 @@
+ui/src/dashboard/NavBar.vue
+  s_e827e256e15185::t_cbfc4c2e2223d3 187,197-199,215-216,218-221,261,278-287,290,297
+ui/test/nav-bar-navigation.test.ts
+  s_e827e256e15185::t_7f331c4d213581 108-123,177-183
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c2a6fad0543d6e1ff9abbc7817870efeca6ce3bb",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
