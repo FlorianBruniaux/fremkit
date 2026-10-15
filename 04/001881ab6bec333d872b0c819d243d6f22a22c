@@ -1,0 +1,21 @@
+server/test/local-operations.test.ts
+  s_e827e256e15185::t_39998a23484aad 105-115
+server/src/providers/local-operations.ts
+  s_e827e256e15185::t_39998a23484aad 26-33,177,182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "04001881ab6bec333d872b0c819d243d6f22a22c",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
