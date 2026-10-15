@@ -59,12 +59,15 @@ export async function googleOAuthRoutes(app: FastifyInstance, opts: GoogleOAuthR
   // Both config copies lose the binding before the single atomic secret item is replaced.
   const replace = async(c:Connection, expected:AbortSignal, value:string, binding:Binding, isAttemptCurrent:()=>boolean = ()=>true) => {
     let quarantined=false
+    let quarantineAttempted=false
+    const initialRevision=binding.revision
     const current = () => binding.valid && binding.configValid && bindings.get(c.id)===binding && isAttemptCurrent()
       && (quarantined && !connection(c.id) || fingerprint(connection(c.id))===binding.fingerprint)
     const owned = async (fn: (config: ReturnType<ConfigStore['get']>) => ReturnType<ConfigStore['get']>) => {
       try { await store.update(config=>{const result=fn(config);ownConfigEvent=true;return result}) } finally {ownConfigEvent=false}
     }
     const quarantine = async()=>{
+      quarantineAttempted=true
       await owned(config=>{
         const found=config.connections.find(x=>x.id===c.id)
         if (!binding.configValid || (quarantined ? found && fingerprint(found)!==binding.fingerprint : fingerprint(found)!==binding.fingerprint)) throw new Error('connection retired')
@@ -103,8 +106,10 @@ export async function googleOAuthRoutes(app: FastifyInstance, opts: GoogleOAuthR
     }
     const rollback = () => owned(config=>{
       // A subsequent external write wins, including delete and A-B-A. Never overwrite it.
-      if(recoveryRevision!==binding.revision || !recoveryRow || config.connections.some(x=>x.id===c.id)) return config
-      return {...config,connections:[...config.connections,recoveryRow]}
+      const originalStillOwned=quarantineAttempted && binding.configValid && binding.revision===initialRevision
+      const row=recoveryRevision===undefined && originalStillOwned ? c : recoveryRevision===binding.revision ? recoveryRow : undefined
+      if(!row || config.connections.some(x=>x.id===c.id)) return config
+      return {...config,connections:[...config.connections,row]}
     })
     try { await manager.updateSecretsIfCurrent(c,expected,{credentials:value},{quarantine,quarantineRollback,commit:restore,rollback},current) }
     finally { await manager.sync(store.get().connections) }
