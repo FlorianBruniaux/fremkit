@@ -46,6 +46,7 @@ The name is the Fremen survival kit from *Dune*.
   and the widgets all wear the one you pick.
 - **Two languages** — the whole interface is French or English, switched in the admin.
 - **A widget SDK** that is a folder, a JSON file and an HTML page.
+- **Optional local operations** show Docker containers and Ollama/MLX models through registry widgets. See [docs/local-operations.md](docs/local-operations.md).
 
 ## Requirements
 
