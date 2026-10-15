@@ -11,6 +11,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let poster = EventPoster()
     private var driver: TouchDriver?
     private var fence: MouseFence?
+    /// A future window fence can register here and share the dashboard visibility rule.
+    private var fenceUpdates: [(Bool) -> Void] = []
     private var dockBadges: DockBadges?
     private var watcher: EdgeDisplay.Watcher?
     private var kiosk: KioskWindow?
@@ -55,6 +57,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.menu?.update { $0.fence = state }
         }
         self.fence = fence
+        fenceUpdates.append { [weak fence] active in
+            if active { _ = fence?.start() }
+            else { fence?.stop() }
+        }
 
         let dockBadges = DockBadges(port: config.port)
         dockBadges.onState = { [weak self] state in
@@ -80,7 +86,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if config.touch { driver.start() }
-        if config.fence { fence.start() }
+        syncFences()
         if config.dock { dockBadges.start() }
 
         // An orphan from a crashed helper still holds the port and would be mistaken for an
@@ -182,6 +188,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Display
 
+    // Cmd-H temporarily hides the app without changing the user's dashboard preference.
+    func applicationDidHide(_ notification: Notification) { kiosk?.applicationDidHide() }
+    func applicationDidUnhide(_ notification: Notification) { kiosk?.applicationDidUnhide() }
+
+    private func syncFences() {
+        let active = config.fence && kiosk?.isShowingDashboard == true
+        for update in fenceUpdates { update(active) }
+    }
+
+    private func refreshDashboardMenu() {
+        menu?.update { state in
+            state.dashboardAvailable = edge != nil && kiosk != nil
+            state.dashboardHidden = kiosk?.isHiddenByUser == true
+        }
+    }
+
     private func edgeDidChange(_ edge: CGRect?) {
         self.edge = edge
         driver?.displayBounds = edge
@@ -197,11 +219,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             } else {
                 let url = Self.parseURL(config.url, what: "url")
                 kiosk = KioskWindow(frame: frame, url: url)
+                kiosk?.onVisibilityChange = { [weak self] in
+                    self?.syncFences()
+                    self?.refreshDashboardMenu()
+                }
             }
         } else {
             admin?.kioskFrame = nil
             kiosk?.setEdgeFrame(nil)
         }
+        syncFences()
+        refreshDashboardMenu()
     }
 
     // MARK: - Server
@@ -227,6 +255,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func wireMenu(_ menu: StatusMenu) {
+        menu.onToggleDashboard = { [weak self] in
+            guard let self, self.edge != nil, let kiosk = self.kiosk else { return }
+            if kiosk.isHiddenByUser { kiosk.showDashboard() }
+            else { kiosk.hideDashboard() }
+        }
         menu.onOpenAdmin = { [weak self] in self?.admin?.show() }
 
         menu.onOpenAdminInBrowser = { [weak self] in
@@ -248,7 +281,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             self.config.fence = on
             self.saveConfig()
-            if on { self.fence?.start() } else { self.fence?.stop() }
+            self.syncFences()
             self.refreshMenu()
         }
 

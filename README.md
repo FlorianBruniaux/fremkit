@@ -216,8 +216,9 @@ the widget library and the widgets themselves, live, without a reload.
 helper adds what a browser cannot — its own HID driver for the Edge's touch panel, a fence that
 keeps the mouse cursor on your other displays, a kiosk window with no chrome and no cursor, the
 Dock's notification badges, and supervision of the server. Its menu bar **F** shows what is
-running: *Open the admin*, *Admin in the browser*, *Reload the dashboard*, the *Touch* / *Mouse
-fence* / *Notifications* / *Manage the server* / *Launch at login* toggles, *Log…* and *Quit*,
+running: *Open the admin*, *Admin in the browser*, *Hide the dashboard* / *Show the dashboard*,
+*Reload the dashboard*, the *Touch* / *Mouse fence* / *Notifications* / *Manage the server* /
+*Launch at login* toggles, *Log…* and *Quit*,
 above state lines such as "Server: running" and "Touch: active".
 
 ## Widgets
