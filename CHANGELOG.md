@@ -12,6 +12,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 
 ### Changed
 - **Clock in the compact bar.** Show an accent-coloured clock icon beside the time, matching the weather icon.
+- **The system tiles show useful Mac capacity.** Disk usage uses the APFS data volume and shows available space; memory shows available RAM and swap.
 - **Homey is a declared connection now.** The Homey connection type built into Fremkit is gone:
   both Homey widgets bring their own, so one API key serves the two of them. An existing Homey
   connection is migrated when the server starts — same name, same address, same key — and the
@@ -26,6 +27,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 ### Added
 - **GitHub rows open on the Mac.** Open a saved run, notification or pull request from a widget without marking it read.
 - **Local Docker and AI models.** Registry widgets can show up to 200 local containers and observed Ollama or MLX models. Fremkit refuses remote Docker contexts, distinguishes a missing CLI from a stopped daemon, and keeps the container list when stats fail.
+- **The Uptime tile shows time since boot.** The reading comes from macOS and remains unavailable when the system cannot provide it.
 - **Borrow the Edge display.** Hide or show the dashboard from the helper menu without quitting it. Hidden state survives display rearrangements, and the mouse fence pauses while the Edge is borrowed. Touch and data collection continue; the dashboard reappears after a helper restart.
 - **Claude sessions: go to the session.** Touch a card and its window comes forward — the
   exact Orca pane, the Terminal.app or iTerm2 tab, the VS Code window on that folder, or at
