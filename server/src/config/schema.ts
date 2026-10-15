@@ -248,6 +248,8 @@ const PrivacySchema = z.object({
   showAccountEmail: z.boolean().default(false),
   codexAccount: z.boolean().default(false),
   codexHistorySources: z.array(HistorySourceSchema).max(10).default([]),
+  /** Read CPU temperature from the optional local macmon executable. */
+  macmonTemperature: z.boolean().default(false),
 }).prefault({})
 
 /**
@@ -352,7 +354,7 @@ export const DEFAULT_CONFIG: Config = {
   connections: [],
   secrets: { backend: defaultSecretsBackend() },
   locale: defaultLocale(),
-  privacy: { claudeAccountUsage: false, showAccountEmail: false, codexAccount: false, codexHistorySources: [] },
+  privacy: { claudeAccountUsage: false, showAccountEmail: false, codexAccount: false, codexHistorySources: [], macmonTemperature: false },
   marketplace: { installed: {} },
   pages: [
     {

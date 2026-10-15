@@ -112,7 +112,7 @@ describe('ConfigStore migration', () => {
   })
 })
 
-describe('privacy.claudeAccountUsage on an older config', () => {
+describe('privacy settings on an older config', () => {
   const page = (widgets: object[]) => ({ id: 'home', name: 'Accueil', widgets })
   const widget = (widgetId: string) => ({ instanceId: 'a', widgetId, x: 0, y: 0, w: 8, h: 4 })
 
@@ -155,6 +155,17 @@ describe('privacy.claudeAccountUsage on an older config', () => {
 
   it('leaves a fresh install off', () => {
     expect(DEFAULT_CONFIG.privacy.claudeAccountUsage).toBe(false)
+  })
+  it('keeps macmon sampling off for existing configs and fresh installs', () => {
+    const page = { id: 'home', name: 'Home', widgets: [{ instanceId: 'cpu-1', widgetId: 'cpu', x: 0, y: 0, w: 8, h: 4 }] }
+    expect(migrateConfig({ version: 2, pages: [page] }).privacy.macmonTemperature).toBe(false)
+    expect(migrateConfig({ ...DEFAULT_CONFIG, privacy: { claudeAccountUsage: false } }).privacy.macmonTemperature).toBe(false)
+    expect(DEFAULT_CONFIG.privacy.macmonTemperature).toBe(false)
+  })
+
+  it('preserves explicit consent to macmon sampling', () => {
+    expect(migrateConfig({ ...DEFAULT_CONFIG, privacy: { claudeAccountUsage: false, macmonTemperature: true } })
+      .privacy.macmonTemperature).toBe(true)
   })
 })
 

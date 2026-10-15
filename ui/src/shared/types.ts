@@ -82,6 +82,8 @@ export interface Privacy {
   showAccountEmail: boolean
   codexAccount: boolean
   codexHistorySources: ('cli' | 'vscode' | 'exec' | 'appServer' | 'subAgent' | 'subAgentReview' | 'subAgentCompact' | 'subAgentThreadSpawn' | 'subAgentOther' | 'unknown')[]
+  /** Use the optional local macmon executable for Apple Silicon CPU temperature. */
+  macmonTemperature: boolean
 }
 
 export interface Config {
