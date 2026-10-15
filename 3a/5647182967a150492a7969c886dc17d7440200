@@ -1,0 +1,27 @@
+ui/test/connection-service-bridge.test.ts
+  s_e827e256e15185::t_5b5235812d927a 92-99
+ui/src/shared/useWidgetBridge.ts
+  s_e827e256e15185::t_52565397f26706 107
+server/src/config/routes.ts
+  s_e827e256e15185::t_52565397f26706 45-51
+CHANGELOG.md
+  s_e827e256e15185::t_eb184d9ae1c631 15
+server/test/config-quarantine-race.test.ts
+  s_e827e256e15185::t_ac588602aaab9f 1-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3a5647182967a150492a7969c886dc17d7440200",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
