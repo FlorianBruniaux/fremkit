@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { execFile } from 'node:child_process'
 import type { ConnectionProviderContext } from '../connections/types.js'
 import type { Provider } from './types.js'
 import { USER_AGENT } from '../version.js'
@@ -352,7 +353,15 @@ const MarkAllReadPayload = z.object({
   lastReadAt: z.string().refine((s) => Number.isFinite(Date.parse(s)), 'not a date').optional(),
 })
 
+const OpenRowPayload = z.object({
+  // The host bridge stamps every widget command with its instance id.
+  instanceId: z.string().min(1).max(200).optional(),
+  kind: z.enum(['run', 'notification', 'review', 'pull']),
+  id: z.string().regex(/^\d{1,20}$/),
+}).strict()
+
 export interface GithubDeps {
+  openRunner?: (cmd: string, args: string[]) => Promise<void>
   fetchFn?: typeof fetch
   now?: () => number
 }
@@ -366,6 +375,8 @@ export interface GithubDeps {
 export function createGithubProvider(ctx: ConnectionProviderContext, deps: GithubDeps = {}): Provider {
   const fetchFn = deps.fetchFn ?? fetch
   const now = deps.now ?? Date.now
+  const openRunner = deps.openRunner ?? ((cmd: string, args: string[]) => new Promise<void>((resolve, reject) =>
+    execFile(cmd, args, { timeout: 5000 }, err => err ? reject(err) : resolve())))
 
   const base = githubBaseUrl(ctx.fields.host)
   const token = ctx.secrets.token ?? ''
@@ -593,6 +604,25 @@ export function createGithubProvider(ctx: ConnectionProviderContext, deps: Githu
     },
 
     commands: {
+      // The widget supplies an id, never a destination. Only rows already received for this
+      // connection can be opened, on its own web host, from the local dashboard.
+      open: async (payload, context) => {
+        if (!context?.loopback) return { ok: false }
+        const parsed = OpenRowPayload.safeParse(payload)
+        if (!parsed.success) throw new Error(tr(undefined, 'github.invalidCommand'))
+        const { kind, id } = parsed.data
+        const rows = kind === 'run' ? last.runs : kind === 'notification' ? last.notifications
+          : kind === 'review' ? last.reviewRequests : last.myPrs
+        const row = rows.find(item => item.id === id)
+        if (!row || !base || !OWNER_REPO_RE.test(row.repo)) return { ok: false }
+        let url: URL
+        try { url = new URL(row.url) } catch { return { ok: false } }
+        const host = base === GITHUB_DEFAULT_HOST ? 'github.com' : new URL(base).hostname
+        if (url.protocol !== 'https:' || url.hostname !== host || url.username || url.password || url.port ||
+            !(url.pathname === `/${row.repo}` || url.pathname.startsWith(`/${row.repo}/`))) return { ok: false }
+        try { await openRunner('/usr/bin/open', [url.href]); return { ok: true } }
+        catch { return { ok: false } }
+      },
       /** Marks one notification thread read — what a tap on an inbox row asks for. */
       markRead: async (payload) => {
         const parsed = MarkReadPayload.safeParse(payload)

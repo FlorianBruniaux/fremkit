@@ -10,6 +10,8 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 
 ## Unreleased
 
+- Open a saved GitHub run, notification or pull request from a widget without marking it read.
+
 ### Changed
 - **Clock in the compact bar.** Show an accent-coloured clock icon beside the time, matching the weather icon.
 - **Homey is a declared connection now.** The Homey connection type built into Fremkit is gone:
