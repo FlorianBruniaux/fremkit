@@ -1,0 +1,25 @@
+server/test/youtube-bridge.test.ts
+  s_e827e256e15185::t_083a4f7bb7f3ba 1-61
+CHANGELOG.md
+  s_e827e256e15185::t_38a20cf91b4937 13-14
+server/src/index.ts
+  s_e827e256e15185::t_d27989c0223f49 4,49,56,60,62-63
+server/src/youtube/bridge.ts
+  s_e827e256e15185::t_ce5ce3121625ae 1-91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "976bf04ae041d2f6993d7f6bf862e952c3109dbc",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
