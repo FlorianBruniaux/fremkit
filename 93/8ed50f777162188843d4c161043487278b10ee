@@ -1,0 +1,71 @@
+ui/test/store.test.ts
+  s_e827e256e15185::t_f686a9143b55b0 573
+ui/src/dashboard/App.vue
+  s_e827e256e15185::t_e226ca76782181 112
+docs/writing-widgets.md
+  s_e827e256e15185::t_77ac60c36b66be 452
+CHANGELOG.md
+  s_e827e256e15185::t_661191f78a2c2b 30
+ui/src/shared/locales/fr.ts
+  s_e827e256e15185::t_cf0ce74e288dd3 282-283
+  s_e827e256e15185::t_8cc4d6aace4446 158-161,166,269
+ui/src/admin/ScreenInspector.vue
+  s_e827e256e15185::t_34debe85e4d58a 197
+  s_e827e256e15185::t_e226ca76782181 21-22,107-113,194-196
+ui/test/nav-bar-navigation.test.ts
+  s_e827e256e15185::t_2e1d19c9e5d0d5 11-12,18-31,39-46,180
+  s_e827e256e15185::t_e96ba8e21ad28a 169-176,178,186,188,193
+  s_2e9ca0d5560653::t_a9c05784cec532 1-10,13-17,32-38,48-114,133-168,177,179,181-185,187,189-192,194-197,206-237
+  s_e827e256e15185::t_7f331c4d213581 115-132,198-205
+  s_e827e256e15185::t_979348ca3b101b 47
+server/test/config-schema.test.ts
+  s_e827e256e15185::t_f686a9143b55b0 103-108
+ui/src/shared/locales/en.ts
+  s_e827e256e15185::t_4c5053d36f5bd6 282-283
+  s_e827e256e15185::t_01aca6a50d988d 158-161,166,269
+ui/src/dashboard/NavBar.vue
+  s_e827e256e15185::t_e9ff20488e7ddd 386,388,393-397,399,407-409
+  s_2e9ca0d5560653::t_d4b32002d5ddb3 2,4,7,22,31,36,40,91-92,146-151,185,187-194,199-213,216,221-233,236,242-259,266-273,283-284,295-296,298-303,305-308,313,353-358,368-372,390,403-405,410
+  s_e827e256e15185::t_89aaa8090cd0b7 3,274-282,322,335-336,378,381-383,385,389,401,411-412,414
+  s_e827e256e15185::t_75b28c31c19155 24-25,261-265,332-333,361,365-367,384,387,391-392,406
+  s_e827e256e15185::t_2ebada8b4869a6 359-360,362-364,398,400,402
+  s_e827e256e15185::t_cbfc4c2e2223d3 186,196-198,214-215,217-220,260,285-294,297,304
+  s_e827e256e15185::t_60ea7ce5ba2e9f 317
+docs/troubleshooting.md
+  s_e827e256e15185::t_27d55d6a0bb1c5 131
+README.md
+  s_e827e256e15185::t_0f89b9b8dcb94e 184-185,187-189,192
+ui/src/admin/Canvas.vue
+  s_e827e256e15185::t_e226ca76782181 91
+ui/src/shared/types.ts
+  s_e827e256e15185::t_29acef387cf3cb 49-50,57-58
+  s_e827e256e15185::t_4c964a69b193e3 284-285,313
+server/src/config/schema.ts
+  s_e827e256e15185::t_29acef387cf3cb 120,170-171
+ui/test/nav-bar-admin.test.ts
+  s_e827e256e15185::t_9f25126cf87451 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "938ed50f777162188843d4c161043487278b10ee",
+  "prompts": {},
+  "sessions": {
+    "s_2e9ca0d5560653": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff5faa5e-0006-4c12-83cb-c362dfd2ef9b",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    },
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
