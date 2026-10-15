@@ -56,11 +56,11 @@ All commands require host loopback context, strict payload schemas and exact ide
 
 | Service command | Payload | Current behavior |
 | --- | --- | --- |
-| Gmail `open` | `{ connectionId, messageId }` | Unavailable with `accountRoutingUnverified` for a fresh loaded message. |
-| Calendar `open` | `{ connectionId, calendarId, eventId }` | Unavailable with `accountRoutingUnverified` when a stored HTTPS Calendar HTML link is valid; otherwise `unsupportedDestination`. |
+| Gmail `open` | `{ connectionId, messageId }` | Opens the loaded thread with the verified account email in `authuser`. |
+| Calendar `open` | `{ connectionId, calendarId, eventId }` | Opens a validated event link with the verified account email in `authuser`; otherwise `unsupportedDestination`. |
 | Calendar `join` | `{ connectionId, calendarId, eventId }` | Re-fetches that event, validates current identity/freshness, then opens only an attached supported video destination. |
 
-The reviewed Google API references do not establish exact browser-account selection for a Gmail message or Calendar HTML link. No numeric browser account index, email-based `authuser` heuristic, or manufactured deep link is used. These opening actions remain unavailable until a supported route and consented browser tests establish the intended account. This is a browser-account routing limit, separate from API authorization.
+The provider uses the OAuth-verified email in the browser `authuser` parameter for Gmail and Calendar opening actions. It never uses a numeric browser account index or accepts an arbitrary destination from a widget. The URL construction and host-opening command have tests, but a consented multi-account browser test is still needed to confirm that Chrome opens the intended account. Keep this contribution in draft until that behavior is verified.
 
 Meeting joins currently allow only credential-free HTTPS `meet.google.com` URLs with an exact meeting-code path, no non-default port, query or fragment, taken from a `video` conference entry point or attached `hangoutLink`. Phone, SIP, `more` entry points, descriptions, other hosts and unsupported meeting formats expose no join action. The server resolves the destination again from the current event immediately before host opening. The result does not guarantee which Google account the browser uses to join.
 
