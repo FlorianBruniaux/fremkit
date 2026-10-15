@@ -3,7 +3,13 @@
  * (c) Lucide Contributors. Each entry is the inner markup of a 24x24 stroked SVG.
  * Copied here on purpose: the UI must not take a runtime icon dependency.
  */
+// Service symbols below are local simplified illustrations.
 export const ICONS: Record<string, string> = {
+  "claude": "<path d=\"M12 2v20M2 12h20M5 5l14 14M5 19 19 5M8 3l8 18M3 8l18 8M3 16l18-8M8 21l8-18\"/>",
+  "code": "<rect x=\"2\" y=\"3\" width=\"20\" height=\"18\" rx=\"5\"/><path d=\"m9 8-4 4 4 4m6-8 4 4-4 4m-2-9-2 14\"/>",
+  "container": "<path d=\"M2 13h20c-1 5-5 8-11 8-5 0-8-3-9-8ZM20 13v-3l2 1M7 18h.01\"/><rect x=\"4\" y=\"9\" width=\"4\" height=\"4\"/><rect x=\"8\" y=\"9\" width=\"4\" height=\"4\"/><rect x=\"12\" y=\"9\" width=\"4\" height=\"4\"/><rect x=\"8\" y=\"5\" width=\"4\" height=\"4\"/><rect x=\"12\" y=\"5\" width=\"4\" height=\"4\"/><rect x=\"12\" y=\"1\" width=\"4\" height=\"4\"/>",
+  "brain": "<path d=\"M12 5a3 3 0 0 0-6 0v1a4 4 0 0 0-3 6 4 4 0 0 0 3 7 3 3 0 0 0 6 0V5Zm0 0a3 3 0 0 1 6 0v1a4 4 0 0 1 3 6 4 4 0 0 1-3 7 3 3 0 0 1-6 0M6 6v3m12-3v3M6 19v-3m12 3v-3\"/>",
+  "mail": "<rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"3\"/><path d=\"m2 6 10 7L22 6\"/>",
   'layout-grid': '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
   clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
   plug: '<path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/>',
