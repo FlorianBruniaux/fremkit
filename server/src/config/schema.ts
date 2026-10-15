@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { HistorySourceSchema } from '../codex/adapter.js'
 import { BUILTIN_THEME } from '../themes/theme.js'
 import { defaultSecretsBackend } from '../secrets/index.js'
 import { tr } from '../i18n.js'
@@ -245,6 +246,8 @@ const PrivacySchema = z.object({
    * `withAccountEmail()` from `privacy.ts` on every poll.
    */
   showAccountEmail: z.boolean().default(false),
+  codexAccount: z.boolean().default(false),
+  codexHistorySources: z.array(HistorySourceSchema).max(10).default([]),
 }).prefault({})
 
 /**
@@ -349,7 +352,7 @@ export const DEFAULT_CONFIG: Config = {
   connections: [],
   secrets: { backend: defaultSecretsBackend() },
   locale: defaultLocale(),
-  privacy: { claudeAccountUsage: false, showAccountEmail: false },
+  privacy: { claudeAccountUsage: false, showAccountEmail: false, codexAccount: false, codexHistorySources: [] },
   marketplace: { installed: {} },
   pages: [
     {

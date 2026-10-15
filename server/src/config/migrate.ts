@@ -152,7 +152,7 @@ export function migrateConfig(raw: unknown): Config {
     connections: [],
     secrets: { backend: defaultSecretsBackend() },
     locale: defaultLocale(),
-    privacy: { claudeAccountUsage: false, showAccountEmail: false },
+    privacy: { claudeAccountUsage: false, showAccountEmail: false, codexAccount: false, codexHistorySources: [] },
     // A v1 config predates the marketplace by a long way; nothing can have been installed.
     marketplace: { installed: {} },
     pages: v1.pages.map((p) => ({

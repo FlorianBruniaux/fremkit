@@ -62,6 +62,16 @@ const privacy = computed(() => s.state.config!.privacy)
 function setClaudeAccountUsage(on: boolean): void {
   s.apply((c) => { c.privacy.claudeAccountUsage = on })
 }
+const CODEX_SOURCES = ['appServer', 'vscode', 'cli', 'exec', 'subAgent', 'subAgentReview', 'subAgentCompact', 'subAgentThreadSpawn', 'subAgentOther', 'unknown'] as const
+type CodexSource = typeof CODEX_SOURCES[number]
+function setCodexAccount(on: boolean): void {
+  s.apply((c) => { c.privacy.codexAccount = on })
+}
+function setCodexSource(source: CodexSource, on: boolean): void {
+  s.apply((c) => { c.privacy.codexHistorySources = on
+    ? [...new Set([...c.privacy.codexHistorySources, source])]
+    : c.privacy.codexHistorySources.filter(value => value !== source) })
+}
 /**
  * Off, the server leaves the account e-mail out of every snapshot it publishes; this box does
  * not hide it in a widget, it decides whether any widget is sent it at all.
@@ -274,12 +284,24 @@ function setBackground(patch: Partial<Background>): void {
     :label="t('admin.inspector.screen.accountEmail')"
     @update:model-value="setShowAccountEmail($event)" />
   <p class="ro">{{ t('admin.inspector.screen.accountEmail.hint') }}</p>
+  <BaseCheckbox :model-value="privacy.codexAccount"
+    :label="t('admin.inspector.screen.codexAccount')"
+    @update:model-value="setCodexAccount($event)" />
+  <p class="ro">{{ t('admin.inspector.screen.codexAccount.hint') }}</p>
+  <p class="ro">{{ t('admin.inspector.screen.codexSources') }}</p>
+  <div class="codex-sources">
+    <BaseCheckbox v-for="source in CODEX_SOURCES" :key="source"
+      :model-value="privacy.codexHistorySources.includes(source)"
+      :label="t('admin.inspector.screen.codexSource.' + source)"
+      @update:model-value="setCodexSource(source, $event)" />
+  </div>
   </BaseSection>
 </template>
 
 <style scoped>
 .ro { margin: 0 0 var(--space-2); font-size: var(--fs-sm); color: var(--text-muted); }
 .ro.warn { color: var(--danger); }
+.codex-sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--space-1); margin-bottom: var(--space-3); }
 .row { display: flex; gap: var(--space-2); margin-bottom: var(--space-2); }
 .hidden { display: none; }
 .bad { margin: 0 0 var(--space-2); font-size: var(--fs-sm); color: var(--danger); white-space: pre-wrap; }

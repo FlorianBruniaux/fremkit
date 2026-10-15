@@ -41,7 +41,7 @@ function config(): Config {
     version: 3,
     display: { cols: 64, rows: 16, cell: 40, autoCycleSeconds: 0 },
     connections: [], secrets: { backend: 'file' }, locale: 'en',
-    privacy: { claudeAccountUsage: false, showAccountEmail: false },
+    privacy: { claudeAccountUsage: false, showAccountEmail: false, codexAccount: false, codexHistorySources: [] },
     marketplace: { installed: {} },
     pages: [{
       id: 'home', name: 'Home',

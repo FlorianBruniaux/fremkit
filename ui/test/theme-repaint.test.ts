@@ -18,7 +18,7 @@ function config(theme: string): Config {
     version: 3,
     display: { cols: 64, rows: 16, cell: 40, autoCycleSeconds: 0, theme },
     connections: [], secrets: { backend: 'file' }, locale: 'en',
-    privacy: { claudeAccountUsage: false, showAccountEmail: false }, marketplace: { installed: {} },
+    privacy: { claudeAccountUsage: false, showAccountEmail: false, codexAccount: false, codexHistorySources: [] }, marketplace: { installed: {} },
     pages: [{ id: 'home', name: 'Home', widgets: [] }],
   } as unknown as Config
 }

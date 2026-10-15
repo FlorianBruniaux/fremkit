@@ -32,6 +32,19 @@ describe('migrateConfig', () => {
     const c2 = migrateConfig(v1)
     expect(migrateConfig(c2)).toEqual(c2)
   })
+  it('keeps older dashboards opted out of Codex account and history reads', () => {
+    const old = migrateConfig(v1)
+    delete (old.privacy as Partial<typeof old.privacy>).codexAccount
+    delete (old.privacy as Partial<typeof old.privacy>).codexHistorySources
+    expect(migrateConfig(old).privacy).toMatchObject({
+      codexAccount: false,
+      codexHistorySources: [],
+    })
+    expect(migrateConfig(v1).privacy).toMatchObject({
+      codexAccount: false,
+      codexHistorySources: [],
+    })
+  })
   it('rejects an unknown version with a clear message', () => {
     // Translated now, so match either language rather than the French wording.
     expect(() => migrateConfig({ ...v1, version: 7 })).toThrow(/(version de config inconnue|unknown config version).*7/)
