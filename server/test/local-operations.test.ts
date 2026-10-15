@@ -102,6 +102,17 @@ describe('Local model observation', () => {
     expect(JSON.stringify(snapshot)).not.toContain('/Users/example')
   })
 
+  it('detects Python-launched oMLX and mlx-server scripts', async () => {
+    const provider = createLocalModelsProvider({
+      fetchFn: modelResponse as typeof fetch,
+      processes: async () => [
+        { pid: 15, name: 'python3', command: 'python3', params: '/opt/example/bin/omlx serve --port 8000', cpu: 1, mem: 1, memRss: 100 },
+        { pid: 16, name: 'python3', command: 'python3', params: '/opt/example/bin/mlx-server --port 8001', cpu: 1, mem: 1, memRss: 100 },
+      ],
+    })
+    expect((await provider.poll!()).mlx.data?.map((entry) => entry.backend)).toEqual(['oMLX', 'MLX'])
+  })
+
   it('keeps MLX independent when Ollama is offline', async () => {
     const provider = createLocalModelsProvider({ fetchFn: (async () => { throw new Error('PRIVATE') }) as typeof fetch, processes: async () => [] })
     const snapshot = await provider.poll!()

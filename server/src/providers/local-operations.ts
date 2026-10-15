@@ -23,6 +23,14 @@ interface Part<T> {
 const empty = <T>(): Part<T> => ({ data: null, stale: false, error: null, updatedAt: null })
 const fresh = <T>(data: T): Part<T> => ({ data, stale: false, error: null, updatedAt: Date.now() })
 const failed = <T>(part: Part<T>, error: string): Part<T> => ({ ...part, stale: part.data !== null, error })
+
+function mlxBackend(command: string, params: string): 'oMLX' | 'MLX' | null {
+  const executable = basename(command)
+  if (executable === 'omlx') return 'oMLX'
+  if (executable === 'mlx-server' || executable === 'mlx_lm.server') return 'MLX'
+  const launch = params.match(/^(?:-u\s+|-B\s+)*(?:-m\s+)?(?:\S*\/)?(omlx|mlx-server|mlx_lm\.server)(?:\s|$)/)
+  return launch?.[1] === 'omlx' ? 'oMLX' : launch ? 'MLX' : null
+}
 const text = z.string().max(2048)
 const identifier = z.string().regex(/^[a-f0-9]{4,64}$/i)
 const Container = z.object({ ID: identifier, Names: text, Image: text, State: text, Status: text })
@@ -166,16 +174,12 @@ export function createLocalModelsProvider(opts: { fetchFn?: typeof fetch; proces
         (async (): Promise<Part<MlxProcess[]>> => {
           try {
             const all = await processes()
-            return fresh(all.filter((process) =>
-              ['mlx_lm.server', 'omlx', 'mlx-server'].includes(basename(process.command))
-              || /(?:^|\s)-m\s+mlx_lm\.server(?:\s|$)/.test(process.params)
-              || /(?:^|\s)(?:\S*\/)?mlx_lm\.server(?:\s|$)/.test(process.params),
-            ).slice(0, 20).map((process) => {
+            return fresh(all.filter((process) => mlxBackend(process.command, process.params) !== null).slice(0, 20).map((process) => {
               const model = process.params.match(/(?:^|\s)--model(?:=|\s+)([^\s]{1,512})/)
               const port = process.params.match(/(?:^|\s)--port(?:=|\s+)(\d{1,5})/)
               const number = port ? Number(port[1]) : null
               return {
-                pid: process.pid, backend: basename(process.command) === 'omlx' ? 'oMLX' : 'MLX',
+                pid: process.pid, backend: mlxBackend(process.command, process.params)!,
                 model: safeModelLabel(model?.[1]), port: number && number < 65536 ? number : null,
                 cpu: process.cpu, memoryBytes: process.memRss * 1024,
               }
