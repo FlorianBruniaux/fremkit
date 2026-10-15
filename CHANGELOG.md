@@ -10,8 +10,6 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 
 ## Unreleased
 
-- Start sandboxed widgets on WebKit versions that refuse a bridge script request from an opaque frame.
-
 ### Changed
 - **Clock in the compact bar.** Show an accent-coloured clock icon beside the time, matching the weather icon.
 - **Homey is a declared connection now.** The Homey connection type built into Fremkit is gone:
@@ -40,6 +38,8 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
   sessions after 30 minutes (on by default), and group the board by application.
 
 ### Fixed
+- **Widgets load on the native dashboard again.** WebKit can now load the bridge and a widget's
+  own script, style, image, font and media files inside the sandboxed frame.
 - Shortcut buttons draw the real icon of an application that is not in the Dock again. The widget
   read the list of installed applications itself, which the `connect-src 'none'` its frame is
   served with has always refused, so anything the user had never docked fell back to the kind's

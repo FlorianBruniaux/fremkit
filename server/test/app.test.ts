@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { buildApp } from '../src/app.js'
-import { WIDGET_CSP } from '../src/widgets/routes.js'
+import { WIDGET_CSP, widgetCsp } from '../src/widgets/routes.js'
 import { BYTE_ROUTES, isByteRoute } from '../src/http/headers.js'
 import { degradedMessage } from '../src/config/routes.js'
 import { defaultLocale } from '../src/config/schema.js'
@@ -158,27 +158,40 @@ describe('widget routes', () => {
     expect(res.statusCode).toBe(200)
     expect(res.headers['content-type']).toContain('text/html')
     expect(res.headers['content-security-policy']).toBe(WIDGET_CSP)
-    expect(res.body).toContain('<head><script>')
+    expect(res.body).toContain('<head><script src="/fremkit.js"></script>')
     expect(res.body).toContain('hi')
   })
-  it('boots the widget bridge without a same-origin script request', async () => {
+  it('allows the bridge and a widget-owned relative script in an opaque frame', async () => {
+    await writeFile(join(dir, 'widgets', 'clock', 'index.html'),
+      '<html><head><script src="./app.js"></script></head><body>hi</body></html>')
+    await writeFile(join(dir, 'widgets', 'clock', 'app.js'), 'window.widgetLoaded = true')
     const res = await app.inject({ url: '/widgets/clock/index.html' })
-    const script = res.body.match(/<head><script>([\s\S]*?)<\/script>/)?.[1]
-    expect(script).toBeDefined()
-    const messages: unknown[] = []
-    const window: Record<string, unknown> = {
-      parent: { postMessage: (message: unknown) => messages.push(message) },
-      addEventListener: () => {},
+    expect(res.body).toContain('<script src="/fremkit.js"></script>')
+    expect(res.body).toContain('<script src="./app.js"></script>')
+    expect(res.headers['content-security-policy']).toContain("script-src 'self' http://127.0.0.1:4242")
+    expect((await app.inject({ url: '/fremkit.js' })).statusCode).toBe(200)
+    expect((await app.inject({ url: '/widgets/clock/app.js' })).body).toBe('window.widgetLoaded = true')
+  })
+  it('scopes explicit subresource origins to the server port and development proxy', () => {
+    const csp = widgetCsp(4301, true)
+    for (const directive of ['script-src', 'style-src', 'img-src', 'font-src', 'media-src']) {
+      const line = csp.split('; ').find((part) => part.startsWith(directive))
+      expect(line).toContain('http://127.0.0.1:4301')
+      expect(line).toContain('http://localhost:5173')
+      expect(line).not.toContain('http://127.0.0.1:4242')
     }
-    const document = {
-      querySelector: () => null,
-      addEventListener: () => {},
-      createElement: () => ({ setAttribute: () => {} }),
-      head: { appendChild: () => {} },
+    expect(widgetCsp(4301)).not.toContain(':5173')
+  })
+  it('serves a second checkout with its own widget origin', async () => {
+    const other = await buildApp({ dataDir: join(dir, 'data'), widgetsDir: join(dir, 'widgets'), port: 4301 })
+    try {
+      const res = await other.inject({ url: '/widgets/clock/index.html', headers: { host: '127.0.0.1:4301' } })
+      expect(res.statusCode).toBe(200)
+      expect(res.headers['content-security-policy']).toBe(widgetCsp(4301))
+      expect(res.headers['content-security-policy']).not.toContain(':4242')
+    } finally {
+      await other.close()
     }
-    new Function('window', 'document', script!)(window, document)
-    expect(messages).toContainEqual({ type: 'fremkit:hello' })
-    expect(window.Fremkit).toBeDefined()
   })
   it('sandboxes a widget however it is reached', async () => {
     // Opening a widget top-level, or as a second HTML file, or as Index.html on a
@@ -236,7 +249,7 @@ describe('widget routes', () => {
     const html = await app.inject({ url: '/widgets/synology/index.html' })
     expect(html.statusCode).toBe(200)
     expect(html.headers['content-security-policy']).toBe(WIDGET_CSP)
-    expect(html.body).toContain('<head><script>')
+    expect(html.body).toContain('<head><script src="/fremkit.js"></script>')
     expect((await app.inject({ url: '/widgets/synology/app.js' })).body).toBe('console.log(1)')
 
     const dotfile = await app.inject({ url: '/widgets/synology/.env' })
