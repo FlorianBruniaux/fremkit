@@ -1,0 +1,37 @@
+CHANGELOG.md
+  s_edae00164c4bc3::t_68cf14960a3ac9 13-14
+docs/writing-widgets.md
+  s_edae00164c4bc3::t_ff50f240c7b3f8 229-230
+server/src/bridge/fremkit.js
+  s_edae00164c4bc3::t_95d699245077d8 225,234-237
+server/test/bridge.test.ts
+  s_edae00164c4bc3::t_28e62a71688628 12,21,34,36,77,237-247
+ui/src/shared/useWidgetBridge.ts
+  s_edae00164c4bc3::t_0f3e3ee0a42a76 7,212-226
+ui/src/shared/widgetMessages.ts
+  s_edae00164c4bc3::t_abbb9e342f29c8 16-21
+ui/test/app-icon-host.test.ts
+  s_edae00164c4bc3::t_d86431a3dc2119 1-56
+ui/test/bridge.test.ts
+  s_edae00164c4bc3::t_9d9725b54ef9d3 2,153-162
+ui/test/notifications-widget.test.ts
+  s_edae00164c4bc3::t_ae53fa6cec9869 1-41
+widgets/notifications/index.html
+  s_edae00164c4bc3::t_bf91ef248e75d2 54,65-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3dfa3773ae5d795fdbe2ae1c5388336c07ba4c0c",
+  "prompts": {},
+  "sessions": {
+    "s_edae00164c4bc3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a135ea-f172-7f02-944f-04532cb53a51",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
