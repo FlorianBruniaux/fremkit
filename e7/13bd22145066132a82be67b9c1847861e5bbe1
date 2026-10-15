@@ -1,0 +1,23 @@
+server/src/app.ts
+  s_e827e256e15185::t_2f2227c24cc91e 210,270
+server/src/connections/manager.ts
+  s_e827e256e15185::t_2f2227c24cc91e 80-82
+server/test/connection-services.test.ts
+  s_e827e256e15185::t_d4ab838088acbc 211-220
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e713bd22145066132a82be67b9c1847861e5bbe1",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
