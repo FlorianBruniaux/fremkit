@@ -1,0 +1,25 @@
+CHANGELOG.md
+  s_e827e256e15185::t_ea042f474891d3 14
+server/src/providers/codex.ts
+  s_e827e256e15185::t_801acee22a12d8 90-97,114-124,229,263,284-289,347
+server/test/codex-observations.test.ts
+  s_e827e256e15185::t_e40d21aca080c3 209-222
+server/test/codex-provider.test.ts
+  s_e827e256e15185::t_7bc37535657bee 136-177
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5b50ed1a73db2b10a96bbf04a04f1d59ef537e00",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
