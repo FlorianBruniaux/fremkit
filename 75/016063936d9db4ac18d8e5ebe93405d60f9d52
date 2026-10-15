@@ -1,0 +1,27 @@
+ui/src/dashboard/NavBar.vue
+  s_e827e256e15185::t_a8a64fb8e57c89 335-336
+  s_e827e256e15185::t_deb77dbe57413c 274,278,381
+ui/test/nav-bar-navigation.test.ts
+  s_e827e256e15185::t_364a8a36f6675e 193-195
+CHANGELOG.md
+  s_e827e256e15185::t_661191f78a2c2b 16
+ui/src/shared/types.ts
+  s_e827e256e15185::t_a3b08a3847b119 320
+  s_e827e256e15185::t_05c53b6d5b6e09 293
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "75016063936d9db4ac18d8e5ebe93405d60f9d52",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
