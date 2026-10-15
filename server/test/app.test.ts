@@ -178,6 +178,7 @@ describe('widget routes', () => {
       const line = csp.split('; ').find((part) => part.startsWith(directive))
       expect(line).toContain('http://127.0.0.1:4301')
       expect(line).toContain('http://localhost:5173')
+      expect(line).not.toContain('[::1]')
       expect(line).not.toContain('http://127.0.0.1:4242')
     }
     expect(widgetCsp(4301)).not.toContain(':5173')

@@ -30,7 +30,7 @@ const BRIDGE_PATH = fileURLToPath(new URL('../bridge/fremkit.js', import.meta.ur
  * `Fremkit.fetch`, which asks the host, which asks the proxy, which checks the manifest.
  */
 export function widgetCsp(port = 4242, dev = false): string {
-  const ownOrigins = [`http://127.0.0.1:${port}`, `http://localhost:${port}`, `http://[::1]:${port}`]
+  const ownOrigins = [`http://127.0.0.1:${port}`, `http://localhost:${port}`]
   if (dev) ownOrigins.push('http://127.0.0.1:5173', 'http://localhost:5173')
   const own = ownOrigins.join(' ')
   return [
