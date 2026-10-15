@@ -46,12 +46,16 @@ export interface NavWidget {
 export interface Background { color?: string; image?: string; fit?: BackgroundFit }
 /** Mirrors the server schema: the two heights the navigation bar may take. */
 export type NavHeight = 80 | 40
+export type NavStyle = 'dots' | 'names'
+export const DEFAULT_NAV_STYLE: NavStyle = 'dots'
 export interface Display {
   cols: number; rows: number; cell: number; autoCycleSeconds: number
   /** Id of a theme in `themes/`; an unknown id paints the built-in one. */
   theme?: string
   /** Absent means `DEFAULT_NAV_HEIGHT`; the default is stored as a missing key. */
   navHeight?: NavHeight
+  /** Absent keeps the existing dot navigation. */
+  navStyle?: NavStyle
   /** Opacity of the navigation bar's background, 0–1; absent means solid. */
   navOpacity?: number
   /** The opacity a tile gets when it is added; absent means solid. */
@@ -286,8 +290,8 @@ export const navWidgetsIn = (display: Display, slot: NavSlot): NavWidget[] =>
 
 /** A sanity ceiling on the bar's widget count; mirrors the server's `MAX_NAV_WIDGETS`. */
 export const MAX_NAV_WIDGETS = 12
-/** Cells kept free in the middle of the bar for the page dots, whatever the clusters hold. */
-export const NAV_DOTS_RESERVE_CELLS = 10
+/** The centre is capped at ten cells for either navigation style. */
+export const NAV_CENTRE_RESERVE_CELLS = 10
 /**
  * The two settings that make a compact widget need more room than its manifest asks for, and
  * the width it then gets. A widget cannot resize its own iframe, so the rule lives on the host
@@ -315,7 +319,7 @@ export function navCellsUsed(display: Display, manifests: Record<string, WidgetM
 
 /** Whether one more compact widget of that width still leaves the dots their room. */
 export function navHasRoom(display: Display, manifests: Record<string, WidgetManifest>, width: number): boolean {
-  return navCellsUsed(display, manifests) + width <= display.cols - NAV_DOTS_RESERVE_CELLS
+  return navCellsUsed(display, manifests) + width <= display.cols - NAV_CENTRE_RESERVE_CELLS
 }
 
 /**

@@ -570,7 +570,7 @@ describe('navigation bar widgets', () => {
     await store.load()
     for (let i = 0; i < 11; i++) store.addNavWidget('clock')
     expect(bar(store)).toHaveLength(10)
-    expect(store.state.toast).toMatch(/dots|points/)
+    expect(store.state.toast).toMatch(/buttons|boutons/)
     await vi.advanceTimersByTimeAsync(SAVE_DEBOUNCE_MS)
   })
 
