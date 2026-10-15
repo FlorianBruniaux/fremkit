@@ -237,6 +237,14 @@ const PrivacySchema = z.object({
    * undocumented and may disappear.
    */
   claudeAccountUsage: z.boolean().default(false),
+  /**
+   * Let an account provider (Claude, Codex, …) put the account's e-mail address in what it
+   * publishes. Off, the field is never in the snapshot: anything on a channel reaches every
+   * widget subscribed to it, a third-party one with network access included, and the Edge sits
+   * on a desk. The plan and the sign-in method are published either way. Providers read it with
+   * `withAccountEmail()` from `privacy.ts` on every poll.
+   */
+  showAccountEmail: z.boolean().default(false),
 }).prefault({})
 
 /**
@@ -341,7 +349,7 @@ export const DEFAULT_CONFIG: Config = {
   connections: [],
   secrets: { backend: defaultSecretsBackend() },
   locale: defaultLocale(),
-  privacy: { claudeAccountUsage: false },
+  privacy: { claudeAccountUsage: false, showAccountEmail: false },
   marketplace: { installed: {} },
   pages: [
     {
