@@ -182,14 +182,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Display
 
-    // Keep the F menu synchronized with the existing dashboard hide/show buttons as well.
+    // Cmd-H in the admin also hides the accessory app; keep the dashboard and menu in sync.
     func applicationDidHide(_ notification: Notification) { kiosk?.hideDashboard() }
     func applicationDidUnhide(_ notification: Notification) { kiosk?.showDashboard() }
+
+    private func syncMouseFence() {
+        if config.fence && kiosk?.isHiddenByUser != true { fence?.start() }
+        else { fence?.stop() }
+    }
 
     private func refreshDashboardMenu() {
         menu?.update { state in
             state.dashboardAvailable = edge != nil && kiosk != nil
-            state.dashboardHidden = kiosk?.isHiddenByUser == true || NSApp.isHidden
+            state.dashboardHidden = kiosk?.isHiddenByUser == true
         }
     }
 
@@ -208,7 +213,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             } else {
                 let url = Self.parseURL(config.url, what: "url")
                 kiosk = KioskWindow(frame: frame, url: url)
-                kiosk?.onVisibilityChange = { [weak self] in self?.refreshDashboardMenu() }
+                kiosk?.onVisibilityChange = { [weak self] in
+                    self?.syncMouseFence()
+                    self?.refreshDashboardMenu()
+                }
             }
         } else {
             admin?.kioskFrame = nil
@@ -242,7 +250,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func wireMenu(_ menu: StatusMenu) {
         menu.onToggleDashboard = { [weak self] in
             guard let self, self.edge != nil, let kiosk = self.kiosk else { return }
-            if kiosk.isHiddenByUser || NSApp.isHidden { kiosk.showDashboard() }
+            if kiosk.isHiddenByUser { kiosk.showDashboard() }
             else { kiosk.hideDashboard() }
         }
         menu.onOpenAdmin = { [weak self] in self?.admin?.show() }
@@ -266,7 +274,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             self.config.fence = on
             self.saveConfig()
-            if on { self.fence?.start() } else { self.fence?.stop() }
+            self.syncMouseFence()
             self.refreshMenu()
         }
 

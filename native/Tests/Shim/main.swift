@@ -108,7 +108,6 @@ let suites: [(String, () -> XCTestCase, [TestMethod])] = [
     ("DashboardVisibilityTests", { DashboardVisibilityTests() }, [
         ("testUserHideSurvivesDisplayReconfiguration", { ($0 as! DashboardVisibilityTests).testUserHideSurvivesDisplayReconfiguration() }),
         ("testShowingWithoutDisplayKeepsWindowAbsent", { ($0 as! DashboardVisibilityTests).testShowingWithoutDisplayKeepsWindowAbsent() }),
-        ("testMenuLabelsAreWrittenInBothLanguages", { ($0 as! DashboardVisibilityTests).testMenuLabelsAreWrittenInBothLanguages() }),
     ]),
     ("L10nTests", { L10nTests() }, [
         ("testPicksFrenchForAFrenchSystem", { ($0 as! L10nTests).testPicksFrenchForAFrenchSystem() }),

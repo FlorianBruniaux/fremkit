@@ -74,25 +74,6 @@ final class KioskWindow: NSObject, WKNavigationDelegate {
     private let window: NSWindow
     private let webView: WKWebView
     private let url: URL
-    private var visibility = DashboardVisibility()
-    var isHiddenByUser: Bool { visibility.hiddenByUser }
-    var onVisibilityChange: (() -> Void)?
-
-    func hideDashboard() {
-        visibility.hide()
-        window.orderOut(nil)
-        onVisibilityChange?()
-    }
-
-    func showDashboard() {
-        visibility.show()
-        if visibility.shouldShow {
-            NSApp.unhide(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            window.makeKeyAndOrderFront(nil)
-        }
-        onVisibilityChange?()
-    }
     /// Pending retry, so a burst of failures queues only one and a manual reload can cancel it.
     private var retryWork: DispatchWorkItem?
 
@@ -164,6 +145,29 @@ final class KioskWindow: NSObject, WKNavigationDelegate {
         let frame = NSRect.fromCGDisplayBounds(rect, primaryHeight: NSRect.primaryScreenHeight)
         window.setFrame(frame, display: visibility.shouldShow)
         if visibility.shouldShow { window.orderFrontRegardless() }
+    }
+
+    // MARK: - Visibility
+
+    private var visibility = DashboardVisibility()
+    var isHiddenByUser: Bool { visibility.hiddenByUser }
+    var onVisibilityChange: (() -> Void)?
+
+    /// Lends the Edge to the windows behind the dashboard until the user shows it again.
+    func hideDashboard() {
+        visibility.hide()
+        window.orderOut(nil)
+        onVisibilityChange?()
+    }
+
+    /// Returns the dashboard without taking keyboard focus from the current application.
+    func showDashboard() {
+        visibility.show()
+        if visibility.shouldShow {
+            if NSApp.isHidden { NSApp.unhide(nil) }
+            window.orderFrontRegardless()
+        }
+        onVisibilityChange?()
     }
 
     func close() {

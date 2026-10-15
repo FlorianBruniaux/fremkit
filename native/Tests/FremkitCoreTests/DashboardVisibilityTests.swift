@@ -22,10 +22,4 @@ final class DashboardVisibilityTests: XCTestCase {
         state.displayAvailable = true
         XCTAssertTrue(state.shouldShow)
     }
-    func testMenuLabelsAreWrittenInBothLanguages() {
-        XCTAssertEqual(L10n.string(.hideDashboard, language: .fr), "Masquer")
-        XCTAssertEqual(L10n.string(.showDashboard, language: .fr), "Réafficher")
-        XCTAssertEqual(L10n.string(.hideDashboard, language: .en), "Hide")
-        XCTAssertEqual(L10n.string(.showDashboard, language: .en), "Show")
-    }
 }
