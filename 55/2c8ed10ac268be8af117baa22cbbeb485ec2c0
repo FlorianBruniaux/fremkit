@@ -1,0 +1,21 @@
+server/test/mac-thermals.test.ts
+  s_e827e256e15185::t_fe143bf693fef5 42-52,54
+server/src/providers/mac-thermals.ts
+  s_e827e256e15185::t_fe143bf693fef5 57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "552c8ed10ac268be8af117baa22cbbeb485ec2c0",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
