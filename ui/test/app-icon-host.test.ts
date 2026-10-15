@@ -37,6 +37,12 @@ describe('host application icon requests', () => {
     await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({type: 'fremkit:result', id: 'icon-1', result: 'data:image/png;base64,aWNvbg=='}, '*'))
     expect(fetcher).toHaveBeenCalledWith('/api/apps/icon/com.apple.mail', {cache: 'no-store'})
   })
+  it('explains when a local application icon is unavailable', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok: false}))
+    const reply = load()
+    request('com.apple.mail')
+    await vi.waitFor(() => expect(reply).toHaveBeenCalledWith({type: 'fremkit:result', id: 'icon-1', error: 'pas d’icône pour cette application'}, '*'))
+  })
   it('refuses widgets without a Dock subscription before fetching', () => {
     const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher)
     const reply = load([])

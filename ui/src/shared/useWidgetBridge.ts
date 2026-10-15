@@ -218,7 +218,7 @@ export function useWidgetBridge(
         // Fetch from the host origin. An opaque widget cannot load this route directly.
         fetch(`/api/apps/icon/${encodeURIComponent(bundleId)}`, { cache: 'no-store' })
           .then(async (r) => {
-            if (!r.ok) { reply(id, undefined, t('bridge.noIcon')); return }
+            if (!r.ok) { reply(id, undefined, t('bridge.noAppIcon')); return }
             reply(id, await dataUrl(await r.blob()))
           })
           .catch((e: Error) => reply(id, undefined, e.message))

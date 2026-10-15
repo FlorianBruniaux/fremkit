@@ -133,7 +133,7 @@
       // An address the user typed as the icon is first taken as the image itself, then as a site.
       var icon = exact ? Fremkit.image(site).catch(function () { return Fremkit.favicon(site) }) : Fremkit.favicon(site)
       icon.then(function (src) {
-        if (!art.parentNode) return
+        if (!button.isConnected || !art.parentNode) return
         var img = document.createElement('img')
         img.className = 'art'
         img.alt = ''
@@ -141,7 +141,7 @@
         art.parentNode.replaceChild(img, art)
         art = img
       }, function () {
-        if (!art.parentNode) return
+        if (!button.isConnected || !art.parentNode) return
         button.retryTimer = setTimeout(attempt, ICON_RETRY_MS)
       })
     }
@@ -170,26 +170,23 @@
     if (spec.kind !== 'app') return glyph(spec.kind)
     var bundleId = bundleIdFor(spec.target)
     if (!bundleId) return glyph(spec.kind)
-    var attempt = 0
+    var art = glyph(spec.kind)
     function attach() {
-      var img = document.createElement('img')
-      img.className = 'art'
-      img.alt = ''
-      // The attempt number defeats any caching of the 404 by the previous try.
-      img.src = '/api/apps/icon/' + encodeURIComponent(bundleId) + (attempt ? '?retry=' + attempt : '')
-      img.addEventListener('error', function () {
-        if (!img.parentNode) return
-        var fallback = glyph(spec.kind)
-        img.parentNode.replaceChild(fallback, img)
-        button.retryTimer = setTimeout(function () {
-          if (!fallback.parentNode) return
-          attempt += 1
-          fallback.parentNode.replaceChild(attach(), fallback)
-        }, ICON_RETRY_MS)
+      Fremkit.appIcon(bundleId).then(function (src) {
+        if (!button.isConnected || !art.parentNode) return
+        var img = document.createElement('img')
+        img.className = 'art'
+        img.alt = ''
+        img.src = src
+        art.parentNode.replaceChild(img, art)
+        art = img
+      }, function () {
+        if (!button.isConnected || !art.parentNode) return
+        button.retryTimer = setTimeout(attach, ICON_RETRY_MS)
       })
-      return img
     }
-    return attach()
+    attach()
+    return art
   }
 
   /**

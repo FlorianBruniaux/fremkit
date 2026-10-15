@@ -268,6 +268,7 @@ export const en: Record<string, string> = {
 
   'bridge.badRequest': 'invalid widget request',
   'bridge.noIcon': 'no icon for this site',
+  'bridge.noAppIcon': 'no icon for this application',
   'bridge.noApps': 'installed applications unavailable',
   'bridge.channelNotAllowed': 'channel not allowed: {channel}',
 

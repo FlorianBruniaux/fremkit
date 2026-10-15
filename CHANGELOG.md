@@ -10,8 +10,6 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 
 ## Unreleased
 
-- Show local app icons in the Notifications widget by loading them through the trusted dashboard host.
-
 ### Changed
 - **Clock in the compact bar.** Show an accent-coloured clock icon beside the time, matching the weather icon.
 - **The system tiles show useful Mac capacity.** Disk usage uses the APFS data volume and shows available space; memory shows available RAM and swap.
@@ -46,6 +44,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
   sessions after 30 minutes (on by default), and group the board by application.
 
 ### Fixed
+- **Application icons in widgets.** Notifications and Shortcuts load app icons through the trusted dashboard host, so they appear inside sandboxed widgets.
 - **Widgets load on the native dashboard again.** WebKit can now load the bridge and a widget's
   own script, style, image, font and media files inside the sandboxed frame.
 - Shortcut buttons draw the real icon of an application that is not in the Dock again. The widget
