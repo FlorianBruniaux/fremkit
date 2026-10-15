@@ -30,6 +30,10 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 - **Local Docker and AI models.** Registry widgets can show up to 200 local containers and observed Ollama or MLX models. Fremkit refuses remote Docker contexts, distinguishes a missing CLI from a stopped daemon, and keeps the container list when stats fail.
 - **The Uptime tile shows time since boot.** The reading comes from macOS and remains unavailable when the system cannot provide it.
 - **Borrow the Edge display.** Hide or show the dashboard from the helper menu without quitting it. Hidden state survives display rearrangements, and the mouse fence pauses while the Edge is borrowed. Touch and data collection continue; the dashboard reappears after a helper restart.
+- **Account e-mail stays private.** A new box in **/admin → Screen → Privacy**, *Show the account
+  e-mail address*, off by default. Until you tick it, a widget that shows an account gets its plan
+  and how you signed in, never its e-mail address: the server does not send it, so no widget —
+  one from the marketplace included — can show it or pass it on.
 - **Claude sessions: go to the session.** Touch a card and its window comes forward — the
   exact Orca pane, the Terminal.app or iTerm2 tab, the VS Code window on that folder, or at
   least the application — for every session, hooked or merely found running. The card also says which application the session lives in, which is what tells two panes of the

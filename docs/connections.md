@@ -78,6 +78,62 @@ are reduced to a phrase rather than passed through, because a network error can 
 the URL can carry the organisation or the calendar address. Deleting a connection a widget still
 points at is refused with a 409 naming the widgets.
 
+## The account's e-mail address
+
+A provider that signs in to an account — Claude, Codex, any service whose API answers with a
+profile — **never publishes the account's e-mail address unless `privacy.showAccountEmail` is
+on**, and it is off by default. The check belongs to the provider, on the server, not to the
+widget: whatever lands on a channel reaches every widget subscribed to it, a third-party widget
+from the marketplace with network access included, and that widget's consent dialog said "reads
+channel X", not "reads your e-mail". A widget that hides the field has already received it.
+
+Build the snapshot with `withAccountEmail()` from `server/src/privacy.ts`, and read the setting
+on every poll rather than once, so the admin's toggle takes effect without a restart:
+
+```ts
+// server/src/app.ts
+registry.register(createExampleAccountProvider({
+  showAccountEmail: () => store.get().privacy.showAccountEmail,
+}))  // the provider object sets publishesAccountEmail: true
+
+// in the provider's poll()
+return { plan: profile.plan, authMode, ...withAccountEmail(profile.email, opts.showAccountEmail()) }
+```
+
+Every snapshot the provider returns goes through `gateAccountEmail()` as well — the error path
+above all. A provider that answers a failure with its last good snapshot would otherwise go on
+publishing an address fetched while the box was ticked, after the user has unticked it:
+
+```ts
+return gateAccountEmail({ ...last, error: 'offline' }, opts.showAccountEmail())
+```
+
+`gateAccountEmail()` looks only at the top level of what it is given: apply it to **the object
+that carries `email`**, on the fresh path, the error path and any stale answer alike. A snapshot
+that holds the account under a key gates that object, not the snapshot around it:
+
+```ts
+const show = opts.showAccountEmail()
+return {
+  ...last,
+  error: 'offline',
+  account: { ...last.account, data: gateAccountEmail(last.account.data, show) },
+}
+```
+
+Set `publishesAccountEmail: true` on the provider. Toggling the setting then drops the hub's
+cached value of its channel and polls it again at once instead of at its next tick, and an answer
+from a poll that was already in flight is thrown away, since it may have read the old setting.
+The address therefore leaves the screen when the box is unticked rather than five minutes later.
+The flag needs a `poll()` — the registry refuses it otherwise — because a poll is the only way
+anything reaches a channel. A provider whose endpoint is rate-limited should answer that extra poll from its last
+snapshot, gated, rather than fetch again.
+
+Off, the snapshot has no `email` key at all — not an empty string, not a masked address. The plan
+(Pro, Max, …) and the sign-in method are not covered by the setting and are published either way.
+No provider built into Fremkit publishes an address today; this is the contract the first one is
+held to.
+
 ## Local Network
 
 macOS 15 and later gate LAN access per application. The server runs inside whatever launched it —

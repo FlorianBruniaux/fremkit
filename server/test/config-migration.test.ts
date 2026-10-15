@@ -145,6 +145,55 @@ describe('privacy.claudeAccountUsage on an older config', () => {
   })
 })
 
+describe('privacy.showAccountEmail on an older config', () => {
+  const page = (widgets: object[]) => ({ id: 'home', name: 'Accueil', widgets })
+  const widget = (widgetId: string) => ({ instanceId: 'a', widgetId, x: 0, y: 0, w: 8, h: 4 })
+
+  it('starts off for every config written before it existed', () => {
+    // Even next to the Claude opt-in being inferred on: reading the usage is not showing the e-mail.
+    const v3 = migrateConfig({ ...migrateConfig(v1), privacy: { claudeAccountUsage: true } })
+    // toMatchObject: other privacy keys arrive in other branches and must not break this.
+    expect(v3.privacy).toMatchObject({ claudeAccountUsage: true, showAccountEmail: false })
+    expect(migrateConfig({ version: 2, pages: [page([widget('claude-usage')])] }).privacy)
+      .toMatchObject({ claudeAccountUsage: true, showAccountEmail: false })
+    expect(migrateConfig(v1).privacy.showAccountEmail).toBe(false)
+  })
+
+  it('respects the field once the file carries it', () => {
+    const v3 = (showAccountEmail: boolean) => migrateConfig({
+      ...migrateConfig(v1), privacy: { claudeAccountUsage: false, showAccountEmail },
+    }).privacy.showAccountEmail
+    expect(v3(true)).toBe(true)
+    expect(v3(false)).toBe(false)
+  })
+
+  it('leaves a v3 file without the field untouched on disk', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'fremkit-mig-'))
+    const file = join(dir, 'fremkit.json')
+    const { privacy: _privacy, ...rest } = migrateConfig(v1)
+    const before = JSON.stringify({ ...rest, privacy: { claudeAccountUsage: false } }, null, 2)
+    await writeFile(file, before)
+    const cfg = await new ConfigStore(file).load()
+    expect(cfg.privacy.showAccountEmail).toBe(false)
+    expect(await readFile(file, 'utf8')).toBe(before)
+  })
+
+  it('never rewrites a file whose value it cannot read', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'fremkit-mig-'))
+    const file = join(dir, 'fremkit.json')
+    const original = JSON.stringify({ ...migrateConfig(v1), privacy: { claudeAccountUsage: false, showAccountEmail: 'yes' } })
+    await writeFile(file, original)
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const store = new ConfigStore(file)
+    const cfg = await store.load()
+    err.mockRestore()
+    expect(store.degraded).toBe(true)
+    expect(cfg.privacy.showAccountEmail).toBe(false)
+    expect(await readFile(file, 'utf8')).toBe(original)
+    expect(await readdir(dir)).toEqual(['fremkit.json'])
+  })
+})
+
 describe('renamed stored values', () => {
   const withModel = (model: string) => ({
     version: 2,

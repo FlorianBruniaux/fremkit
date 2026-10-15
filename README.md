@@ -316,6 +316,12 @@ The list is short and it is all of it.
 | The Dock's badge counts and the icons of installed applications | the `notifications` and `shortcuts` widgets, through the helper | whenever one of those widgets is on the dashboard |
 | The volume, the battery, the disks, the processes, the network | those widgets, through `pmset`, `df`, `ps` and friends | whenever one of them is on the dashboard |
 
+A widget that shows an account — its plan, how you signed in — never gets the account's e-mail
+address unless you tick **/admin → Screen → Privacy → Show the account e-mail address**. It is off
+by default, and the server leaves the address out of what it sends, so no widget can show it or
+pass it on. Once on, every widget that reads that account's channel receives it, one installed
+from the marketplace included, and it is on the screen.
+
 Everything else Fremkit knows, you typed into it: the connections of the table above, whose
 secrets live in the macOS keychain (see [docs/connections.md](docs/connections.md)). Nothing is
 sent to any server other than the ones you configured, there is no telemetry, and the server

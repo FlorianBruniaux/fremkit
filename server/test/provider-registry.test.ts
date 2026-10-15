@@ -283,3 +283,118 @@ describe('runCommand and the prototype chain', () => {
     await expect(registry.runCommand('ghost', 'real', null)).rejects.toThrow(/canal inconnu/)
   })
 })
+
+describe('ProviderRegistry.reconsiderAccountEmail', () => {
+  // Stands in for an account provider: what it publishes depends on the setting at poll time.
+  function account(show: { on: boolean }, intervalMs = 300_000) {
+    let polls = 0
+    let release: (() => void) | null = null
+    const provider: Provider = {
+      channel: 'account', intervalMs, publishesAccountEmail: true,
+      async poll() {
+        polls++
+        const seen = show.on
+        if (hold.on) await new Promise<void>((r) => { release = r })
+        return seen ? { plan: 'max', email: 'someone@example.com' } : { plan: 'max' }
+      },
+    }
+    const hold = { on: false }
+    return { provider, polls: () => polls, hold, release: () => release?.() }
+  }
+
+  it('polls a watched provider at once instead of at its next tick', async () => {
+    const publish = vi.fn()
+    const show = { on: true }
+    const a = account(show)
+    const reg = new ProviderRegistry(publish)
+    reg.register(a.provider)
+    reg.addSubscriber('account')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(publish).toHaveBeenLastCalledWith('account', { plan: 'max', email: 'someone@example.com' })
+    show.on = false
+    reg.reconsiderAccountEmail()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(a.polls()).toBe(2)
+    expect(publish).toHaveBeenLastCalledWith('account', { plan: 'max' })
+    reg.stop()
+  })
+
+  it('throws away a poll in flight that read the old setting, and polls again', async () => {
+    const publish = vi.fn()
+    const show = { on: true }
+    const a = account(show)
+    const reg = new ProviderRegistry(publish)
+    reg.register(a.provider)
+    a.hold.on = true
+    reg.addSubscriber('account')
+    await vi.advanceTimersByTimeAsync(0)
+    show.on = false
+    reg.reconsiderAccountEmail()
+    a.hold.on = false
+    a.release()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(a.polls()).toBe(2)
+    // The first answer carried the address and was read before the change: never published.
+    expect(publish).toHaveBeenCalledTimes(1)
+    expect(publish).toHaveBeenCalledWith('account', { plan: 'max' })
+    reg.stop()
+  })
+
+  it('drops the cache of a watched channel before the new answer arrives', async () => {
+    const forget = vi.fn()
+    const show = { on: true }
+    const a = account(show)
+    const reg = new ProviderRegistry(vi.fn(), forget)
+    reg.register(a.provider)
+    reg.addSubscriber('account')
+    await vi.advanceTimersByTimeAsync(0)
+    show.on = false
+    reg.reconsiderAccountEmail()
+    // Synchronously: a widget subscribing in the meantime must not be replayed the address.
+    expect(forget).toHaveBeenCalledWith('account')
+    reg.stop()
+  })
+
+  it('neither publishes nor caches a poll in flight when the last widget left meanwhile', async () => {
+    const publish = vi.fn()
+    const forget = vi.fn()
+    const show = { on: true }
+    const a = account(show)
+    const reg = new ProviderRegistry(publish, forget)
+    reg.register(a.provider)
+    a.hold.on = true
+    reg.addSubscriber('account')
+    await vi.advanceTimersByTimeAsync(0)
+    reg.removeSubscriber('account')
+    show.on = false
+    reg.reconsiderAccountEmail()
+    forget.mockClear()
+    a.release()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(publish).not.toHaveBeenCalled()
+    expect(forget).toHaveBeenCalledWith('account')
+    expect(a.polls()).toBe(1)
+    reg.stop()
+  })
+
+  it('refuses the flag on a provider with no poll', () => {
+    const reg = new ProviderRegistry(vi.fn())
+    expect(() => reg.register({ channel: 'push', publishesAccountEmail: true })).toThrow(/needs a poll/)
+  })
+
+  it('drops the cached value of a channel nobody watches, and leaves other providers alone', async () => {
+    const forget = vi.fn()
+    const reg = new ProviderRegistry(vi.fn(), forget)
+    reg.register(account({ on: true }).provider)
+    const other = make([1])
+    reg.register(other.provider)
+    reg.addSubscriber('test')
+    await vi.advanceTimersByTimeAsync(0)
+    reg.reconsiderAccountEmail()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(forget).toHaveBeenCalledWith('account')
+    expect(forget).not.toHaveBeenCalledWith('test')
+    expect(other.polls()).toBe(1)
+    reg.stop()
+  })
+})
