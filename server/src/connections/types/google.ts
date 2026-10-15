@@ -5,7 +5,7 @@ import { tr } from '../../i18n.js'
 export function createGoogleType(services: ConnectionService[]): ConnectionType {
   return {
     id: 'google', name: 'Google', icon: 'mail',
-    description: { en: 'Gmail metadata and Google Calendar, authorized separately for each account.', fr: 'Métadonnées Gmail et Google Agenda, autorisés séparément pour chaque compte.' },
+    description: { en: 'Gmail metadata, Google Calendar and Google Tasks, authorized separately for each account.', fr: 'Métadonnées Gmail, Google Agenda et Google Tasks, autorisés séparément pour chaque compte.' },
     fields: [
       { key: 'clientId', label: { en: 'Desktop OAuth client ID', fr: 'Identifiant client OAuth pour ordinateur' }, required: true },
       { key: 'services', label: { en: 'Selected services', fr: 'Services sélectionnés' }, required: true },

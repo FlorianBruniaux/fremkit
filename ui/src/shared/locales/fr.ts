@@ -13,6 +13,7 @@ export const fr: Record<string, string> = {
   "google.secretHelp": "Conservé avec le compte dans le stockage secret. Laissez vide à la reconnexion pour conserver le secret existant. Après une déconnexion locale, saisissez-le à nouveau.",
   "google.services": "Services à autoriser",
   "google.gmail": "Métadonnées Gmail, lecture seule",
+  "google.tasks": "Listes et tâches Google Tasks, lecture seule",
   "google.calendar": "Liste des agendas et événements, lecture seule",
   "google.scopeHelp": "Google vérifie l’identité du compte (openid et email). Ajouter un service demande un nouveau consentement pour tous les services sélectionnés. Les applications externes en test perdent ces refresh tokens après sept jours.",
   "google.calendarIds": "Identifiants des agendas (tableau JSON)",

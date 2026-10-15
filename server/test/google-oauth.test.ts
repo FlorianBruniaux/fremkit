@@ -16,7 +16,7 @@ function setup(options: { timeoutMs?: number; scope?: string; error?: string; su
       verifier = new URLSearchParams(String(init?.body)).get('code_verifier') ?? ''
       await options.gate
       if (options.error) return Response.json({ error: options.error, error_description: 'private-value' }, { status: 400 })
-      return Response.json({ access_token: 'fake-access', refresh_token: 'fake-refresh', token_type: 'Bearer', expires_in: 3600, scope: options.scope ?? ['openid','email', ...Object.values(GOOGLE_SCOPES).flat()].join(' ') })
+      return Response.json({ access_token: 'fake-access', refresh_token: 'fake-refresh', token_type: 'Bearer', expires_in: 3600, scope: options.scope ?? ['openid','email', ...GOOGLE_SCOPES.gmail, ...GOOGLE_SCOPES.calendar].join(' ') })
     }
     expect(String(u)).toBe('https://openidconnect.googleapis.com/v1/userinfo')
     expect((init?.headers as Record<string,string>).Authorization).toBe('Bearer fake-access')
@@ -35,7 +35,7 @@ describe('desktop Google OAuth', () => {
   it('exchanges once with PKCE, verified identity, selected minimal scopes and a secret-free callback', async () => {
     const s = setup(); await s.start()
     expect(s.auth().searchParams.get('code_challenge_method')).toBe('S256')
-    expect(s.auth().searchParams.get('scope')?.split(' ')).toEqual(['openid','email',...Object.values(GOOGLE_SCOPES).flat()])
+    expect(s.auth().searchParams.get('scope')?.split(' ')).toEqual(['openid','email',...GOOGLE_SCOPES.gmail, ...GOOGLE_SCOPES.calendar])
     const callback = s.callback({ code: 'fake-code', state: s.auth().searchParams.get('state')! })
     const response = await fetch(callback)
     expect(await response.text()).not.toMatch(/fake-code|fake-access|script|img/)
@@ -124,4 +124,13 @@ it('does not reopen or rearm a listener cancelled while binding',async()=>{
   expect(s.broker.status('a').error).toBe('cancelled')
   await new Promise(r=>setTimeout(r,30))
   expect(s.broker.status('a').error).toBe('cancelled')
+})
+
+it('requests only the Tasks scope for a Tasks-only connection', async () => {
+  let authorizationUrl = ''
+  const broker = new GoogleOAuthBroker({openBrowser: async url => {authorizationUrl = url}})
+  brokers.push(broker)
+  const result = await broker.start('tasks-account', {clientId: fields.clientId, services: '["tasks"]'}, null, undefined, async () => {}, () => true)
+  expect(result.state).toBe('pending')
+  expect(new URL(authorizationUrl).searchParams.get('scope')?.split(' ')).toEqual(['openid', 'email', ...GOOGLE_SCOPES.tasks])
 })

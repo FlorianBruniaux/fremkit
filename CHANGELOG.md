@@ -11,6 +11,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 ## Unreleased
 
 ### Changed
+- Add a separate read-only Google Tasks service with bounded list and task snapshots for each connected Google account.
 - Add multi-account Google desktop OAuth connections with separate Gmail and Calendar consent, read-only data providers, partial authorization feedback and local secret storage. Gmail and Calendar opening actions use the verified account email in the browser URL; account selection still needs a real multi-account browser check.
 - Support explicit service channels for multi-service accounts, with generation-safe credential replacement and widget authorization.
 - Account service widgets require an explicit account selection for account channels. Failed credential refreshes and quarantined accounts keep their subscribers ready for recovery; a concurrent layout save cannot restore a quarantined binding; and a failed quarantine restores the previous binding before secrets are changed. A command cancelled by an account or permission change now reports the cancellation to its widget.

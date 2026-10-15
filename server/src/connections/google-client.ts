@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { readJsonCapped } from '../net/json.js'
 import type { ConnectionCredentials, ConnectionServiceContext } from './types.js'
 
-export type GoogleService = 'gmail' | 'calendar'
+export type GoogleService = 'gmail' | 'calendar' | 'tasks'
 export interface GoogleIdentity { subject: string; email: string; services: GoogleService[] }
 export interface GoogleCredentials {
   version: 1; clientId: string; clientSecret?: string; accessToken: string; refreshToken: string
@@ -10,6 +10,7 @@ export interface GoogleCredentials {
 }
 export const GOOGLE_SCOPES: Record<GoogleService, string[]> = {
   gmail: ['https://www.googleapis.com/auth/gmail.metadata'],
+  tasks: ['https://www.googleapis.com/auth/tasks.readonly'],
   calendar: ['https://www.googleapis.com/auth/calendar.calendarlist.readonly', 'https://www.googleapis.com/auth/calendar.events.readonly'],
 }
 export class GoogleClientError extends Error {
@@ -52,7 +53,7 @@ function list(raw: string | undefined, fallback: string): string[] {
 }
 export function parseGoogleServices(raw: string | undefined): GoogleService[] {
   const services = list(raw, '[]')
-  if (!services.length || services.some(s => s !== 'gmail' && s !== 'calendar')) throw new GoogleClientError('malformed')
+  if (!services.length || services.some(s => s !== 'gmail' && s !== 'calendar' && s !== 'tasks')) throw new GoogleClientError('malformed')
   return services as GoogleService[]
 }
 export function parseCalendarIds(raw: string | undefined): string[] { return list(raw, '[]') }
@@ -86,9 +87,10 @@ export const googleTokenSchema = z.object({ access_token: nonempty, refresh_toke
 
 function apiUrl(service: GoogleService, path: string, query: Record<string, string | string[]>): string {
   const id = '(?:[a-zA-Z0-9_@.+~!-]|%[0-9a-fA-F]{2})+'
-  const valid = service === 'gmail' ? new RegExp('^/users/me/messages(?:/' + id + ')?$') : new RegExp('^(?:/users/me/calendarList|/calendars/' + id + '/events(?:/' + id + ')?)$')
+  const taskId = '(?:[a-zA-Z0-9_@.+~!=-]|%[0-9a-fA-F]{2})+'
+  const valid = service === 'tasks' ? new RegExp('^(?:/users/@me/lists|/lists/' + taskId + '/tasks(?:/' + taskId + ')?)$') : service === 'gmail' ? new RegExp('^/users/me/messages(?:/' + id + ')?$') : new RegExp('^(?:/users/me/calendarList|/calendars/' + id + '/events(?:/' + id + ')?)$')
   if (!valid.test(path) || /(?:^|\/)\.{1,2}(?:\/|$)/.test(decodeURIComponent(path))) throw new GoogleClientError('malformed')
-  const base = service === 'gmail' ? 'https://gmail.googleapis.com/gmail/v1' : 'https://www.googleapis.com/calendar/v3'
+  const base = service === 'tasks' ? 'https://tasks.googleapis.com/tasks/v1' : service === 'gmail' ? 'https://gmail.googleapis.com/gmail/v1' : 'https://www.googleapis.com/calendar/v3'
   const url = new URL(base + path)
   for (const [key, values] of Object.entries(query)) {
     if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(key) || key === 'access_token' || key === 'key' || key === 'oauth_token') throw new GoogleClientError('malformed')
