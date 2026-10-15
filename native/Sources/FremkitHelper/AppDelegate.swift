@@ -222,6 +222,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             admin?.kioskFrame = nil
             kiosk?.setEdgeFrame(nil)
         }
+        syncMouseFence()
         refreshDashboardMenu()
     }
 
