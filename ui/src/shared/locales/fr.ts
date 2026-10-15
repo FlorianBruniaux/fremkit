@@ -184,6 +184,8 @@ export const fr: Record<string, string> = {
   'admin.inspector.screen.codexAccount': 'Lire les quotas et l’usage du compte Codex',
   'admin.inspector.screen.codexAccount.hint': 'Désactivé par défaut. Fremkit interroge le CLI Codex local pour le type de compte, la formule, les quotas et les tokens. Il ne publie ni votre adresse e-mail, ni vos identifiants, ni le contenu des conversations.',
   'admin.inspector.screen.codexSources': 'Historique Codex à afficher (lecture locale seule) :',
+  'admin.inspector.screen.codexSources.hint': 'L’historique choisi transmet les titres des chats (souvent issus du premier prompt), le modèle et les noms de dossier ou de branche à tous les widgets abonnés à codex ou codex-live, y compris ceux du catalogue. Ne cochez que les sources à afficher sur ce tableau de bord.',
+  'admin.inspector.screen.codexSources.subagents': 'Autres types de sous-agents',
   'admin.inspector.screen.codexSource.appServer': 'Application Codex',
   'admin.inspector.screen.codexSource.vscode': 'VS Code',
   'admin.inspector.screen.codexSource.cli': 'CLI',

@@ -11,7 +11,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 ## Unreleased
 
 ### Added
-- Add read-only Codex account quotas, token usage, selected local chats and observed turns. Enable account reads or select history sources in the admin screen privacy settings; both start off. A chat opens only after exact-ID validation against the local desktop catalog. Account email is not sent to widgets.
+- Add read-only Codex account quotas, token usage, selected local chats and observed turns. Enable account reads or select history sources in the admin screen privacy settings; both start off. History selection explains that titles and labels reach subscribed widgets. A chat opens only after exact-ID validation against the local desktop catalog. Account email is not sent to widgets.
 
 ### Changed
 - **Clock in the compact bar.** Show an accent-coloured clock icon beside the time, matching the weather icon.

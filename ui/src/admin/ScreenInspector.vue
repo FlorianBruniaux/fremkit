@@ -62,8 +62,9 @@ const privacy = computed(() => s.state.config!.privacy)
 function setClaudeAccountUsage(on: boolean): void {
   s.apply((c) => { c.privacy.claudeAccountUsage = on })
 }
-const CODEX_SOURCES = ['appServer', 'vscode', 'cli', 'exec', 'subAgent', 'subAgentReview', 'subAgentCompact', 'subAgentThreadSpawn', 'subAgentOther', 'unknown'] as const
-type CodexSource = typeof CODEX_SOURCES[number]
+const CODEX_SOURCES = ['appServer', 'vscode', 'cli', 'exec', 'subAgent', 'unknown'] as const
+const CODEX_SUBAGENT_SOURCES = ['subAgentReview', 'subAgentCompact', 'subAgentThreadSpawn', 'subAgentOther'] as const
+type CodexSource = typeof CODEX_SOURCES[number] | typeof CODEX_SUBAGENT_SOURCES[number]
 function setCodexAccount(on: boolean): void {
   s.apply((c) => { c.privacy.codexAccount = on })
 }
@@ -289,12 +290,22 @@ function setBackground(patch: Partial<Background>): void {
     @update:model-value="setCodexAccount($event)" />
   <p class="ro">{{ t('admin.inspector.screen.codexAccount.hint') }}</p>
   <p class="ro">{{ t('admin.inspector.screen.codexSources') }}</p>
+  <p class="ro">{{ t('admin.inspector.screen.codexSources.hint') }}</p>
   <div class="codex-sources">
     <BaseCheckbox v-for="source in CODEX_SOURCES" :key="source"
       :model-value="privacy.codexHistorySources.includes(source)"
       :label="t('admin.inspector.screen.codexSource.' + source)"
       @update:model-value="setCodexSource(source, $event)" />
   </div>
+  <details class="codex-subagent-sources">
+    <summary>{{ t('admin.inspector.screen.codexSources.subagents') }}</summary>
+    <div class="codex-sources">
+      <BaseCheckbox v-for="source in CODEX_SUBAGENT_SOURCES" :key="source"
+        :model-value="privacy.codexHistorySources.includes(source)"
+        :label="t('admin.inspector.screen.codexSource.' + source)"
+        @update:model-value="setCodexSource(source, $event)" />
+    </div>
+  </details>
   </BaseSection>
 </template>
 
@@ -302,6 +313,8 @@ function setBackground(patch: Partial<Background>): void {
 .ro { margin: 0 0 var(--space-2); font-size: var(--fs-sm); color: var(--text-muted); }
 .ro.warn { color: var(--danger); }
 .codex-sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--space-1); margin-bottom: var(--space-3); }
+.codex-subagent-sources { margin-bottom: var(--space-3); }
+.codex-subagent-sources summary { cursor: pointer; margin-bottom: var(--space-2); }
 .row { display: flex; gap: var(--space-2); margin-bottom: var(--space-2); }
 .hidden { display: none; }
 .bad { margin: 0 0 var(--space-2); font-size: var(--fs-sm); color: var(--danger); white-space: pre-wrap; }

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { HistorySourceSchema } from '../codex/adapter.js'
+import { HistorySourceSchema } from '../codex/sources.js'
 import { BUILTIN_THEME } from '../themes/theme.js'
 import { defaultSecretsBackend } from '../secrets/index.js'
 import { tr } from '../i18n.js'

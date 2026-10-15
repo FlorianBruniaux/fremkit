@@ -184,6 +184,8 @@ export const en: Record<string, string> = {
   'admin.inspector.screen.codexAccount': 'Read Codex account quotas and usage',
   'admin.inspector.screen.codexAccount.hint': 'Off by default. Fremkit asks the local Codex CLI for your account type, plan, quotas and token usage. It does not publish your email, credentials or conversation text.',
   'admin.inspector.screen.codexSources': 'Codex history to show (local read only):',
+  'admin.inspector.screen.codexSources.hint': 'Selected history publishes chat titles (often taken from the first prompt), model and folder or branch labels to every widget subscribed to codex or codex-live, including marketplace widgets. Select only sources you want visible on this dashboard.',
+  'admin.inspector.screen.codexSources.subagents': 'More subagent source types',
   'admin.inspector.screen.codexSource.appServer': 'Codex desktop',
   'admin.inspector.screen.codexSource.vscode': 'VS Code',
   'admin.inspector.screen.codexSource.cli': 'CLI',
