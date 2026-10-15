@@ -98,3 +98,8 @@ Nothing the Claude providers publish carries the account's e-mail address. Shoul
 it is held to the rule every account provider is: the address is left out unless **/admin →
 Screen → Privacy → Show the account e-mail address** is ticked (see
 [connections.md](connections.md#the-accounts-e-mail-address)).
+
+The usage tile also shows a plan badge when the local Claude CLI reports a known subscription.
+Fremkit reads `claude auth status --json` from a fixed local binary path. It publishes only login
+state, authentication method and the known plan, never the account email or authentication data.
+The plan badge is independent of the optional account-usage read.

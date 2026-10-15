@@ -39,6 +39,7 @@ import { claudeRoutes } from './claude/routes.js'
 import { createClaudeSessionsProvider, createClaudeUsageProvider, createClaudeAccountProvider } from './claude/providers.js'
 import { createCodexProvider } from './providers/codex.js'
 import { createLocalChatValidator } from './codex/local-chats.js'
+import { createClaudeIdentityProvider } from './claude/identity.js'
 import { createAttention } from './claude/attention.js'
 import { DockState } from './dock/state.js'
 import { dockRoutes } from './dock/routes.js'
@@ -151,6 +152,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   for (const p of opts.providers ?? []) registry.register(p)
   registry.register(createClaudeSessionsProvider(tracker))
   registry.register(createClaudeUsageProvider(usage))
+  registry.register(createClaudeIdentityProvider())
   registry.register(createClaudeAccountProvider({
     filePath: join(opts.dataDir, 'claude-account.json'),
     enabled: () => store.get().privacy.claudeAccountUsage,
