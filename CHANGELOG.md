@@ -24,7 +24,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
   rather than only the one that declared it.
 
 ### Added
-- Open a saved GitHub run, notification or pull request from a widget without marking it read.
+- **GitHub rows open on the Mac.** Open a saved run, notification or pull request from a widget without marking it read.
 - **Local Docker and AI models.** Registry widgets can show up to 200 local containers and observed Ollama or MLX models. Fremkit refuses remote Docker contexts, distinguishes a missing CLI from a stopped daemon, and keeps the container list when stats fail.
 - **Borrow the Edge display.** Hide or show the dashboard from the helper menu without quitting it. Hidden state survives display rearrangements, and the mouse fence pauses while the Edge is borrowed. Touch and data collection continue; the dashboard reappears after a helper restart.
 - **Claude sessions: go to the session.** Touch a card and its window comes forward — the
