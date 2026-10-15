@@ -208,6 +208,32 @@ describe('account credential concurrency', () => {
     providers.stop()
   })
 
+  it('preserves subscribers through a quarantined credential write and retry', async () => {
+    const { manager, providers, secrets, values, cached } = setup()
+    const original = connection()
+    let saved = [original]
+    await manager.sync(saved)
+    providers.addSubscriber('gmail:account-a')
+    await vi.advanceTimersByTimeAsync(0)
+    secrets.set = async () => { throw new Error('store unavailable') }
+    const transaction = {
+      quarantine: async () => { saved = [] },
+      commit: async () => { saved = [original] },
+      rollback: async () => { saved = [original] },
+    }
+    await expect(manager.updateSecrets(original, { token: 'replacement' }, transaction)).rejects.toThrow('store unavailable')
+    await manager.sync(saved)
+    expect(saved).toEqual([])
+    expect(providers.channels()).toContain('gmail:account-a')
+    expect(cached.size).toBe(0)
+    secrets.set = async (key, value) => { values.set(key, value) }
+    await manager.updateSecrets(original, { token: 'repaired' }, transaction)
+    await manager.sync(saved)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(cached.get('gmail:account-a')).toBe('repaired')
+    providers.stop()
+  })
+
   it('unregisters suspended channels when their account is deleted after a failed refresh', async () => {
     const { manager, contexts, providers, secrets } = setup()
     await manager.sync([connection()])

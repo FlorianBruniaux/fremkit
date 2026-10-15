@@ -177,7 +177,9 @@ export class ConnectionManager {
 
   private async syncNow(connections: Connection[]): Promise<void> {
     const wanted = new Set(connections.map((c) => c.id))
-    for (const id of this.active.keys()) if (!wanted.has(id)) this.retire(id)
+    // Quarantine removes the binding from config until its credentials are repaired.
+    // Keep the suspended channel's subscribers so the existing widgets resume on repair.
+    for (const id of this.active.keys()) if (!wanted.has(id)) this.retire(id, this.failedSecrets.has(id))
     for (const connection of connections) {
       if (this.failedSecrets.has(connection.id)) continue
       const type = this.deps.types.get(connection.type)

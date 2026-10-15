@@ -57,6 +57,7 @@ describe('selected service and account authorization', () => {
     resolve('stale command')
     await nextTick()
     expect(JSON.stringify(reply.mock.calls)).not.toContain('stale')
+    expect(reply).toHaveBeenCalledWith(expect.objectContaining({ type: 'fremkit:result', id: 'gmail:account-a', error: expect.stringContaining('annulée') }), '*')
     send('fremkit:subscribe', 'gmail:account-b')
     expect([...relays.keys()]).toEqual(['gmail:account-b'])
   })

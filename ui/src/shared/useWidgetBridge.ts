@@ -191,9 +191,13 @@ export function useWidgetBridge(
         const version = authorizationVersion
         socket.command(channel, name, stampInstance(m.payload, instance().instanceId))
           .then((r) => {
-            if (trust.trusted && version === authorizationVersion && allowed('commands', channel)) reply(id, r)
+            if (!trust.trusted) return
+            if (version === authorizationVersion && allowed('commands', channel)) reply(id, r)
+            else reply(id, undefined, t('bridge.commandCancelled'))
           }, (e: Error) => {
-            if (trust.trusted && version === authorizationVersion && allowed('commands', channel)) reply(id, undefined, e.message)
+            if (!trust.trusted) return
+            if (version === authorizationVersion && allowed('commands', channel)) reply(id, undefined, e.message)
+            else reply(id, undefined, t('bridge.commandCancelled'))
           })
         break
       }
