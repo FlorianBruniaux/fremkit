@@ -24,7 +24,7 @@ The name is the Fremen survival kit from *Dune*.
   auto-rotation.
 - **A live editor** at `/admin`: the real page rendered with real widgets, drag and resize with
   snapping, overlap refused, keyboard nudges, undo/redo and autosave.
-- **Thirty widgets** — clock, weather, a pomodoro timer, CPU, memory, disks, a disk map, network
+- **Thirty-seven widgets** — clock, weather, a pomodoro timer, CPU, memory, disks, a disk map, network
   throughput, batteries, processes, volume, Spotify, Dock badges, a clipboard history, shortcut
   buttons, service status checks, published calendars, Claude Code sessions and limits; and,
   *from the registry*, meeting controls, CleanShot X actions, Azure DevOps builds, GitHub
@@ -101,7 +101,14 @@ Touchscreen Gestures must not be running (the panel takes one owner).
 7. **Allow Local Network** when macOS asks. It asks the first time the server reaches a device on
    your LAN — a Bambu printer, a Homey. The app to allow is "Fremkit Helper".
 
-8. **Launch at login**, optionally, from the menu bar menu. There is no `KeepAlive`: if the helper
+8. **Full Disk Access, optionally.** The disk map measures your home folder; without Full Disk
+   Access the folders macOS protects (Mail, Messages, other apps' containers) are shown as
+   unreadable, and macOS asks once for Desktop, Documents and Downloads. Grant it under Privacy &
+   Security → Full Disk Access → "Fremkit Helper" to measure everything — see
+   [troubleshooting](docs/troubleshooting.md#the-disk-map-says-folders-could-not-be-read). It is a
+   broad grant: the server the helper runs can then read every file.
+
+9. **Launch at login**, optionally, from the menu bar menu. There is no `KeepAlive`: if the helper
    crashes, open it again by hand.
 
 Rebuilding the helper later (`pnpm helper:build && pnpm helper:install`) is what registers changes
@@ -318,7 +325,7 @@ The list is short and it is all of it.
 | The clipboard, through `pbpaste` | the `clipboard` widget | whenever that widget is on the dashboard |
 | The Dock's badge counts and the icons of installed applications | the `notifications` and `shortcuts` widgets, through the helper | whenever one of those widgets is on the dashboard |
 | The volume, the battery, the disks, the processes, the network | those widgets, through `pmset`, `df`, `ps` and friends | whenever one of them is on the dashboard |
-| The names and sizes of the folders and files under your home folder or a volume — never their contents | the `disk-map` widget, through `fremkit-scan` or `du`; the last scan is kept in `data/disk-map/` | only when you scan, from that widget |
+| The names and sizes of the folders and files under your home folder or a volume — never their contents | the `disk-map` widget, through `fremkit-scan` or `du`; the last scan is kept in `data/disk-map/` | only when you tap **Scan** (the first time) or ↻ on that widget — never on its own, never on a timer |
 
 A widget that shows an account — its plan, how you signed in — never gets the account's e-mail
 address unless you tick **/admin → Screen → Privacy → Show the account e-mail address**. It is off
@@ -343,6 +350,8 @@ listens on `127.0.0.1` only.
 | A shortcut button to a NAS or a router has no icon | Expected: favicons of private and local addresses are not fetched. The button still works |
 | The admin shows an old version of itself | Reopen it, or Cmd+R in its window; it keeps one web view for the helper's lifetime |
 | Widgets break after pulling a new version | Restart the server: the widget bridge is read once, at start |
+| The disk map shows locked folders | Give "Fremkit Helper" Full Disk Access, or leave them unmeasured |
+| The disk map says "du (no helper)" | Expected under `pnpm dev`: the bundled `fremkit-scan` is only there under the helper |
 
 The rest, with the reasoning: **[docs/troubleshooting.md](docs/troubleshooting.md)**.
 
@@ -363,7 +372,7 @@ pnpm helper:test
 |---|---|
 | `server/` | Fastify 5 on 127.0.0.1:4242 — config, widget catalog, providers, connections, secrets, the bridge, the WebSocket |
 | `ui/` | Vue 3 — the dashboard, the admin, and the code they share |
-| `native/` | The Swift helper — kiosk window, HID touch driver, mouse fence, admin window, Dock badges, server supervision |
+| `native/` | The Swift helper — kiosk window, HID touch driver, mouse fence, admin window, Dock badges, server supervision, and `fremkit-scan`, the disk map's scanner |
 | `widgets/` | One folder per widget |
 | `scripts/` | Setup, dev, the helper's build and tests, the signing identity, kiosk, the Claude Code hooks |
 | `data/` | Your configuration and its assets. Git-ignored |

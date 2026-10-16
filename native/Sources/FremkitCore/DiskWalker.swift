@@ -45,15 +45,23 @@ public final class DiskWalker {
     public private(set) var stats = DiskWalkStats()
 
     static let bufferSize = 128 * 1024
+    /// How deep the walk goes before a directory is counted as unreadable instead of entered.
+    /// Each level holds a 128 KB buffer and an open descriptor; a process starts with 256 of
+    /// those, so a tree nested past this (a runaway build, a crafted one) would otherwise end in
+    /// failed opens counted as nothing, or in a large allocation.
+    public static let defaultMaxDepth = 128
+    private let maxDepth: Int
 
     public init(builder: DiskTreeBuilder,
                 isCancelled: @escaping () -> Bool = { false },
                 tickEvery: TimeInterval = 0.25,
+                maxDepth: Int = DiskWalker.defaultMaxDepth,
                 onDirectory: @escaping (_ path: [String], _ node: DiskNode) -> Void = { _, _ in },
                 onTick: @escaping (_ stats: DiskWalkStats, _ path: [String]) -> Void = { _, _ in }) {
         self.builder = builder
         self.isCancelled = isCancelled
         self.tickEvery = tickEvery
+        self.maxDepth = maxDepth
         self.onDirectory = onDirectory
         self.onTick = onTick
     }
@@ -178,6 +186,11 @@ public final class DiskWalker {
     }
 
     private func enter(_ subdirectory: Subdirectory, from parent: Int32) throws {
+        if builder.depth >= maxDepth {
+            builder.addUnreadable(name: subdirectory.name)
+            stats.unreadable += 1
+            return
+        }
         var fd: Int32
         repeat {
             fd = openat(parent, subdirectory.name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)

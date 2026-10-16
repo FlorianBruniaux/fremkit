@@ -14,9 +14,9 @@ import type { CommandContext, Provider } from './types.js'
 /**
  * The `disk-map` channel: what fills a disk, for the DaisyDisk-style ring of `widgets/disk-map`.
  *
- * Scans run on demand only — the widget's ↻, or its first look at a root never scanned — and
- * never on a clock: a walk of a home folder reads a million entries. One at a time; a new one
- * cancels the one running. The result is held in memory pruned (see `disk-map-tree.ts`) and saved
+ * Scans run on demand only — a tap on the widget — and never on a clock: a walk of a home folder
+ * reads a million entries. One at a time: a new scan of the root being scanned replaces the one
+ * running, a scan of another root waits its turn. The result is held in memory pruned (see `disk-map-tree.ts`) and saved
  * under `<dataDir>/disk-map/`, so a restart shows the last scan with its date.
  *
  * The widget never names a path. It names a root from a closed list (the home folder, the local
@@ -47,6 +47,8 @@ export interface DiskMapSnapshot {
   scanner: DiskScanner['kind'] | null
   roots: { id: string; label: string; kind: DiskRoot['kind'] }[]
   scanning: { root: string; path: string[]; startedAt: number; directories: number; files: number; current: string[] } | null
+  /** Roots waiting for the running scan to finish, in the order they will run. */
+  queued: string[]
   results: Record<string, RootSummary>
   /** The last failure per root; `path` is the folder that was being rescanned, [] for the root. */
   errors: Record<string, { path: string[]; code: ScanFailure | 'gone' }>
@@ -86,6 +88,8 @@ const ViewPayload = z.object({
 }).strict()
 const TargetPayload = z.object({ ...INSTANCE, root: ROOT_ID, path: SEGMENTS.default([]) }).strict()
 const EmptyPayload = z.object({ ...INSTANCE }).strict()
+/** `root` absent cancels whatever runs; present, it cancels that root's scan, running or queued. */
+const CancelPayload = z.object({ ...INSTANCE, root: ROOT_ID.optional() }).strict()
 
 const SAVE_VERSION = 1
 const SAVED = z.object({
@@ -217,6 +221,12 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
 
   let running: Running | null = null
   let nextId = 1
+  /**
+   * Scans of other roots asked for while one runs, by root, oldest first. Two tiles on two roots
+   * tapped together would otherwise cancel each other, and the first would be left on "never
+   * scanned" with no error to say why. A root asked for again keeps its place with the new path.
+   */
+  const queue = new Map<string, string[]>()
   /** The last failure per root, until a scan of that root succeeds. */
   const errors = new Map<string, { path: string[]; code: ScanFailure | 'gone' }>()
 
@@ -232,7 +242,7 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
     return findNode(h.tree, segments)
   }
 
-  const startScan = async (rootId: string, wanted: string[]): Promise<{ ok: boolean; error?: string }> => {
+  const startScan = async (rootId: string, wanted: string[]): Promise<{ ok: boolean; error?: string; queued?: boolean }> => {
     await load()
     const root = (await listRoots()).find((r) => r.id === rootId)
     if (!root) return { ok: false, error: 'unknown-root' }
@@ -241,6 +251,11 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
     // "gone" — never a reason to walk the whole root instead.
     const segments = wanted.length > 0 && h ? wanted : []
     if (wanted.length > 0 && (!h || !lookup(h, wanted))) return { ok: false, error: 'gone' }
+    if (running && running.root !== rootId) {
+      queue.set(rootId, segments)
+      return { ok: true, queued: true }
+    }
+    queue.delete(rootId)
     let path: string
     try {
       path = await resolveInside(root.path, segments)
@@ -257,6 +272,11 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
       minBytes: Math.min(DEFAULT_POLICY.minBytes, Math.max(4096, Math.floor((lookup(h!, segments)?.size ?? 0) / 4000))),
     }
     const s = await scanner()
+    // Checked again after the awaits: another root may have started meanwhile.
+    if (running && running.root !== rootId) {
+      queue.set(rootId, segments)
+      return { ok: true, queued: true }
+    }
     // No await between the cancel and `running = …`: two commands racing would otherwise both
     // cancel nothing, and the first scan would walk on with nobody reading it.
     running?.handle.cancel()
@@ -266,6 +286,7 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
     handle.result.then(async (outcome) => {
       if (running?.id !== id) return
       running = null
+      next()
       errors.delete(rootId)
       const current = held.get(rootId)
       if (segments.length === 0 || !current) {
@@ -288,8 +309,24 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
       running = null
       const code: ScanFailure = err instanceof ScanError ? err.code : 'failed'
       if (code !== 'cancelled') errors.set(rootId, { path: segments, code })
+      next()
     })
     return { ok: true }
+  }
+
+  /** Starts the oldest queued scan, and the one after it if that one cannot start. */
+  const next = (): void => {
+    if (running) return
+    const first = queue.entries().next()
+    if (first.done) return
+    const [rootId, segments] = first.value
+    queue.delete(rootId)
+    startScan(rootId, segments).then((r) => {
+      // `missing` is recorded by `startScan`; a folder gone meanwhile is recorded here, so the
+      // tile that asked says so instead of waiting for nothing.
+      if (!r.ok && r.error === 'gone') errors.set(rootId, { path: segments, code: 'gone' })
+      if (!r.ok) next()
+    }, () => next())
   }
 
   const snapshot = async (): Promise<DiskMapSnapshot> => {
@@ -313,6 +350,7 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
         root: running.root, path: running.segments, startedAt: running.startedAt,
         directories: running.progress.directories, files: running.progress.files, current: running.progress.path,
       },
+      queued: [...queue.keys()],
       results,
       errors: Object.fromEntries(roots.flatMap((r) => { const e = errors.get(r.id); return e ? [[r.id, e]] : [] })),
     }
@@ -349,9 +387,11 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
       },
       cancel: async (payload, ctx?: CommandContext) => {
         if (!ctx?.loopback) return localOnly()
-        const parsed = EmptyPayload.safeParse(payload ?? {})
+        const parsed = CancelPayload.safeParse(payload ?? {})
         if (!parsed.success) return invalid(parsed.error)
-        running?.handle.cancel()
+        const { root } = parsed.data
+        if (root !== undefined) queue.delete(root)
+        if (root === undefined || running?.root === root) running?.handle.cancel()
         return { ok: true }
       },
       /** Shows the folder in Finder — the path comes from the server's tree, never the payload. */

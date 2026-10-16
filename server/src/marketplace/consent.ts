@@ -17,7 +17,7 @@
  * and holding them to a record nothing ever writes would simply break them.
  */
 
-import { ConnectionDeclSchema, type ConnectionDecl, type WidgetManifest } from '../widgets/manifest.js'
+import { builtinOnlyChannels, ConnectionDeclSchema, type ConnectionDecl, type WidgetManifest } from '../widgets/manifest.js'
 import type { WidgetCatalog, WidgetSource } from '../widgets/catalog.js'
 import type { Config, WidgetConsent } from '../config/schema.js'
 
@@ -184,6 +184,8 @@ export function effectiveManifest(
   consent: WidgetConsent | undefined,
 ): WidgetManifest {
   if (source === 'builtin') return manifest
+  // The catalogue refuses such a manifest already; this is the line that holds if it ever did not.
+  if (builtinOnlyChannels(manifest).length > 0) consent = undefined
   if (!consent) {
     return {
       ...manifest, subscriptions: [], commands: [], connection: undefined,

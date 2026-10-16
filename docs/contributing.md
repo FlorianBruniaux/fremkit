@@ -17,7 +17,7 @@ server/    Fastify 5 server on 127.0.0.1:4242 — config, widget catalog, provid
            the secret store, the widget bridge and the WebSocket
 ui/        Vue 3: the dashboard (src/dashboard), the admin (src/admin), shared code (src/shared)
 native/    The Swift helper: kiosk window, HID touch driver, mouse fence, admin window,
-           Dock badges, server supervision
+           Dock badges, server supervision, `fremkit-scan` (the disk map's scanner)
 widgets/   One folder per widget
 themes/    One folder per theme — see themes.md
 scripts/   setup, dev, build/install/test the helper, signing identity, kiosk, Claude Code hooks

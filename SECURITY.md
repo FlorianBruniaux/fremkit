@@ -128,9 +128,14 @@ here:
 The helper (`native/`) is a small AppKit app that owns the kiosk window, the HID touch driver and
 the Dock badges, and supervises the server process.
 
-- **Its TCC grants are real.** Input Monitoring and Accessibility let it read the touch panel and
-  post synthetic mouse events. Those are powerful permissions, granted to that bundle, and they
-  cover the helper only — not the Node server it spawns, which is an ordinary child process.
+- **Its TCC grants are real, and they reach its children.** Input Monitoring and Accessibility
+  let it read the touch panel and post synthetic mouse events. macOS attributes the Node server
+  and the programs it runs (such as `fremkit-scan`) to the helper as their responsible app, so a
+  file-access grant made to "Fremkit Helper" — Files and Folders, or Full Disk Access — is also
+  the server's.
+- **Full Disk Access is optional.** Only the disk map benefits from it: without it, the folders
+  macOS protects are shown as unreadable. With it, the helper, the server and every provider can
+  read every file of the account. Grant it only if you want those folders measured.
 - **It is signed with a self-signed identity** created by
   `scripts/create-signing-identity.sh` ("Fremkit Helper Dev"), because macOS ties TCC grants to
   the signature: without a stable one you would re-approve the permissions after every build.

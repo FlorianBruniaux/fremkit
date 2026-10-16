@@ -56,6 +56,8 @@ export interface DiskScanner {
 /** A finished line of output can be the whole tree; anything beyond this is not ours. */
 const MAX_LINE = 64 * 1024 * 1024
 const KILL_AFTER_MS = 3000
+/** How a du message starts, BSD's `du: ` or GNU's `/usr/bin/du: `. */
+const DU_PREFIX = /^(?:\/\S*\/)?du: /
 
 type Spawn = typeof spawn
 
@@ -242,8 +244,32 @@ export class DuParser {
     else delete node.children
   }
 
-  /** One stdout line: `<kilobytes>\t<path>`. Returns the path below the root, or null. */
+  /**
+   * du ends each entry with a newline and has no other separator, so a folder whose name holds
+   * one arrives as two lines: the second does not start with a size. Each line is held until the
+   * next one says whether it was whole; `flush()` hands over the last. A refusal is applied as
+   * soon as it reads as one, and only a message that does not yet is held for its next half.
+   */
+  private pendingOut: string | null = null
+  private pendingErr: string | null = null
+
+  /**
+   * One stdout line: `<kilobytes>\t<path>`. Returns the path below the root of the entry this
+   * line completes — the one before it — or null.
+   */
   line(text: string): string[] | null {
+    if (this.pendingOut !== null && !/^\d+\t/.test(text)) { this.pendingOut += `\n${text}`; return null }
+    const whole = this.pendingOut
+    this.pendingOut = text
+    return whole === null ? null : this.entry(whole)
+  }
+
+  /** The entry held back by `line()`, once du has exited. */
+  flush(): void {
+    if (this.pendingOut !== null) { const o = this.pendingOut; this.pendingOut = null; this.entry(o) }
+  }
+
+  private entry(text: string): string[] | null {
     const tab = text.indexOf('\t')
     if (tab <= 0) return null
     const kb = Number(text.slice(0, tab))
@@ -265,12 +291,20 @@ export class DuParser {
    * `/usr/bin/du: cannot read directory '<path>': Permission denied`.
    */
   errorLine(text: string): void {
-    const match = /^(?:\/\S*\/)?du: (.+): (?:Permission denied|Operation not permitted)$/.exec(text)
-    if (!match) return
-    const gnu = /^cannot (?:read directory|access) '(.+)'$/.exec(match[1])
+    const joined = this.pendingErr !== null && !DU_PREFIX.test(text) ? `${this.pendingErr}\n${text}` : text
+    this.pendingErr = null
+    if (this.refusal(joined)) return
+    // Not a refusal, or not yet: the first half of one whose path holds a newline.
+    if (DU_PREFIX.test(joined) && joined.length <= 64 * 1024) this.pendingErr = joined
+  }
+
+  private refusal(text: string): boolean {
+    const match = /^(?:\/\S*\/)?du: (.+): (?:Permission denied|Operation not permitted)$/s.exec(text)
+    if (!match) return false
+    const gnu = /^cannot (?:read directory|access) '(.+)'$/s.exec(match[1])
     const segments = this.segments(gnu ? gnu[1] : match[1])
-    if (!segments) return
-    if (segments.length === 0) { this.rootUnreadable = true; return }
+    if (!segments) return true
+    if (segments.length === 0) { this.rootUnreadable = true; return true }
     this.unreadable++
     const node = this.nodeAt(segments)
     node.kind = 'x'
@@ -281,10 +315,12 @@ export class DuParser {
       ancestor = ancestor.children!.find((c) => c.name === segment)!
       ancestor.unreadable = (ancestor.unreadable ?? 0) + 1
     }
+    return true
   }
 
   /** The finished tree: what each folder holds besides its subfolders goes into its "others". */
   finish(policy: DiskPolicy, maxDepth: number): DiskNode {
+    this.flush()
     const settle = (node: DiskNode, depth: number): void => {
       const children = node.children ?? []
       for (const child of children) settle(child, depth + 1)
@@ -326,6 +362,7 @@ export function createDuScanner(spawnImpl: Spawn = spawn, du = '/usr/bin/du'): D
       const result = run.exited.then(
         (code) => {
           if (cancelled) throw new ScanError('cancelled')
+          parser.flush()
           // du exits 1 when it met errors along the way and still printed its totals.
           if (code !== 0 && code !== 1) throw new ScanError('failed')
           if (parser.rootUnreadable) throw new ScanError('unreadable')

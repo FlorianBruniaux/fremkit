@@ -303,6 +303,11 @@ document.documentElement.style.setProperty('--h', Fremkit.size.px.height + 'px')
 `bambu:<connectionId>`, `github:<connectionId>`, `synology:<connectionId>`,
 and `calendar:<connectionId>` for an ICS connection.
 
+`disk-map` and `clipboard` are reserved for their built-in widgets and refused in a third-party
+manifest — at install and when the catalogue reads `data/widgets` — because the first carries the
+names of your folders and files and the second a preview of everything you copy. `config` is
+refused in every manifest.
+
 A manifest may declare a whole family with a `:*` suffix — `"subscriptions": ["azure-devops:*"]` —
 and build the exact channel from its `connection` setting at runtime.
 

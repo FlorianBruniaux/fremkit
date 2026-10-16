@@ -162,3 +162,4 @@ agent's in-flight work. Say where the worktree is, and remove it once the work h
 | change the dashboard | `ui/src/dashboard/App.vue`, `NavBar.vue`, `CompactWidgetFrame.vue`, `NavPopover.vue` |
 | change what widgets can do | `server/src/bridge/fremkit.js` and `ui/src/shared/useWidgetBridge.ts`, together |
 | touch or the kiosk window | `native/Sources/FremkitHelper/` |
+| change the disk map | `server/src/providers/disk-map*.ts`, `native/Sources/FremkitCore/Disk*.swift`, `native/Sources/FremkitScan`, `widgets/disk-map` |

@@ -26,6 +26,7 @@ let scanSuites: [(String, () -> XCTestCase, [TestMethod])] = [
         ("testAnotherDeviceIsNotCrossed", { try ($0 as! DiskWalkerTests).testAnotherDeviceIsNotCrossed() }),
         ("testCancellationStopsTheWalk", { ($0 as! DiskWalkerTests).testCancellationStopsTheWalk() }),
         ("testMissingRootIsAnError", { ($0 as! DiskWalkerTests).testMissingRootIsAnError() }),
+        ("testTooDeepIsUnreadableNotEntered", { try ($0 as! DiskWalkerTests).testTooDeepIsUnreadableNotEntered() }),
         ("testFinishedDirectoriesAreReportedDownToTheProgressDepth", { try ($0 as! DiskWalkerTests).testFinishedDirectoriesAreReportedDownToTheProgressDepth() }),
     ]),
 ]
