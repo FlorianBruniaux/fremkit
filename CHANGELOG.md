@@ -14,8 +14,8 @@ tagged `vX.Y.Z`.
 
 ### Added
 - **Choose page names in the Edge bar.** Screen can keep the familiar page dots or show scrolling
-  names with a current-page marker. Arrows move by a visible page. Compact widgets retain their
-  space, and page taps still work with the admin gestures.
+  names with a current-page marker. Arrows move by a visible page, and the admin reserves room
+  for compact widgets. Page taps still work with the admin gestures.
 
 ## 0.4.1 — 2026-10-16
 

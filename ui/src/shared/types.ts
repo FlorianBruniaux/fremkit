@@ -290,7 +290,7 @@ export const navWidgetsIn = (display: Display, slot: NavSlot): NavWidget[] =>
 
 /** A sanity ceiling on the bar's widget count; mirrors the server's `MAX_NAV_WIDGETS`. */
 export const MAX_NAV_WIDGETS = 12
-/** Conservative ten-cell allowance for page navigation when adding compact bar widgets. */
+/** Minimum width retained for dot navigation. */
 export const NAV_CENTRE_RESERVE_CELLS = 10
 /**
  * The two settings that make a compact widget need more room than its manifest asks for, and
@@ -317,9 +317,32 @@ export function navCellsUsed(display: Display, manifests: Record<string, WidgetM
   return navWidgetsOf(display).reduce((sum, w) => sum + compactWidth(manifests[w.widgetId], mergeSettings(manifests[w.widgetId], w.settings)), 0)
 }
 
-/** Whether one more compact widget of that width stays within the bar's widget budget. */
-export function navHasRoom(display: Display, manifests: Record<string, WidgetManifest>, width: number): boolean {
-  return navCellsUsed(display, manifests) + width <= display.cols - NAV_CENTRE_RESERVE_CELLS
+/**
+ * The navigation stays centred between equally wide side tracks. Budget against the wider side,
+ * including its gaps and padding, or a full cluster can disappear behind the centre.
+ */
+export function navHasRoom(
+  display: Display,
+  manifests: Record<string, WidgetManifest>,
+  width: number,
+  pageCount: number,
+  slot: NavSlot = 'left',
+): boolean {
+  const scale = navHeightOf(display) / DEFAULT_NAV_HEIGHT
+  const clusterWidth = (side: NavSlot): number => {
+    const widgets = navWidgetsIn(display, side)
+    const content = widgets.reduce((sum, widget) =>
+      sum + compactWidth(manifests[widget.widgetId], mergeSettings(manifests[widget.widgetId], widget.settings)) * display.cell, 0)
+    const count = widgets.length + (side === slot && width > 0 ? 1 : 0)
+    return content + (side === slot ? width * display.cell : 0)
+      + Math.max(0, count - 1) * 12 * scale + 24 * scale
+  }
+  const visibleNames = Math.min(Math.max(pageCount, 1), 5)
+  const centreWidth = display.navStyle === 'names'
+    ? (visibleNames * 120 + Math.max(0, visibleNames - 1) * 8) * scale
+      + (pageCount > visibleNames ? 112 : 0)
+    : NAV_CENTRE_RESERVE_CELLS * display.cell
+  return 2 * Math.max(clusterWidth('left'), clusterWidth('right')) + centreWidth <= display.cols * display.cell
 }
 
 /**

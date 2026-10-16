@@ -473,10 +473,10 @@ export function createAdminStore(deps: StoreDeps): AdminStore {
       const manifest = state.manifests[widgetId]
       if (!manifest) { state.toast = t('admin.store.unknownWidget', { id: widgetId }); return }
       if (!manifest.compact) { state.toast = t('admin.store.notCompact', { id: widgetId }); return }
-      // Room is measured in cells, not in widgets: the clusters must not reach the dots.
+      // The wider cluster sets both side tracks, keeping the page buttons centred and visible.
       const display = state.config!.display
       const width = compactWidth(manifest, mergeSettings(manifest, {}))
-      if (navWidgetsOf(display).length >= MAX_NAV_WIDGETS || !navHasRoom(display, state.manifests, width)) {
+      if (navWidgetsOf(display).length >= MAX_NAV_WIDGETS || !navHasRoom(display, state.manifests, width, state.config!.pages.length)) {
         state.toast = t('admin.store.navFull', { id: pick(manifest.name) || widgetId })
         return
       }
@@ -520,6 +520,13 @@ export function createAdminStore(deps: StoreDeps): AdminStore {
     },
 
     updateNavWidget(instanceId: string, patch: Partial<NavWidget>): void {
+      const display = state.config!.display
+      const candidate = { ...display, navWidgets: navWidgetsOf(display).map((widget) =>
+        widget.instanceId === instanceId ? { ...widget, ...patch } : widget) }
+      if (!navHasRoom(candidate, state.manifests, 0, state.config!.pages.length)) {
+        state.toast = t('admin.store.navFull', { id: instanceId })
+        return
+      }
       apply((c) => {
         const w = navWidgetsOf(c.display).find((x) => x.instanceId === instanceId)
         if (w) Object.assign(w, patch)

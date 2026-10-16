@@ -19,7 +19,7 @@ import { pick, useI18n, type Locale } from '../shared/i18n'
 import { useConfirm } from '../shared/useConfirm'
 import { CONTRIBUTORS, MAINTAINER, REGISTRY_REPOSITORY, REPOSITORY, VERSION } from '../shared/credits'
 import { BUILTIN_THEME, useThemes } from '../shared/theme'
-import { ADMIN_GESTURES, DEFAULT_ADMIN_GESTURE, DEFAULT_NAV_STYLE, NAV_HEIGHTS, navHeightOf,
+import { ADMIN_GESTURES, DEFAULT_ADMIN_GESTURE, DEFAULT_NAV_STYLE, NAV_HEIGHTS, navHasRoom, navHeightOf,
   type AdminGesture, type Background, type NavHeight, type NavStyle } from '../shared/types'
 import { useAdminStore } from './store'
 
@@ -135,6 +135,12 @@ const NAV_STYLE_OPTIONS = computed(() => (['dots', 'names'] as const).map((value
 })))
 function setNavStyle(value: string): void {
   const next = value as NavStyle
+  const config = s.state.config!
+  const candidate = { ...config.display, navStyle: next }
+  if (!navHasRoom(candidate, s.state.manifests, 0, config.pages.length)) {
+    s.state.toast = t('admin.inspector.screen.navStyle.noRoom')
+    return
+  }
   s.apply((c) => { c.display.navStyle = next === DEFAULT_NAV_STYLE ? undefined : next })
 }
 const kioskUrl = `${location.origin}/?kiosk=1`

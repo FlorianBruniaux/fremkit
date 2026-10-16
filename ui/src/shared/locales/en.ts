@@ -159,6 +159,7 @@ export const en: Record<string, string> = {
   'admin.inspector.screen.navStyle.hint': 'Dots by default, or scrolling names. Compact widgets keep their space.',
   'admin.inspector.screen.navStyle.dots': 'Dots',
   'admin.inspector.screen.navStyle.names': 'Names',
+  'admin.inspector.screen.navStyle.noRoom': 'Not enough room for names: move or remove compact widgets.',
   'admin.inspector.screen.adminGesture': 'Open the admin from the bar',
   'admin.inspector.screen.adminGesture.both': 'Both',
   'admin.inspector.screen.adminGesture.longPress': 'Long press',

@@ -564,12 +564,25 @@ describe('navigation bar widgets', () => {
     expect(store.state.toast).toMatch(/inconnu/)
   })
 
-  it('refuses a widget once the clusters would reach the page dots', async () => {
-    // 64 columns, 10 kept for the dots: ten 5-cell clocks fit (50), the eleventh (55) does not.
+  it('keeps the wider cluster visible beside centred page dots', async () => {
+    // Five 5-cell clocks plus gaps and padding fit; a sixth would clip the left cluster.
     const { store } = makeBar()
     await store.load()
     for (let i = 0; i < 11; i++) store.addNavWidget('clock')
-    expect(bar(store)).toHaveLength(10)
+    expect(bar(store)).toHaveLength(5)
+    expect(store.state.toast).toMatch(/buttons|boutons/)
+    await vi.advanceTimersByTimeAsync(SAVE_DEBOUNCE_MS)
+  })
+
+  it('reserves more room for named pages and rejects a crowded style switch', async () => {
+    const { store } = makeBar()
+    await store.load()
+    store.apply((c) => {
+      c.pages = Array.from({ length: 12 }, (_, i) => ({ id: `page-${i}`, name: `Page ${i}`, widgets: [] }))
+      c.display.navStyle = 'names'
+    })
+    for (let i = 0; i < 5; i++) store.addNavWidget('clock')
+    expect(bar(store)).toHaveLength(4)
     expect(store.state.toast).toMatch(/buttons|boutons/)
     await vi.advanceTimersByTimeAsync(SAVE_DEBOUNCE_MS)
   })

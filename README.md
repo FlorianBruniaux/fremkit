@@ -237,8 +237,9 @@ border, **fill** colours the whole tile. The screen itself has a background colo
 you like. Its middle shows page dots by default. In *Screen → Pages in the bar*, choose scrolling names if you prefer them. The sides stay available for compact widgets. **Hold or double-tap
 a page button to open the admin** — the Edge has no keyboard, so this is the way in from the screen.
 *Screen → Open the admin from the bar* chooses between the two gestures, or accepts both, which
-is the default. When both gestures are enabled, a page tap waits 500 ms for a possible
-double tap. With only long press enabled, the page opens on release. A single page keeps its
+is the default. When both gestures are enabled, a page tap waits briefly for a possible
+double tap. With only long press enabled, the page opens on release. The admin prevents a
+named-page layout that would hide compact widgets. A single page keeps its
 button so the admin shortcut remains available.
 
 **Compact widgets.** Widgets can live *in* the bar, in a left or a right cluster, in the order

@@ -159,6 +159,7 @@ export const fr: Record<string, string> = {
   'admin.inspector.screen.navStyle.hint': 'Points par défaut, ou noms défilants. Les widgets compacts gardent leur place.',
   'admin.inspector.screen.navStyle.dots': 'Points',
   'admin.inspector.screen.navStyle.names': 'Noms',
+  'admin.inspector.screen.navStyle.noRoom': 'Pas assez de place pour les noms : déplacez ou retirez des widgets compacts.',
   'admin.inspector.screen.adminGesture': 'Ouvrir l’admin depuis la barre',
   'admin.inspector.screen.adminGesture.both': 'Les deux',
   'admin.inspector.screen.adminGesture.longPress': 'Appui long',
