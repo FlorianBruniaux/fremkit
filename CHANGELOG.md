@@ -44,6 +44,10 @@ tagged `vX.Y.Z`.
   Accessibility, which none of the three is using.
 
 ### Fixed
+- **Input Monitoring is asked on a first launch.** Fremkit asked for Accessibility and Input
+  Monitoring at the same moment, and macOS, which shows one such prompt at a time, dropped the
+  second: touch said "permission missing" and Fremkit was not even listed under Input Monitoring.
+  It now asks for Input Monitoring first and for Accessibility once that is answered.
 - **Save a backup from the Fremkit admin window.** **Screen → Backup → Save** did nothing in the
   helper's own admin window, which dropped the download; it now asks where to save the archive,
   as a browser does.

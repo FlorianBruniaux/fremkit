@@ -141,9 +141,9 @@ final class TouchDriver {
         running = true
         reopenBackoff = Self.reopenDelay
 
-        // Ask for Input Monitoring before opening, otherwise the open fails silently
-        // the first time and the user never sees a prompt.
-        _ = IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
+        // Input Monitoring is asked by the caller, not here: a request fired at launch alongside
+        // the Accessibility prompt was lost (macOS shows one privacy prompt at a time). See
+        // `PermissionSequencer`.
 
         openManager()
 

@@ -138,6 +138,15 @@ let suites: [(String, () -> XCTestCase, [TestMethod])] = [
         ("testOverrideMovesEverything", { ($0 as! HelperPathsTests).testOverrideMovesEverything() }),
         ("testRelativeOrEmptyOverrideIsIgnored", { ($0 as! HelperPathsTests).testRelativeOrEmptyOverrideIsIgnored() }),
     ]),
+    ("PermissionSequencerTests", { PermissionSequencerTests() }, [
+        ("testAsksInputMonitoringAloneWhenTouchNeedsIt", { ($0 as! PermissionSequencerTests).testAsksInputMonitoringAloneWhenTouchNeedsIt() }),
+        ("testAsksAccessibilityOnceInputMonitoringIsAnswered", { ($0 as! PermissionSequencerTests).testAsksAccessibilityOnceInputMonitoringIsAnswered() }),
+        ("testAsksAccessibilityAnywayAfterTheTimeout", { ($0 as! PermissionSequencerTests).testAsksAccessibilityAnywayAfterTheTimeout() }),
+        ("testAsksAccessibilityAtOnceWhenInputMonitoringIsAlreadyAnswered", { ($0 as! PermissionSequencerTests).testAsksAccessibilityAtOnceWhenInputMonitoringIsAlreadyAnswered() }),
+        ("testTouchOffNeverAsksInputMonitoring", { ($0 as! PermissionSequencerTests).testTouchOffNeverAsksInputMonitoring() }),
+        ("testEverythingOffAsksNothing", { ($0 as! PermissionSequencerTests).testEverythingOffAsksNothing() }),
+        ("testBeginOnlyActsOnce", { ($0 as! PermissionSequencerTests).testBeginOnlyActsOnce() }),
+    ]),
 ]
 
 var passed = 0

@@ -31,24 +31,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// URL actions that arrived while launching, replayed as soon as everything exists.
     private var pendingActions: [HelperURLAction] = []
 
+    /// Orders the launch prompts: Input Monitoring first when touch needs it, then Accessibility.
+    private var permissions = PermissionSequencer(touch: false, fence: false, dock: false)
+    /// Polls the Input Monitoring answer while Accessibility waits for it.
+    private var permissionTimer: Timer?
+
     /// Period of the Accessibility re-check, matching the fence's own retry period.
     private static let accessibilityInterval: TimeInterval = 5
+    /// Period of the Input Monitoring check while the launch prompts wait on it.
+    private static let permissionInterval: TimeInterval = 1
+
+    private static var uptime: TimeInterval { ProcessInfo.processInfo.systemUptime }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
         config = Self.loadConfig()
         poster.scrollInvert = config.scrollInvert
-
-        // Accessibility is needed to post the synthetic events the touch driver generates, not
-        // just to create the fence tap, so ask for it once at launch whatever the fence setting is.
-        // Only a helper with touch, fence and Dock badges all switched off has no use for it — a
-        // copy run beside the installed one for testing, typically — and is not made to ask: a
-        // prompt answered for that copy would be answered for the bundle id both share.
-        if config.touch || config.fence || config.dock {
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-            _ = AXIsProcessTrustedWithOptions(options)
-        }
 
         let menu = StatusMenu()
         self.menu = menu
@@ -104,7 +103,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.edgeDidChange(edge)
         }
 
-        if config.touch { driver.start() }
+        // Accessibility is needed to post the synthetic events the touch driver generates, not
+        // just to create the fence tap, so it is asked at launch whatever the fence setting is —
+        // but after Input Monitoring when touch still needs that one: see `PermissionSequencer`.
+        // The sequencer also starts the touch driver.
+        permissions = PermissionSequencer(touch: config.touch, fence: config.fence, dock: config.dock)
+        performPermissions(permissions.begin(inputMonitoring: Permissions.inputMonitoring, now: Self.uptime))
+        if permissions.isWaiting { startPermissionSequence() }
         syncFences()
         if config.dock { dockBadges.start() }
 
@@ -154,6 +159,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         accessibilityTimer?.invalidate()
         accessibilityTimer = nil
+        permissionTimer?.invalidate()
+        permissionTimer = nil
         server?.stopAndWait(timeout: 2)
         driver?.stop()
         fence?.stop()
@@ -162,6 +169,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // MARK: - Permissions
+
+    private func performPermissions(_ actions: [PermissionSequencer.Action]) {
+        for action in actions {
+            switch action {
+            case .requestInputMonitoring:
+                Permissions.requestInputMonitoring()
+                // The driver is not started until the answer is in; say what it is waiting for.
+                menu?.update { $0.touch = .notPermitted }
+            case .requestAccessibility:
+                Permissions.requestAccessibility()
+            case .startTouch:
+                // The menu may have switched touch off while the prompt was up.
+                if config.touch { driver?.start() }
+            }
+        }
+    }
+
+    /// Waits for the Input Monitoring answer, then lets the sequencer ask for Accessibility.
+    private func startPermissionSequence() {
+        // `.common` so the check keeps ticking while a menu is being tracked.
+        let timer = Timer(timeInterval: Self.permissionInterval, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.performPermissions(self.permissions.poll(inputMonitoring: Permissions.inputMonitoring, now: Self.uptime))
+            guard !self.permissions.isWaiting else { return }
+            self.permissionTimer?.invalidate()
+            self.permissionTimer = nil
+            self.refreshMenu()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        permissionTimer = timer
+    }
 
     /// Re-checks the Accessibility grant every few seconds until it is granted, so the touch line
     /// stops warning about it as soon as the user comes back from System Settings.
@@ -292,7 +330,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             self.config.touch = on
             self.saveConfig()
-            if on { self.driver?.start() } else { self.driver?.stop() }
+            if on {
+                // Touch switched on after launch: the launch sequence did not ask for Input
+                // Monitoring, so ask now. Accessibility was asked at launch, so no prompt clashes.
+                if Permissions.inputMonitoring == .unknown { Permissions.requestInputMonitoring() }
+                self.driver?.start()
+            } else {
+                self.driver?.stop()
+            }
+            // The driver reports only changes; resync in case the menu showed the launch wait.
+            if let driver = self.driver { self.menu?.update { $0.touch = driver.state } }
             self.refreshMenu()
         }
 
