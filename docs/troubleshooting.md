@@ -244,6 +244,12 @@ under the helper, your terminal under `pnpm dev`. What it meets there:
   reaches it, and remembers the answer. A folder you said no to stays unreadable until you change
   it under Privacy & Security → Files and Folders.
 
+While such a dialog waits for an answer the scan cannot open that folder, and the tile says so:
+*macOS is asking whether Fremkit may open "Documents" — answer the window on the Mac*. The dialog
+can be hidden behind the dashboard on the Edge, so look for it on the other screens too. If nobody
+answers within 30 seconds the scan goes on without that folder, which then counts as unreadable;
+answer the dialog (or grant access in System Settings) and press ↻ to measure it.
+
 The widget never counts such a folder as small or empty: it is drawn hatched with a lock, listed
 as *unreadable*, and the tile says how many could not be read. Its size is simply unknown.
 

@@ -10,6 +10,16 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 (`package.json`, `server/package.json`, `ui/package.json`, `server/src/version.ts`) and is
 tagged `vX.Y.Z`.
 
+## Unreleased
+
+### Fixed
+- **The disk map no longer looks stuck while macOS asks for access to a folder.** When a scan
+  reaches Documents, Desktop, Downloads, iCloud Drive or a removable volume for the first time,
+  macOS asks whether Fremkit may open it, and the scan cannot go on until somebody answers — a
+  question that could sit unseen behind the dashboard. The tile now says which folder macOS is
+  asking about and that the answer is on the Mac; after 30 seconds without one, the scan goes on
+  without that folder and counts it as unreadable.
+
 ## 0.4.0 — 2026-10-16
 
 ### Added

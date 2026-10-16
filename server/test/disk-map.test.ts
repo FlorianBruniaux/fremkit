@@ -3,13 +3,16 @@ import { mkdir, mkdtemp, readdir, rm, symlink, writeFile } from 'node:fs/promise
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createDiskMapProvider, parseMounts, resolveInside, type DiskMapSnapshot } from '../src/providers/disk-map.js'
-import { ScanError, type DiskScanner, type ScanOutcome } from '../src/providers/disk-map-scanner.js'
+import { ScanError, type DiskScanner, type ScanOutcome, type ScanProgress } from '../src/providers/disk-map-scanner.js'
 import type { DiskNode, DiskPolicy } from '../src/providers/disk-map-tree.js'
 import type { Provider } from '../src/providers/types.js'
 
 const LOCAL = { loopback: true }
 
-interface Started { path: string; policy: DiskPolicy; resolve(o: ScanOutcome): void; reject(e: Error): void; cancelled: boolean }
+interface Started {
+  path: string; policy: DiskPolicy; resolve(o: ScanOutcome): void; reject(e: Error): void; cancelled: boolean
+  progress(p: ScanProgress): void
+}
 
 /** A scanner whose scans the test finishes by hand. */
 function fakeScanner(): DiskScanner & { started: Started[] } {
@@ -17,11 +20,11 @@ function fakeScanner(): DiskScanner & { started: Started[] } {
   return {
     kind: 'native',
     started,
-    start(path, policy) {
+    start(path, policy, onProgress) {
       let resolve!: (o: ScanOutcome) => void
       let reject!: (e: Error) => void
       const result = new Promise<ScanOutcome>((res, rej) => { resolve = res; reject = rej })
-      const entry: Started = { path, policy, resolve, reject, cancelled: false }
+      const entry: Started = { path, policy, resolve, reject, cancelled: false, progress: onProgress }
       started.push(entry)
       return { result, cancel: () => { entry.cancelled = true; reject(new ScanError('cancelled')) } }
     },
@@ -110,6 +113,15 @@ describe('disk-map provider', () => {
     expect(snap.scanner).toBe('native')
     expect(snap.results).toEqual({})
     expect(await cmd('view', { root: 'home' })).toEqual({ ok: true, view: null })
+  })
+
+  it('publishes the folder a privacy prompt holds while the scan waits for it', async () => {
+    await cmd('scan', { root: 'home' })
+    expect((await provider.poll!()).scanning).toMatchObject({ waiting: null })
+    scanner.started[0].progress({ directories: 5, files: 7, path: ['Library'], waiting: ['Documents'] })
+    expect((await provider.poll!()).scanning).toMatchObject({ directories: 5, current: ['Library'], waiting: ['Documents'] })
+    scanner.started[0].progress({ directories: 5, files: 7, path: ['Library'], waiting: null })
+    expect((await provider.poll!()).scanning).toMatchObject({ waiting: null })
   })
 
   it('scans on demand, shows progress, then serves the view and saves it', async () => {

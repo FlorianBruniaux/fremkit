@@ -46,7 +46,11 @@ export interface RootSummary {
 export interface DiskMapSnapshot {
   scanner: DiskScanner['kind'] | null
   roots: { id: string; label: string; kind: DiskRoot['kind'] }[]
-  scanning: { root: string; path: string[]; startedAt: number; directories: number; files: number; current: string[] } | null
+  scanning: {
+    root: string; path: string[]; startedAt: number; directories: number; files: number; current: string[]
+    /** The folder macOS is asking the user about (a privacy prompt), below `path`; null otherwise. */
+    waiting: string[] | null
+  } | null
   /** Roots waiting for the running scan to finish, in the order they will run. */
   queued: string[]
   results: Record<string, RootSummary>
@@ -282,7 +286,7 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
     running?.handle.cancel()
     const id = nextId++
     const handle = s.start(path, policy, (progress) => { if (running?.id === id) running.progress = progress })
-    running = { id, root: rootId, segments, startedAt: now(), progress: { directories: 0, files: 0, path: [] }, handle }
+    running = { id, root: rootId, segments, startedAt: now(), progress: { directories: 0, files: 0, path: [], waiting: null }, handle }
     handle.result.then(async (outcome) => {
       if (running?.id !== id) return
       running = null
@@ -349,6 +353,7 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
       scanning: running && {
         root: running.root, path: running.segments, startedAt: running.startedAt,
         directories: running.progress.directories, files: running.progress.files, current: running.progress.path,
+        waiting: running.progress.waiting,
       },
       queued: [...queue.keys()],
       results,
