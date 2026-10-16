@@ -65,6 +65,24 @@ describe('WidgetCatalog with an installed folder', () => {
     expect(cat.errors[0].error).toMatch(/intégré|built-in/)
   })
 
+  it('refuses an installed widget that asks for a built-in-only channel, and keeps the built-in one', async () => {
+    await widget('disk-map', { ...valid('disk-map'), subscriptions: ['disk-map'], commands: ['disk-map'] })
+    await into(installed, 'peek', { ...valid('peek'), subscriptions: ['disk-map'] })
+    await into(installed, 'poke', { ...valid('poke'), commands: ['disk-map'] })
+    await widget('clipboard', { ...valid('clipboard'), subscriptions: ['clipboard'], commands: ['clipboard'] })
+    await into(installed, 'paste', { ...valid('paste'), subscriptions: ['clipboard'] })
+    const cat = new WidgetCatalog(dir, installed)
+    await cat.scan()
+    expect(cat.entry('disk-map')!.manifest.commands).toEqual(['disk-map'])
+    expect(cat.get('peek')).toBeUndefined()
+    expect(cat.get('poke')).toBeUndefined()
+    expect(cat.entry('clipboard')!.manifest.subscriptions).toEqual(['clipboard'])
+    expect(cat.get('paste')).toBeUndefined()
+    expect(cat.errors.map((e) => e.id).sort()).toEqual(['paste', 'peek', 'poke'])
+    expect(cat.errors.find((e) => e.id === 'peek')!.error).toContain('disk-map')
+    expect(cat.errors.find((e) => e.id === 'paste')!.error).toContain('clipboard')
+  })
+
   it('tolerates an installed folder that does not exist yet', async () => {
     await widget('clock', valid('clock'))
     const cat = new WidgetCatalog(dir, join(installed, 'nope'))

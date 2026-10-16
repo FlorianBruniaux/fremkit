@@ -25,6 +25,7 @@ and "Notifications: active" above the toggles, and *Log…* opens the supervised
 | Printer unreachable (`EHOSTUNREACH`) while `ping` and `curl` work | Local Network not granted to the app that runs the server | Allow it under Privacy & Security → Local Network |
 | "Server: external" | Something already answers port 4242, so the helper steps aside | Expected under `pnpm dev`; otherwise stop the stray server, or turn *Manage the server* off |
 | The disk map says folders could not be read | macOS privacy protection (TCC) refuses the scan some folders | Give Fremkit Helper **Full Disk Access**, then scan again — [details](#the-disk-map-says-folders-could-not-be-read) |
+| The disk map is slow and shows no files, "du (no helper)" | The server runs without the helper, or the helper predates the disk map | Rebuild and reinstall the helper — [details](#the-disk-map-uses-du) |
 
 ## Gatekeeper
 
@@ -255,6 +256,15 @@ file of the account — so it is your call, and the disk map works without it, m
 Two things that are not permissions: a folder kept only in iCloud (or another File Provider) is
 not downloaded to be measured, it counts what it takes on this Mac; and a volume mounted inside
 the scanned folder is not entered, exactly like `du -x`.
+
+## The disk map uses du
+
+Under the helper the server runs `fremkit-scan`, which the helper bundles and names in
+`FREMKIT_SCANNER`. When the variable is unset, not absolute or not an executable file — `pnpm dev`,
+a second checkout, a helper built before the disk map — the server falls back to
+`/usr/bin/du -k -x -d 5`: the same rings, but slower, folders only (no single files), and folders
+deeper than five levels are rescanned when you drill into them. Rebuild and reinstall the helper
+(`pnpm helper:build && pnpm helper:install`) to get the native scanner back.
 
 ## The calendar widget is empty or stale
 

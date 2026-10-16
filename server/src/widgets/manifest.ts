@@ -165,6 +165,28 @@ const ChannelSchema = z.string().min(1).refine((channel) => {
   return !RESERVED_CHANNELS.has(family) && !RESERVED_CHANNELS.has(channel)
 }, { error: () => tr(undefined, 'manifest.reservedChannel') })
 
+/**
+ * Channels only a built-in widget may subscribe to or command.
+ *
+ * `disk-map` answers with the names of the folders and large files of the home folder, and its
+ * snapshot names the folder being scanned. A widget from the registry with a network permission
+ * could read those and send them away, and its consent dialog would only have said "controls
+ * disk-map". `clipboard` publishes a preview of every entry copied — secrets are masked, the
+ * rest is whatever the user copied — and `copy` writes the pasteboard: the same reading, of
+ * something more personal still. These are refused in an installed manifest — at install and when the catalogue
+ * reads `data/widgets` — and stay open to `widgets/`, which ships with the server and is reviewed
+ * with it. Unlike `RESERVED_CHANNELS`, the schema alone cannot say: it does not know where a
+ * manifest came from.
+ */
+export const BUILTIN_ONLY_CHANNELS: ReadonlySet<string> = new Set(['disk-map', 'clipboard'])
+
+/** The built-in-only channels a manifest asks for, by family, in the order it names them. */
+export function builtinOnlyChannels(manifest: WidgetManifest): string[] {
+  const previews = Object.values(manifest.settingsSchema ?? {}).flatMap((f) => (f.preview ? [f.preview.channel] : []))
+  const asked = [...manifest.subscriptions, ...manifest.commands, ...previews]
+  return [...new Set(asked.map((c) => c.split(':')[0]).filter((family) => BUILTIN_ONLY_CHANNELS.has(family)))]
+}
+
 
 /**
  * A connection a widget declares for itself, instead of one the core has code for.
