@@ -174,7 +174,7 @@ Minimum size 8 × 4, default 8 × 4. Compact width 4 cells.
 
 ## disk
 
-*Disks* shows used and available capacity of the Mac disk and volumes under `/Volumes`. On APFS it prefers the data volume to avoid presenting the sealed system volume as the usable disk. The Mac disk uses container size minus reported available space so its numbers add up. System disk readings omit purgeable capacity, so free space may be lower than Finder shows.
+*Disks* shows used and available capacity of the Mac disk and volumes under `/Volumes`. On APFS it prefers the data volume to avoid presenting the sealed system volume as the usable disk. The Mac disk uses container size minus reported available space so its numbers add up. APFS volumes that share one container — the Mac disk and a volume added to it in Disk Utility, or two volumes of one external disk — are one row: macOS reports each of them with the whole container's size and the same free space, so the row's bar is split into one segment per volume, then *System* for what the rest of the container holds (system volumes, snapshots). Sizes are in decimal units, as Finder and Disk Utility count them. System disk readings omit purgeable capacity, so free space may be lower than Finder shows.
 
 Minimum size 8 × 4, default 16 × 4. No settings.
 
