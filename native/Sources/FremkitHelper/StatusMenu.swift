@@ -26,18 +26,24 @@ struct MenuState {
     /// True in the app, which updates itself; the developer helper has no updater to offer.
     var updates = false
 
-    /// Touch line label, in the language the helper picked at launch.
-    var touchLabel: String {
+    /// The text of the touch line, which also decides whether clicking it fixes something.
+    var touchKey: L10nKey {
         switch touch {
         case .active:
             // The driver is reading the panel, but without Accessibility nothing it posts lands.
-            return L10n.string(accessibility ? .touchActive : .touchAccessibilityMissing)
-        case .notPermitted: return L10n.string(.touchNotPermitted)
-        case .busy(.exclusiveAccess): return L10n.string(.touchBusy)
-        case let .busy(.openFailed(code)): return L10n.string(.touchOpenFailed, code)
-        case .noDisplay: return L10n.string(.touchNoDisplay)
-        case .disabled: return L10n.string(.touchDisabled)
+            return accessibility ? .touchActive : .touchAccessibilityMissing
+        case .notPermitted: return .touchNotPermitted
+        case .busy(.exclusiveAccess): return .touchBusy
+        case .busy(.openFailed): return .touchOpenFailed
+        case .noDisplay: return .touchNoDisplay
+        case .disabled: return .touchDisabled
         }
+    }
+
+    /// Touch line label, in the language the helper picked at launch.
+    var touchLabel: String {
+        if case let .busy(.openFailed(code)) = touch { return L10n.string(.touchOpenFailed, code) }
+        return L10n.string(touchKey)
     }
 }
 
@@ -52,7 +58,9 @@ final class StatusMenu: NSObject {
     private let item: NSStatusItem
     private var state = MenuState()
 
-    // Status lines, all disabled; the last three are hidden unless they have something to say.
+    // Status lines. They are disabled, except while one reports a missing permission: it can then
+    // be clicked to open the place in System Settings that grants it (`PermissionFix`). The last
+    // three are hidden unless they have something to say.
     private let dashboardToggle = NSMenuItem()
     private let serverLine = NSMenuItem()
     private let touchLine = NSMenuItem()
@@ -80,7 +88,11 @@ final class StatusMenu: NSObject {
     var onToggleLaunchAtLogin: ((Bool) -> Void)?
     var onOpenLog: (() -> Void)?
     var onCheckForUpdates: (() -> Void)?
+    var onFix: ((PermissionFix) -> Void)?
     var onQuit: (() -> Void)?
+
+    /// The fix each clickable status line currently offers, looked up when it is clicked.
+    private var fixes: [ObjectIdentifier: PermissionFix] = [:]
 
     override init() {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -141,6 +153,8 @@ final class StatusMenu: NSObject {
 
         for line in [serverLine, touchLine, fenceLine, dockLine, loginFailedLine, loginApprovalLine] {
             line.isEnabled = false
+            line.target = self
+            line.action = #selector(fix(_:))
             menu.addItem(line)
         }
         fenceLine.title = L10n.string(.fenceMissingPermission)
@@ -190,10 +204,14 @@ final class StatusMenu: NSObject {
         dashboardToggle.isEnabled = state.dashboardAvailable
         serverLine.title = state.server.label
         touchLine.title = state.touchLabel
+        offer(touchLine, PermissionFix.forLine(state.touchKey))
         fenceLine.isHidden = state.fence != .missingPermission
+        offer(fenceLine, PermissionFix.forLine(.fenceMissingPermission))
         dockLine.title = state.dock.label
+        offer(dockLine, PermissionFix.forLine(state.dock.key))
         loginFailedLine.isHidden = !state.loginFailed
         loginApprovalLine.isHidden = !state.loginNeedsApproval
+        offer(loginApprovalLine, PermissionFix.forLine(.loginNeedsApproval))
         checkForUpdatesItem.isHidden = !state.updates
 
         touchToggle.state = state.touchEnabled ? .on : .off
@@ -203,7 +221,18 @@ final class StatusMenu: NSObject {
         launchAtLoginToggle.state = state.launchAtLogin ? .on : .off
     }
 
+    /// Makes a status line clickable when it has a fix to offer, and inert otherwise.
+    private func offer(_ line: NSMenuItem, _ fix: PermissionFix?) {
+        fixes[ObjectIdentifier(line)] = fix
+        line.isEnabled = fix != nil
+    }
+
     // MARK: - Actions
+
+    @objc private func fix(_ sender: NSMenuItem) {
+        guard let fix = fixes[ObjectIdentifier(sender)] else { return }
+        onFix?(fix)
+    }
 
     @objc private func openAdmin() { onOpenAdmin?() }
     @objc private func openAdminInBrowser() { onOpenAdminInBrowser?() }

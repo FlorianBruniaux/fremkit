@@ -14,9 +14,9 @@ and "Notifications: active" above the toggles, and *Log…* opens the supervised
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| "Touch: permission missing" | Input Monitoring not granted to *this build* of the helper | Add "Fremkit" (the app) or "Fremkit Helper" (a source install) under Privacy & Security → Input Monitoring, then relaunch it |
+| "Touch: Input Monitoring missing — open Settings…" | Input Monitoring not granted to *this build* of the helper | Click the line: it opens Privacy & Security → Input Monitoring with the helper listed. Turn "Fremkit" (the app) or "Fremkit Helper" (a source install) on, then relaunch it |
 | "Touch: taken by another driver" | Touchscreen Gestures, another driver or a `--probe` run holds the panel | Quit it, and unload its launchd agent so it does not come back |
-| "Fence: permission missing" | Accessibility not granted | Add "Fremkit" (the app) or "Fremkit Helper" (a source install) under Privacy & Security → Accessibility, then relaunch it |
+| "Fence: Accessibility missing — open Settings…" (or the same on the Touch or Notifications line) | Accessibility not granted | Click the line: it opens Privacy & Security → Accessibility. Turn "Fremkit" (the app) or "Fremkit Helper" (a source install) on, then relaunch it |
 | "Fremkit can't be opened" / "is damaged and can't be opened" | The download was altered or is not the published one | Download the DMG again from the release page; see [Gatekeeper](#gatekeeper) |
 | Input Monitoring and Accessibility asked again after moving to the app | The app's Developer ID signature is a new code identity | Expected once; see [The app asks for permissions again](#the-app-asks-for-permissions-again) |
 | Permissions reset after every rebuild | Ad-hoc signature: a new code identity each build | Run `scripts/create-signing-identity.sh`, rebuild, grant once more |
@@ -150,7 +150,8 @@ the menu bar and open it again.
 ## Touch does not work
 
 1. **Input Monitoring.** The driver reads the panel's raw HID reports and cannot open it without
-   the grant. The menu says "Touch: permission missing".
+   the grant. The menu says "Touch: Input Monitoring missing — open Settings…"; clicking it opens
+   the right pane.
 2. **Another driver has the panel.** Touchscreen Gestures seizes the touch controller
    exclusively; the helper replaces it, it does not coexist with it. Quitting the app is not
    enough while its launchd agent relaunches it:

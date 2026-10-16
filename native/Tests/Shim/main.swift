@@ -147,6 +147,13 @@ let suites: [(String, () -> XCTestCase, [TestMethod])] = [
         ("testEverythingOffAsksNothing", { ($0 as! PermissionSequencerTests).testEverythingOffAsksNothing() }),
         ("testBeginOnlyActsOnce", { ($0 as! PermissionSequencerTests).testBeginOnlyActsOnce() }),
     ]),
+    ("PermissionFixTests", { PermissionFixTests() }, [
+        ("testPanesOpenTheirPrivacyAnchor", { ($0 as! PermissionFixTests).testPanesOpenTheirPrivacyAnchor() }),
+        ("testTouchWithoutInputMonitoringOpensInputMonitoring", { ($0 as! PermissionFixTests).testTouchWithoutInputMonitoringOpensInputMonitoring() }),
+        ("testEveryAccessibilityLineOpensAccessibility", { ($0 as! PermissionFixTests).testEveryAccessibilityLineOpensAccessibility() }),
+        ("testLoginApprovalOpensLoginItems", { ($0 as! PermissionFixTests).testLoginApprovalOpensLoginItems() }),
+        ("testInformativeLinesDoNothing", { ($0 as! PermissionFixTests).testInformativeLinesDoNothing() }),
+    ]),
 ]
 
 var passed = 0

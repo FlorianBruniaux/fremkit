@@ -3,6 +3,7 @@ import ApplicationServices
 import CoreGraphics
 import Foundation
 import FremkitCore
+import ServiceManagement
 
 /// Wires the config, the Edge display, the touch driver, the mouse fence, the kiosk window,
 /// the server supervisor and the status menu together.
@@ -377,6 +378,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.onOpenLog = {
             NSWorkspace.shared.open(ServerProcess.logURL)
+        }
+
+        menu.onFix = { fix in
+            switch fix {
+            case let .openPrivacyPane(pane):
+                // Asking again is what puts the app in the Input Monitoring list when a lost
+                // first request left it out, so there is a switch to turn on once Settings opens.
+                if pane == .inputMonitoring { Permissions.requestInputMonitoring() }
+                NSWorkspace.shared.open(pane.url)
+            case .openLoginItems:
+                SMAppService.openSystemSettingsLoginItems()
+            }
         }
 
         menu.onQuit = {

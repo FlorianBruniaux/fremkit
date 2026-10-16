@@ -34,6 +34,10 @@ tagged `vX.Y.Z`.
   today, in total, and over the last 30 days, read from the `rtk` program when it is installed.
 
 ### Changed
+- **Missing permissions say where to go.** A menu bar line such as "Touch: Input Monitoring
+  missing — open Settings…" or "Fence: Accessibility missing — open Settings…" can be clicked: it
+  opens the right pane of System Settings → Privacy & Security, with Fremkit listed there. The
+  login item waiting for approval opens Login Items the same way.
 - **The signed app asks for Input Monitoring and Accessibility once more** on its first launch:
   macOS ties those grants to the signature, and the app is signed with the project's Developer ID
   rather than the local certificate of a source install. If the old grant is still ticked and
