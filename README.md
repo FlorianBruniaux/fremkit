@@ -24,12 +24,12 @@ The name is the Fremen survival kit from *Dune*.
   auto-rotation.
 - **A live editor** at `/admin`: the real page rendered with real widgets, drag and resize with
   snapping, overlap refused, keyboard nudges, undo/redo and autosave.
-- **Twenty-eight widgets** — clock, weather, a pomodoro timer, CPU, memory, disks, network
+- **Thirty widgets** — clock, weather, a pomodoro timer, CPU, memory, disks, a disk map, network
   throughput, batteries, processes, volume, Spotify, Dock badges, a clipboard history, shortcut
   buttons, service status checks, published calendars, Claude Code sessions and limits; and,
   *from the registry*, meeting controls, CleanShot X actions, Azure DevOps builds, GitHub
   notifications and Actions, a Bambu Lab printer, Homey devices and flows, a Synology NAS.
-  Eighteen ship with Fremkit; the rest are one press away in the admin.
+  Twenty ship with Fremkit; the rest are one press away in the admin.
 - **Compact widgets** in the navigation bar, with a full-size popover on touch.
 - **Per-tile appearance** — background colour, opacity, background image, accent colour and how
   much of the tile the accent paints.
@@ -233,6 +233,7 @@ above state lines such as "Server: running" and "Touch: active".
 | `clock` | Time, date and other cities | — | ● |
 | `cpu` | CPU load and temperature | — | ● |
 | `disk` | Disk usage and available space | — | — |
+| `disk-map` | What fills the disk, as rings you drill into; long press shows it in Finder | — | ● |
 | `memory` | Memory usage, available RAM and swap | — | ● |
 | `uptime` | Time since the Mac last booted | — | — |
 | `network` | Live network throughput, with a sparkline | — | ● |
@@ -317,6 +318,7 @@ The list is short and it is all of it.
 | The clipboard, through `pbpaste` | the `clipboard` widget | whenever that widget is on the dashboard |
 | The Dock's badge counts and the icons of installed applications | the `notifications` and `shortcuts` widgets, through the helper | whenever one of those widgets is on the dashboard |
 | The volume, the battery, the disks, the processes, the network | those widgets, through `pmset`, `df`, `ps` and friends | whenever one of them is on the dashboard |
+| The names and sizes of the folders and files under your home folder or a volume — never their contents | the `disk-map` widget, through `fremkit-scan` or `du`; the last scan is kept in `data/disk-map/` | only when you scan, from that widget |
 
 A widget that shows an account — its plan, how you signed in — never gets the account's e-mail
 address unless you tick **/admin → Screen → Privacy → Show the account e-mail address**. It is off

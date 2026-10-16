@@ -13,6 +13,10 @@ tagged `vX.Y.Z`.
 ## Unreleased
 
 ### Added
+- **Disk map.** A new built-in widget shows what fills your home folder or a volume, as rings you
+  drill into with a finger beside a list of folders and sizes; holding one shows it in Finder.
+  Scans run only when you ask, at low priority, and never delete anything. Folders macOS would not
+  let it read are shown as such, with a button to the Full Disk Access settings.
 - **RTK token savings.** For registry widgets: the tokens [RTK](https://github.com/rtk-ai/rtk) saved
   today, in total, and over the last 30 days, read from the `rtk` program when it is installed.
 
