@@ -10,7 +10,7 @@ Anything that changes what the dashboard, the admin or a widget can do gets a li
 (`package.json`, `server/package.json`, `ui/package.json`, `server/src/version.ts`) and is
 tagged `vX.Y.Z`.
 
-## Unreleased
+## 0.4.1 — 2026-10-16
 
 ### Fixed
 - **The disk map no longer looks stuck while macOS asks for access to a folder.** When a scan
