@@ -55,6 +55,19 @@ final class DiskWalkerTests: XCTestCase {
         node?.children.first { $0.name == name }
     }
 
+    func testTooDeepIsUnreadableNotEntered() throws {
+        write("a/b/c/d/deep.bin", bytes: 50_000)
+        let policy = DiskScanPolicy(depth: 6, minBytes: 1, maxChildren: 100, budget: 1000, progressDepth: 1)
+        let walker = DiskWalker(builder: DiskTreeBuilder(policy: policy), maxDepth: 2)
+        let tree = try walker.walk(root: root)
+        // The root is depth 0: `a` and `a/b` are entered, `a/b/c` is not.
+        let b = child(child(tree, "a"), "b")
+        XCTAssertEqual(child(b, "c")?.kind, .unreadable)
+        XCTAssertEqual(walker.stats.unreadable, 1)
+        XCTAssertEqual(tree.unreadable, 1)
+        XCTAssertTrue(tree.size < allocated("a/b/c/d/deep.bin"))
+    }
+
     func testCountsAllocatedSizesLikeLstat() throws {
         write("a/one.bin", bytes: 200_000)
         write("a/b/two.bin", bytes: 50_000)
