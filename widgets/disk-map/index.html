@@ -119,6 +119,7 @@
     home: { fr: 'Dossier personnel', en: 'Home folder' },
     scanning: { fr: 'Analyse… {n} dossiers', en: 'Scanning… {n} folders' },
     scanningIn: { fr: 'Analyse… {n} dossiers · {where}', en: 'Scanning… {n} folders · {where}' },
+    queued: { fr: 'En attente : une autre analyse est en cours', en: 'Waiting: another scan is running' },
     scanned: { fr: 'Analysé {ago}', en: 'Scanned {ago}' },
     viaDu: { fr: 'Analysé {ago} · du (sans l’assistant)', en: 'Scanned {ago} · du (no helper)' },
     never: { fr: 'Jamais analysé', en: 'Never scanned' },
@@ -180,6 +181,9 @@
     }
     function result() { return snap && snap.results ? snap.results[rootId()] || null : null }
     function scanningHere() { return !!(snap && snap.scanning && snap.scanning.root === rootId()) }
+    /** Asked for while another root was being scanned: it runs next, the server keeps the turn. */
+    function queuedHere() { return !!(snap && (snap.queued || []).indexOf(rootId()) >= 0) }
+    function busyHere() { return scanningHere() || queuedHere() }
     function rootListed() {
       return !snap || (snap.roots || []).some(function (r) { return r.id === rootId() })
     }
@@ -236,7 +240,10 @@
       Fremkit.sendCommand('disk-map', 'scan', { root: rootId(), path: at || [] }).then(function (r) {
         if (r && !r.ok) { toast(Fremkit.t(L.failed)); return }
         // Say so now rather than at the provider's next tick, up to five seconds away.
-        if (snap) {
+        if (snap && r && r.queued) {
+          snap.queued = (snap.queued || []).concat([rootId()])
+          renderStatus()
+        } else if (snap) {
           snap.scanning = { root: rootId(), path: at || [], startedAt: Date.now(), directories: 0, files: 0, current: [] }
           renderStatus()
         }
@@ -366,13 +373,13 @@
       var list = $('list')
       list.textContent = ''
       if (!view) {
-        if (!scanningHere()) list.appendChild(Fremkit.el('div', 'empty', result() ? '' : Fremkit.t(L.never)))
+        if (!busyHere()) list.appendChild(Fremkit.el('div', 'empty', result() ? '' : Fremkit.t(L.never)))
         return
       }
       var children = view.children || []
       if (view.more && !children.length) {
         list.appendChild(Fremkit.el('div', 'empty', Fremkit.t(L.deeper)))
-        if (!scanningHere()) {
+        if (!busyHere()) {
           var b = Fremkit.el('button', 'btn', Fremkit.t(L.scanFolder))
           b.type = 'button'
           b.addEventListener('click', function () { scan(path) })
@@ -397,7 +404,9 @@
       var r = result()
       var status = ''
       var scanningNow = scanningHere()
+      var busy = busyHere()
       if (!rootListed()) status = Fremkit.t(L.error_volume, { name: rootLabel() })
+      else if (!scanningNow && busy) status = Fremkit.t(L.queued)
       else if (scanningNow) {
         var sc = snap.scanning
         var where = (sc.path && sc.path.length ? sc.path : sc.current || []).join(' › ')
@@ -409,18 +418,18 @@
       } else status = Fremkit.t(L.never)
       $('status').textContent = status
       $('progress').hidden = !scanningNow
-      var label = scanningNow ? '✕' : '↻'
+      var label = busy ? '✕' : '↻'
       $('scanBtn').textContent = label
       $('floatScan').textContent = label
       // A narrow tile has no room for the warning line: a lock with the count opens the settings.
-      $('floatLock').hidden = !(r && r.unreadable > 0) || scanningNow
+      $('floatLock').hidden = !(r && r.unreadable > 0) || busy
       if (r && r.unreadable > 0) {
         $('floatLock').textContent = '🔒 ' + r.unreadable.toLocaleString(Fremkit.locale)
         $('floatLock').setAttribute('aria-label', Fremkit.t(L.fda))
       }
-      $('scanBtn').setAttribute('aria-label', Fremkit.t(scanningNow ? L.cancel : r ? L.rescan : L.scan))
+      $('scanBtn').setAttribute('aria-label', Fremkit.t(busy ? L.cancel : r ? L.rescan : L.scan))
       var unreadable = r ? r.unreadable || 0 : 0
-      $('warn').hidden = !(unreadable > 0) || scanningNow
+      $('warn').hidden = !(unreadable > 0) || busy
       if (unreadable > 0) {
         $('warnText').textContent = unreadable === 1 ? Fremkit.t(L.unreadableOne) : Fremkit.t(L.unreadableMany, { n: unreadable.toLocaleString(Fremkit.locale) })
         $('fda').textContent = Fremkit.t(L.fda)
@@ -547,7 +556,7 @@
     })
 
     function onScanButton() {
-      if (scanningHere()) Fremkit.sendCommand('disk-map', 'cancel', {}).catch(function () {})
+      if (busyHere()) Fremkit.sendCommand('disk-map', 'cancel', { root: rootId() }).catch(function () {})
       else scan(path.length && view && view.more ? path : [])
     }
     $('scanBtn').addEventListener('click', onScanButton)

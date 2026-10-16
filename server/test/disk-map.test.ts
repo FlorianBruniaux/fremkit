@@ -188,6 +188,42 @@ describe('disk-map provider', () => {
     expect(scanner.started[1].cancelled).toBe(false)
   })
 
+  it('queues a scan of another root instead of cancelling the one running', async () => {
+    // Two tiles, one on the home folder and one on a volume, both tapped at once.
+    await cmd('scan', { root: 'home' })
+    expect(await cmd('scan', { root: 'volume:Example' })).toEqual({ ok: true, queued: true })
+    expect(scanner.started).toHaveLength(1)
+    expect(scanner.started[0].cancelled).toBe(false)
+    expect((await provider.poll!()).queued).toEqual(['volume:Example'])
+    scanner.started[0].resolve(outcome(homeTree()))
+    await flush()
+    await vi.waitFor(async () => expect((await provider.poll!()).queued).toEqual([]))
+    const snap = await provider.poll!()
+    expect(snap.results.home?.size).toBe(1000)
+    // The queued root ran in turn: `/Volumes/Example` is not on this disk, and the tile says so
+    // rather than staying on "never scanned".
+    await vi.waitFor(async () => expect((await provider.poll!()).errors).toEqual({ 'volume:Example': { path: [], code: 'missing' } }))
+  })
+
+  it('starts queued scans one after the other, and cancels one by its root', async () => {
+    await cmd('scan', { root: 'home', path: [] })
+    scanner.started[0].resolve(outcome(homeTree()))
+    await flush()
+    await cmd('scan', { root: 'volume:Example' })
+    // The volume is missing, so it never runs: queue behind a running home scan instead.
+    await cmd('scan', { root: 'home' })
+    expect(await cmd('scan', { root: 'volume:Example' })).toEqual({ ok: true, queued: true })
+    expect(await cmd('cancel', { root: 'volume:Example' })).toEqual({ ok: true })
+    expect((await provider.poll!()).queued).toEqual([])
+    // Cancelling a queued root leaves the running scan alone.
+    expect(scanner.started[1].cancelled).toBe(false)
+    expect(await cmd('scan', { root: 'volume:Example' })).toEqual({ ok: true, queued: true })
+    await cmd('cancel', { root: 'home' })
+    expect(scanner.started[1].cancelled).toBe(true)
+    await vi.waitFor(async () => expect((await provider.poll!()).queued).toEqual([]))
+    expect(scanner.started).toHaveLength(2)
+  })
+
   it('answers gone for a folder that is no longer there, and never rescans the root instead', async () => {
     await cmd('scan', { root: 'home' })
     scanner.started[0].resolve(outcome(homeTree()))

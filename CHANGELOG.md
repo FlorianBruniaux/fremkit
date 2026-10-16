@@ -15,7 +15,8 @@ tagged `vX.Y.Z`.
 ### Added
 - **Disk map.** A new built-in widget shows what fills your home folder or a volume, as rings you
   drill into with a finger beside a list of folders and sizes; holding one shows it in Finder.
-  Scans run only when you ask, at low priority, and never delete anything. Folders macOS would not
+  Scans run only when you ask, at low priority, and never delete anything; two tiles on two roots
+  scan one after the other instead of interrupting each other. Folders macOS would not
   let it read are shown as such, with a button to the Full Disk Access settings.
 - **About.** **/admin → Screen → About** shows the Fremkit version, who wrote it, and links to
   Fremkit's and the Sietch's repositories, which open in your browser, from the Fremkit admin
