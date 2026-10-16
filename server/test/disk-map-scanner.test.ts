@@ -90,6 +90,15 @@ describe('DuParser', () => {
     expect(cache.children?.map((c) => c.name)).toEqual(['large'])
     expect(cache.others).toEqual([50_000, (8 * 50_000 + 4) * 1024])
   })
+  it('reads the refusals of GNU du too', () => {
+    const p = new DuParser('/Volumes/Big', 'Big')
+    p.errorLine("/usr/bin/du: cannot read directory '/Volumes/Big/locked': Permission denied")
+    p.line('4\t/Volumes/Big/locked')
+    p.line('8\t/Volumes/Big')
+    const tree = p.finish(DEFAULT_POLICY, 5)
+    expect(findNode(tree, ['locked'])?.kind).toBe('x')
+    expect(p.unreadable).toBe(1)
+  })
   it('notices that the root itself was refused', () => {
     const p = new DuParser('/Volumes/Locked', 'Locked')
     p.errorLine('du: /Volumes/Locked: Permission denied')
