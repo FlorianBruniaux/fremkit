@@ -12,6 +12,11 @@ tagged `vX.Y.Z`.
 
 ## Unreleased
 
+### Fixed
+- **Save a backup from the Fremkit admin window.** **Screen → Backup → Save** did nothing in the
+  helper's own admin window, which dropped the download; it now asks where to save the archive,
+  as a browser does.
+
 ## 0.3.0 — 2026-10-15
 
 ### Added

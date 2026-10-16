@@ -14,7 +14,7 @@ private final class AdminNoMenuWebView: WKWebView {
 ///
 /// One instance is kept for the lifetime of the helper: re-opening brings the existing window
 /// forward instead of building a second one.
-final class AdminWindow: NSObject, NSWindowDelegate, WKUIDelegate {
+final class AdminWindow: NSObject, NSWindowDelegate, WKUIDelegate, WKNavigationDelegate, WKDownloadDelegate {
     private static let size = NSSize(width: 1280, height: 800)
 
     private var window: NSWindow?
@@ -67,6 +67,9 @@ final class AdminWindow: NSObject, NSWindowDelegate, WKUIDelegate {
         webView.autoresizingMask = [.width, .height]
         // Without a UI delegate a WKWebView silently ignores <input type="file">.
         webView.uiDelegate = self
+        // Without a navigation delegate it silently drops downloads too: the backup is served as
+        // an attachment, which WebKit neither shows nor saves on its own.
+        webView.navigationDelegate = self
         webView.load(URLRequest(url: url))
         window.contentView = webView
 
@@ -122,6 +125,50 @@ final class AdminWindow: NSObject, NSWindowDelegate, WKUIDelegate {
         panel.beginSheetModal(for: window) { response in
             completionHandler(response == .OK ? panel.urls : nil)
         }
+    }
+
+    // MARK: - WKNavigationDelegate
+
+    /// Turns an attachment, or anything WebKit cannot display, into a download instead of a
+    /// failed navigation. Main frame only: the widgets in the preview are sandboxed iframes and
+    /// get nothing they did not get before.
+    func webView(_ webView: WKWebView,
+                 decidePolicyFor navigationResponse: WKNavigationResponse,
+                 decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+        guard navigationResponse.isForMainFrame else { decisionHandler(.allow); return }
+        let disposition = (navigationResponse.response as? HTTPURLResponse)?
+            .value(forHTTPHeaderField: "Content-Disposition") ?? ""
+        let attachment = disposition.lowercased().hasPrefix("attachment")
+        decisionHandler(attachment || !navigationResponse.canShowMIMEType ? .download : .allow)
+    }
+
+    func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
+        download.delegate = self
+    }
+
+    // MARK: - WKDownloadDelegate
+
+    /// Asks where to save, with the server's file name filled in. Cancelling the panel cancels
+    /// the download.
+    func download(_ download: WKDownload,
+                  decideDestinationUsing response: URLResponse,
+                  suggestedFilename: String,
+                  completionHandler: @escaping (URL?) -> Void) {
+        guard let window else { completionHandler(nil); return }
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = suggestedFilename
+        panel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        panel.beginSheetModal(for: window) { result in
+            guard result == .OK, let url = panel.url else { completionHandler(nil); return }
+            // The panel has already asked whether to replace it; WKDownload refuses to write over
+            // an existing file, so the old one goes first.
+            try? FileManager.default.removeItem(at: url)
+            completionHandler(url)
+        }
+    }
+
+    func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
+        NSLog("fremkit: admin download failed: \(error.localizedDescription)")
     }
 
     // MARK: - NSWindowDelegate
