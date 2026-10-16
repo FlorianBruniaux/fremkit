@@ -47,6 +47,10 @@
   .warn{flex:0 0 auto;display:flex;align-items:center;gap:10px;font-size:calc(13px * var(--text-scale, 1))}
   .warn .text{flex:1;min-width:0;color:var(--warn, #e0a64a)}
   html.on-light .status,html.on-light .warn .text{color:var(--on-surface,#0b0d10);opacity:.75}
+  /* The body is the accent: muted grey and the warning colour would not read on it. */
+  html.accent-fill .status,html.accent-fill .warn .text,html.accent-fill .row .size,html.accent-fill .sep,html.accent-fill .empty{color:var(--on-surface,#0b0d10);opacity:.8}
+  html.accent-fill .centre .name,html.accent-fill .centre .up{fill:var(--on-surface,#0b0d10);opacity:.8}
+  html.on-light .sep,html.on-light .empty{color:var(--on-surface,#0b0d10);opacity:.7}
   .progress{height:3px;border-radius:2px;background:rgba(128,128,128,.25);overflow:hidden;flex:0 0 auto}
   .progress>i{display:block;height:100%;width:30%;background:var(--accent, #d9b36a);animation:slide 1.2s linear infinite}
   html.accent-fill .progress>i{background:var(--on-surface,#0b0d10)}
@@ -66,6 +70,7 @@
   .row.file .name{opacity:.85}
   .empty{color:var(--text-muted, #8b93a0);font-size:calc(14px * var(--text-scale, 1));padding:8px 4px}
   .float{position:absolute;top:4px;right:4px}
+  .float.lockbtn{top:auto;right:auto;bottom:4px;left:4px;width:auto;padding:0 10px;font-size:calc(13px * var(--text-scale, 1))}
   html:not(.narrow) .float,html.compact .float{display:none}
   .toast{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:calc(13px * var(--text-scale, 1));color:var(--accent,#d9b36a);pointer-events:none}
   html.accent-fill .toast{color:var(--on-surface,#0b0d10)}
@@ -94,6 +99,7 @@
       </g>
     </svg>
     <button class="btn icon float" id="floatScan" type="button">↻</button>
+    <button class="btn icon float lockbtn" id="floatLock" type="button" hidden></button>
   </div>
   <div class="side">
     <div class="head">
@@ -165,6 +171,13 @@
       var id = rootId()
       return id === 'home' ? '~' : id.slice('volume:'.length)
     }
+    /** The last failure of this root, when it was about the folder on screen or the root itself. */
+    function currentError() {
+      var e = snap && snap.errors ? snap.errors[rootId()] : null
+      if (!e) return null
+      var at = (e.path || []).join('\u0000')
+      return at === '' || at === path.join('\u0000') ? e : null
+    }
     function result() { return snap && snap.results ? snap.results[rootId()] || null : null }
     function scanningHere() { return !!(snap && snap.scanning && snap.scanning.root === rootId()) }
     function rootListed() {
@@ -213,9 +226,10 @@
       var root = rootId()
       var key = root + '|' + path.join('/')
       if (autoScanned[key]) return
-      var err = snap.error && snap.error.root === root ? snap.error : null
+      var err = snap.errors ? snap.errors[root] : null
       if (!result() && !err) { autoScanned[key] = true; scan([]) }
-      else if (view && view.more && result()) { autoScanned[key] = true; scan(path) }
+      // A folder the tree holds nothing inside of: rescan that folder, never the whole root.
+      else if (view && view.more && result() && path.length > 0 && !(view.children || []).length) { autoScanned[key] = true; scan(path) }
     }
 
     function scan(at) {
@@ -265,6 +279,8 @@
     }
 
     function keyOf(p) { return p ? p.join('\u0000') : null }
+    // No folder name contains a NUL, so this can never be a folder's key.
+    var OTHERS = '\u0000others'
 
     function drawRing(direction) {
       var g = $('rings')
@@ -285,7 +301,7 @@
         var op = opacityFor(arc)
         if (op !== 1) p.setAttribute('fill-opacity', String(op))
         g.appendChild(p)
-        if (arc.kind === 'x' && arc.a1 - arc.a0 >= 3.5 && band >= 12) {
+        if (arc.kind === 'x' && arc.a1 - arc.a0 >= 6 && band >= 12) {
           var c = S.centroid(100, 100, r0, r1, arc.a0, arc.a1)
           var lock = svgEl('path', { 'class': 'lock', d: 'M' + (c[0] - 3) + ' ' + (c[1] - 0.5) + 'h6v4.5h-6z'
             + 'M' + (c[0] - 1.8) + ' ' + (c[1] - 0.5) + 'v-1.6a1.8 1.8 0 0 1 3.6 0v1.6' })
@@ -323,11 +339,11 @@
       var b = document.createElement('button')
       b.type = 'button'
       b.className = 'row' + (child.kind === 'x' ? ' locked' : child.kind === 'f' ? ' file' : '')
-      var key = child.kind === 'o' ? 'o' : keyOf(path.concat([child.name]))
+      var key = child.kind === 'o' ? OTHERS : keyOf(path.concat([child.name]))
       b.dataset.key = key
-      var arc = arcIndex[child.kind === 'o' ? 'o' : child.name]
+      var arc = child.kind === 'o' ? arcIndex.others : arcIndex.byName.get(child.name)
       var dot = Fremkit.el('span', 'dot')
-      var fill = arc ? fillFor(arc, arcIndex.__top) : null
+      var fill = arc ? fillFor(arc, arcIndex.top) : null
       dot.style.background = child.kind === 'x' ? 'repeating-linear-gradient(45deg, rgba(128,128,128,.85) 0 2px, transparent 2px 4px)'
         : fill && fill.indexOf('url(') !== 0 ? fill : 'rgba(128,128,128,.42)'
       var label = child.kind === 'o' ? Fremkit.t(L.others, { n: child.count || 0 })
@@ -365,12 +381,13 @@
         return
       }
       if (!children.length) { list.appendChild(Fremkit.el('div', 'empty', Fremkit.t(L.empty))); return }
-      var arcIndex = { __top: 0 }
+      // A Map: folder names are anything at all, `constructor` and `__proto__` included.
+      var arcIndex = { byName: new Map(), others: null, top: 0 }
       arcs.forEach(function (a) {
         if (a.ring !== 1) return
-        if (a.kind === 'o') arcIndex.o = a
-        else arcIndex[a.name] = a
-        if (a.kind !== 'o' && a.kind !== 'x') arcIndex.__top++
+        if (a.kind === 'o') arcIndex.others = a
+        else arcIndex.byName.set(a.name, a)
+        if (a.kind !== 'o' && a.kind !== 'x') arcIndex.top++
       })
       var maxSize = children.reduce(function (m, c) { return Math.max(m, c.size || 0) }, 0)
       children.forEach(function (c) { list.appendChild(rowFor(c, maxSize, arcIndex)) })
@@ -385,8 +402,8 @@
         var sc = snap.scanning
         var where = (sc.path && sc.path.length ? sc.path : sc.current || []).join(' › ')
         status = Fremkit.t(where ? L.scanningIn : L.scanning, { n: (sc.directories || 0).toLocaleString(Fremkit.locale), where: where })
-      } else if (snap && snap.error && snap.error.root === rootId()) {
-        status = Fremkit.t(L['error_' + snap.error.code] || L.error_failed)
+      } else if (currentError()) {
+        status = Fremkit.t(L['error_' + currentError().code] || L.error_failed)
       } else if (r) {
         status = Fremkit.t(r.scanner === 'du' ? L.viaDu : L.scanned, { ago: S.ago(r.scannedAt, Date.now(), Fremkit.locale) })
       } else status = Fremkit.t(L.never)
@@ -395,6 +412,12 @@
       var label = scanningNow ? '✕' : '↻'
       $('scanBtn').textContent = label
       $('floatScan').textContent = label
+      // A narrow tile has no room for the warning line: a lock with the count opens the settings.
+      $('floatLock').hidden = !(r && r.unreadable > 0) || scanningNow
+      if (r && r.unreadable > 0) {
+        $('floatLock').textContent = '🔒 ' + r.unreadable.toLocaleString(Fremkit.locale)
+        $('floatLock').setAttribute('aria-label', Fremkit.t(L.fda))
+      }
       $('scanBtn').setAttribute('aria-label', Fremkit.t(scanningNow ? L.cancel : r ? L.rescan : L.scan))
       var unreadable = r ? r.unreadable || 0 : 0
       $('warn').hidden = !(unreadable > 0) || scanningNow
@@ -415,7 +438,8 @@
 
     // ---- highlighting -------------------------------------------------------------------------
 
-    function arcKey(arc) { return arc.kind === 'o' ? (arc.ring === 1 ? 'o' : null) : keyOf(arc.path) }
+    // Rows are keyed by the full path, arcs carry the path from the centre: same space for both.
+    function arcKey(arc) { return arc.kind === 'o' ? (arc.ring === 1 ? OTHERS : null) : keyOf(path.concat(arc.path)) }
 
     function paintActive() {
       var g = $('rings')
@@ -434,9 +458,9 @@
     /** The key a row stands for in the ring: its own segment, or the grey one it was merged into. */
     function ringKeyForRow(row) {
       var key = row.dataset.key
-      if (key === 'o') return 'o'
+      if (key === OTHERS) return OTHERS
       var drawn = arcs.some(function (a) { return a.ring === 1 && arcKey(a) === key })
-      return drawn ? key : 'o'
+      return drawn ? key : OTHERS
     }
 
     function highlight(key) {
@@ -474,7 +498,7 @@
     svg.addEventListener('pointerdown', function (e) {
       if (Fremkit.compact || e.button !== 0) return
       var arc = arcFromEvent(e)
-      if (arc) highlight(arc.ring === 1 ? arcKey(arc) : arcKey(arc))
+      if (arc) highlight(arcKey(arc))
     })
     svg.addEventListener('click', function (e) {
       if (Fremkit.compact || Date.now() < suppressClick) return
@@ -528,9 +552,11 @@
     }
     $('scanBtn').addEventListener('click', onScanButton)
     $('floatScan').addEventListener('click', onScanButton)
-    $('fda').addEventListener('click', function () {
+    $('floatLock').addEventListener('click', openPrivacy)
+    function openPrivacy() {
       Fremkit.sendCommand('disk-map', 'openPrivacy', {}).catch(function () { toast(Fremkit.t(L.failed)) })
-    })
+    }
+    $('fda').addEventListener('click', openPrivacy)
 
     // ---- wiring -------------------------------------------------------------------------------
 
