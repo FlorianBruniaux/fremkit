@@ -80,6 +80,17 @@
   html.compact .ringbox{height:calc(var(--h, 80px) - 8px)}
   html.compact .side,html.compact .centre text{display:none}
   html.on-light body{color:var(--on-surface,#0b0d10)}
+  /* Never scanned: one button, and nothing else to look at yet. */
+  .cta{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:10px;box-sizing:border-box;text-align:center}
+  html.never .ringbox,html.never .side{visibility:hidden}
+  html.compact .cta{display:none!important}
+  html.compact.never .ringbox{visibility:visible}
+  .cta .go{min-height:56px;min-width:56px;padding:0 24px;border-radius:14px;font-weight:600;font-size:calc(17px * var(--text-scale, 1));
+    background:var(--accent, #d9b36a);color:var(--on-accent, #0b0d10);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cta .go:active{opacity:.75;background:var(--accent, #d9b36a);color:var(--on-accent, #0b0d10)}
+  html.accent-fill .cta .go,html.accent-fill .cta .go:active{background:var(--on-surface,#0b0d10);color:var(--accent, #d9b36a)}
+  .cta .note{font-size:calc(13px * var(--text-scale, 1));color:var(--text-muted, #8b93a0);max-width:32em}
+  html.on-light .cta .note,html.accent-fill .cta .note{color:var(--on-surface,#0b0d10);opacity:.75}
 </style></head>
 <body>
 <div class="wrap" id="wrap">
@@ -111,6 +122,10 @@
     <div class="warn" id="warn" hidden><span class="text" id="warnText"></span><button class="btn" id="fda" type="button"></button></div>
     <div class="list" id="list"></div>
   </div>
+  <div class="cta" id="cta" hidden>
+    <button class="btn go" id="ctaBtn" type="button"></button>
+    <div class="note" id="ctaNote"></div>
+  </div>
   <div class="toast" id="toast" hidden></div>
 </div>
 <script src="sunburst.js"></script>
@@ -124,6 +139,10 @@
     viaDu: { fr: 'Analysé {ago} · du (sans l’assistant)', en: 'Scanned {ago} · du (no helper)' },
     never: { fr: 'Jamais analysé', en: 'Never scanned' },
     scan: { fr: 'Analyser', en: 'Scan' },
+    scanRoot: { fr: 'Analyser {name}', en: 'Scan {name}' },
+    homeShort: { fr: 'le dossier personnel', en: 'the home folder' },
+    firstScan: { fr: 'Jamais analysé. L’analyse lit chaque dossier et peut prendre quelques minutes ; rien n’est supprimé.',
+      en: 'Never scanned. A scan reads every folder and can take a few minutes; nothing is deleted.' },
     rescan: { fr: 'Analyser de nouveau', en: 'Scan again' },
     cancel: { fr: 'Annuler', en: 'Cancel' },
     scanFolder: { fr: 'Analyser ce dossier', en: 'Scan this folder' },
@@ -220,20 +239,21 @@
         viewKey = root + '|' + (result() ? result().generation : 0)
         activeKey = null
         render(direction)
-        maybeAutoScan()
+        maybeScanFolder()
       }).catch(function () { if (id === requestId) { view = null; render() } })
     }
 
-    /** First look at a root never scanned, or a folder the tree does not hold the inside of. */
-    function maybeAutoScan() {
-      if (Fremkit.compact || !snap || snap.scanning || !rootListed()) return
-      var root = rootId()
-      var key = root + '|' + path.join('/')
+    /**
+     * A folder the tree holds nothing inside of, drilled into with a tap: rescan that folder, never
+     * the whole root. A root is never scanned on its own — showing the tile, in the admin's preview
+     * too, would otherwise walk the home folder and have macOS ask for Desktop, Documents and
+     * Downloads before anybody asked for anything. Its first scan waits for the button.
+     */
+    function maybeScanFolder() {
+      if (Fremkit.compact || !snap || snap.scanning || !rootListed() || !result() || path.length === 0) return
+      var key = rootId() + '|' + path.join('/')
       if (autoScanned[key]) return
-      var err = snap.errors ? snap.errors[root] : null
-      if (!result() && !err) { autoScanned[key] = true; scan([]) }
-      // A folder the tree holds nothing inside of: rescan that folder, never the whole root.
-      else if (view && view.more && result() && path.length > 0 && !(view.children || []).length) { autoScanned[key] = true; scan(path) }
+      if (view && view.more && !(view.children || []).length) { autoScanned[key] = true; scan(path) }
     }
 
     function scan(at) {
@@ -257,7 +277,7 @@
       var r = result()
       var key = rootId() + '|' + (r ? r.generation : 0)
       if (key !== before) fetchView()
-      else { renderStatus(); maybeAutoScan() }
+      else { renderStatus(); maybeScanFolder() }
     }
 
     // ---- drawing ------------------------------------------------------------------------------
@@ -417,6 +437,14 @@
         status = Fremkit.t(r.scanner === 'du' ? L.viaDu : L.scanned, { ago: S.ago(r.scannedAt, Date.now(), Fremkit.locale) })
       } else status = Fremkit.t(L.never)
       $('status').textContent = status
+      // Never scanned: the call to action, with whatever went wrong last time under it.
+      var never = !r && !busy && rootListed()
+      document.documentElement.classList.toggle('never', never)
+      $('cta').hidden = !never
+      if (never) {
+        $('ctaBtn').textContent = Fremkit.t(L.scanRoot, { name: rootId() === 'home' ? Fremkit.t(L.homeShort) : rootLabel() })
+        $('ctaNote').textContent = currentError() ? status : Fremkit.t(L.firstScan)
+      }
       $('progress').hidden = !scanningNow
       var label = busy ? '✕' : '↻'
       $('scanBtn').textContent = label
@@ -560,6 +588,7 @@
       else scan(path.length && view && view.more ? path : [])
     }
     $('scanBtn').addEventListener('click', onScanButton)
+    $('ctaBtn').addEventListener('click', function () { scan([]) })
     $('floatScan').addEventListener('click', onScanButton)
     $('floatLock').addEventListener('click', openPrivacy)
     function openPrivacy() {
