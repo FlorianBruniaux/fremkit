@@ -94,6 +94,12 @@ describe('effectiveManifest', () => {
     expect(effective.commands).toEqual([])
     expect(effective.permissions.network).toEqual([])
     expect(effectiveManifest(asked, 'builtin', undefined).commands).toEqual(['disk-map'])
+    const paste = manifest({ subscriptions: ['clipboard'], commands: ['clipboard'] })
+    const pasted = effectiveManifest(paste, 'installed', consent({ subscriptions: ['clipboard'], commands: ['clipboard'] }))
+    expect(pasted.subscriptions).toEqual([])
+    expect(pasted.commands).toEqual([])
+    expect(pasted.permissions.network).toEqual([])
+    expect(effectiveManifest(paste, 'builtin', undefined).subscriptions).toEqual(['clipboard'])
   })
 
   it('never widens: a grant for something the manifest no longer asks for adds nothing', () => {

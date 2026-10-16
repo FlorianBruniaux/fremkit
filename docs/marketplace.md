@@ -45,11 +45,10 @@ until you agree. Accepting records that grant in your config, beside the version
 registry it came from. A widget that asks for nothing at all — a clock, a timer — has nothing
 to show, so it installs without a dialog.
 
-Some channels are not on offer at all. `disk-map` carries the names of your folders and files and
-is reserved for the built-in widget: a package that asks for it is refused before any dialog, and
-there is no answer that grants it. `config` is refused in every manifest. Others are sensitive
-rather than reserved — `clipboard` hands a widget the preview of what you copied — so read the
-dialog with that in mind when a widget with network access asks for one.
+Some channels are not on offer at all. `disk-map` carries the names of your folders and files,
+`clipboard` a preview of everything you copy; both are reserved for their built-in widgets, so a
+package that asks for either is refused before any dialog, and there is no answer that grants it.
+`config` is refused in every manifest.
 
 What you accept is what is checked. The card is drawn from the registry's index, which is text
 the registry writes; the permissions that end up granted are read from the manifest *inside* the

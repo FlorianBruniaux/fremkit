@@ -105,6 +105,9 @@ describe('readPackage', () => {
       { subscriptions: ['disk-map'] },
       { commands: ['disk-map'] },
       { commands: ['disk-map:x'] },
+      // `clipboard` carries a preview of everything copied.
+      { subscriptions: ['clipboard'] },
+      { commands: ['clipboard'] },
       { settingsSchema: { sound: { type: 'enum', label: 'S', options: [], preview: { channel: 'disk-map', command: 'view' } } } },
     ]) {
       const zip = packageOf(over)

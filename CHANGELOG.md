@@ -40,6 +40,11 @@ tagged `vX.Y.Z`.
 - **Restore a backup from the Fremkit admin window.** **Restore…** there only let you pick images,
   so the archive could not be chosen.
 
+### Security
+- **Only the built-in clipboard widget can read the clipboard.** A widget from the registry that
+  asks for the clipboard history is refused at install, and one already in `data/widgets` is
+  reported as an error and granted nothing: it would see a preview of everything you copy.
+
 ## 0.3.0 — 2026-10-15
 
 ### Added
