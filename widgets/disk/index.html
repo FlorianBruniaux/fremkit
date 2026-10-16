@@ -23,11 +23,18 @@
 <script>
   var L = {
     gigabytes: { fr: '{n} Go', en: '{n} GB' },
+    terabytes: { fr: '{n} To', en: '{n} TB' },
     free: { fr: '{n} libres', en: '{n} free' },
     unknown: { fr: 'Libre ?', en: 'Free ?' },
     system: { fr: 'Disque du Mac', en: 'Mac disk' }
   }
-  function gb(b) { return Fremkit.t(L.gigabytes, { n: Math.round(b / 1073741824) }) }
+  /** Decimal units, as Finder and Disk Utility count them. */
+  function gb(b) {
+    var n = Math.max(0, Number(b) || 0) / 1e9
+    if (n < 1000) return Fremkit.t(L.gigabytes, { n: Math.round(n) })
+    var t = (n / 1000).toFixed(n < 10000 ? 1 : 0)
+    return Fremkit.t(L.terabytes, { n: Fremkit.locale === 'fr' ? t.replace('.', ',') : t })
+  }
   Fremkit.whenReady(function () {
     var last = null
     document.documentElement.lang = Fremkit.locale

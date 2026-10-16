@@ -24,6 +24,8 @@ tagged `vX.Y.Z`.
   today, in total, and over the last 30 days, read from the `rtk` program when it is installed.
 
 ### Fixed
+- **Disks counts like Finder.** Sizes were binary gigabytes labelled GB, about 7 % below what
+  Finder and Disk Utility show; they are decimal now, and a disk past 1,000 GB reads in TB.
 - **Save a backup from the Fremkit admin window.** **Screen → Backup → Save** did nothing in the
   helper's own admin window, which dropped the download; it now asks where to save the archive,
   as a browser does.
