@@ -18,7 +18,8 @@ tagged `vX.Y.Z`.
   A scan runs only when you tap — the tile's **Scan** button the first time, ↻ after that — never on
   a timer, at low priority, and never deletes anything; two tiles on two roots scan one after the
   other instead of interrupting each other. Folders macOS would not let it read are shown as such,
-  with a button to the Full Disk Access settings.
+  with a button to the Full Disk Access settings. Only the built-in widget can read it: a widget
+  from the registry that asks for the disk map is refused, since it would see your files' names.
 - **About.** **/admin → Screen → About** shows the Fremkit version, who wrote it, and links to
   Fremkit's and the Sietch's repositories, which open in your browser, from the Fremkit admin
   window too.

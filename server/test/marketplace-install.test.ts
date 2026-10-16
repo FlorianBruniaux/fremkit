@@ -99,6 +99,19 @@ describe('readPackage', () => {
     expect(() => readPackage(notJson, expected(notJson))).toThrow(expect.objectContaining({ key: 'marketplace.badManifest' }))
   })
 
+  it('refuses a widget that asks for a channel only built-in widgets may use', () => {
+    // `disk-map` carries the names of the home folder's folders and files.
+    for (const over of [
+      { subscriptions: ['disk-map'] },
+      { commands: ['disk-map'] },
+      { commands: ['disk-map:x'] },
+      { settingsSchema: { sound: { type: 'enum', label: 'S', options: [], preview: { channel: 'disk-map', command: 'view' } } } },
+    ]) {
+      const zip = packageOf(over)
+      expect(() => readPackage(zip, expected(zip))).toThrow(expect.objectContaining({ key: 'marketplace.builtinOnlyChannel' }))
+    }
+  })
+
   it('refuses a private host in permissions.network, twice over', () => {
     const zip = packageOf({ permissions: { network: ['127.0.0.1'] } })
     expect(() => readPackage(zip, expected(zip))).toThrow(InstallError)

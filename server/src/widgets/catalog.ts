@@ -1,6 +1,6 @@
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { join } from 'node:path'
-import { ManifestSchema, type WidgetManifest } from './manifest.js'
+import { builtinOnlyChannels, ManifestSchema, type WidgetManifest } from './manifest.js'
 import { WIDGET_ID_RE } from '../config/schema.js'
 import { tr } from '../i18n.js'
 
@@ -103,6 +103,10 @@ export class WidgetCatalog {
           const result = ManifestSchema.safeParse(json)
           if (!result.success) throw new Error(tr(undefined, 'catalog.invalidManifest', { issues: result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') }))
           if (result.data.id !== id) throw new Error(tr(undefined, 'catalog.folderMismatch', { id: result.data.id, folder: id }))
+          // The installer refuses these already; a folder copied into `data/widgets` by hand
+          // never went through it.
+          const builtinOnly = root.source === 'installed' ? builtinOnlyChannels(result.data) : []
+          if (builtinOnly.length > 0) throw new Error(tr(undefined, 'catalog.builtinOnlyChannel', { channels: builtinOnly.join(', ') }))
           entries.set(id, { manifest: result.data, source: root.source, folder })
         } catch (err) {
           errors.push({ id, error: (err as Error).message })

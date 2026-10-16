@@ -87,6 +87,15 @@ describe('effectiveManifest', () => {
     expect(effective.permissions.network).toEqual([])
   })
 
+  it('grants nothing to an installed widget asking for a built-in-only channel, whatever its record says', () => {
+    const asked = manifest({ subscriptions: ['disk-map'], commands: ['disk-map'] })
+    const effective = effectiveManifest(asked, 'installed', consent({ subscriptions: ['disk-map'], commands: ['disk-map'] }))
+    expect(effective.subscriptions).toEqual([])
+    expect(effective.commands).toEqual([])
+    expect(effective.permissions.network).toEqual([])
+    expect(effectiveManifest(asked, 'builtin', undefined).commands).toEqual(['disk-map'])
+  })
+
   it('never widens: a grant for something the manifest no longer asks for adds nothing', () => {
     const effective = effectiveManifest(manifest({ subscriptions: [], commands: [], permissions: { network: [] } }), 'installed', consent())
     expect(effective.subscriptions).toEqual([])

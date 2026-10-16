@@ -14,7 +14,7 @@ import { createHash } from 'node:crypto'
 import { mkdir, mkdtemp, readdir, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { readZip, ZipError } from '../backup/zip.js'
-import { ManifestSchema, type WidgetManifest } from '../widgets/manifest.js'
+import { builtinOnlyChannels, ManifestSchema, type WidgetManifest } from '../widgets/manifest.js'
 import { ThemeSchema, type Theme } from '../themes/theme.js'
 import { SDK_VERSION } from '../bridge/sdk.js'
 import { isPrivateLiteral } from '../net/private.js'
@@ -83,6 +83,7 @@ export type InstallErrorKey =
   | 'marketplace.idMismatch'
   | 'marketplace.sdkTooNew'
   | 'marketplace.hashMismatch'
+  | 'marketplace.builtinOnlyChannel'
 
 export class InstallError extends Error {
   constructor(readonly key: InstallErrorKey, locale?: Locale) {
@@ -181,6 +182,8 @@ export function readPackage(
   // could land under a name they never saw — including one they already trust.
   if (manifest.id !== expected.id) throw new InstallError('marketplace.idMismatch', locale)
   if (manifest.sdk > SDK_VERSION) throw new InstallError('marketplace.sdkTooNew', locale)
+  // Before the consent dialog, not after: there is no answer the user could give that grants it.
+  if (builtinOnlyChannels(manifest).length > 0) throw new InstallError('marketplace.builtinOnlyChannel', locale)
   // The schema refuses these already. Said twice because it is the rule that turns the proxy
   // into a way to read this machine's own services, and one check is never enough for that one.
   if (manifest.permissions.network.some((host) => isPrivateLiteral(host))) {
