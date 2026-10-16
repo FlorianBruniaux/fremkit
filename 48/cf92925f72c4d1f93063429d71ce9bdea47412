@@ -1,0 +1,33 @@
+ui/src/shared/locales/en.ts
+  s_e827e256e15185::t_e5a07c891d9dc9 162
+ui/test/store.test.ts
+  s_e827e256e15185::t_ddd3c5d0bd0704 567-568,572-585
+ui/src/admin/store.ts
+  s_e827e256e15185::t_47477981b92606 476,479,523-529
+ui/src/shared/types.ts
+  s_e827e256e15185::t_47477981b92606 293,320-345
+ui/src/shared/locales/fr.ts
+  s_e827e256e15185::t_e5a07c891d9dc9 162
+ui/src/admin/ScreenInspector.vue
+  s_e827e256e15185::t_e5a07c891d9dc9 22,138-143
+CHANGELOG.md
+  s_e827e256e15185::t_be5c15755b94ea 16
+README.md
+  s_e827e256e15185::t_4331f4ed20ac03 187-189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "48cf92925f72c4d1f93063429d71ce9bdea47412",
+  "prompts": {},
+  "sessions": {
+    "s_e827e256e15185": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12567-61ab-7c62-8b43-ea0028444170",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Florian BRUNIAUX <florian@bruniaux.com>"
+    }
+  }
+}
