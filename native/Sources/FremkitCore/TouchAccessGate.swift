@@ -33,7 +33,8 @@ public struct TouchAccessGate {
         return refusalsWhileGranted >= Self.refusalsBeforeRelaunch ? .relaunchNeeded : .missing
     }
 
-    /// Called when the panel opened, or failed for another reason than permission.
+    /// Called when the panel opened, or failed for another reason than permission. Switching
+    /// touch off and on does not call it: a grant that needed a relaunch still needs one.
     public mutating func reset() {
         refusalsWhileGranted = 0
     }

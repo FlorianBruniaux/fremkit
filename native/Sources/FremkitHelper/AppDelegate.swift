@@ -401,12 +401,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSWorkspace.shared.open(ServerProcess.logURL)
         }
 
-        menu.onFix = { fix in
+        menu.onFix = { [weak self] fix in
             switch fix {
             case let .openPrivacyPane(pane):
-                // Asking again is what puts the app in the Input Monitoring list when a lost
-                // first request left it out, so there is a switch to turn on once Settings opens.
-                if pane == .inputMonitoring { Permissions.requestInputMonitoring() }
+                // Asking again is what puts the app in the pane's list when a lost first request
+                // left it out, so there is a switch to turn on once Settings opens.
+                switch pane {
+                case .inputMonitoring:
+                    Permissions.requestInputMonitoring()
+                case .accessibility:
+                    // Not while the Input Monitoring prompt may still be up: that is the very
+                    // clash the launch sequence avoids. The sequencer asks right after anyway.
+                    if self?.permissions.isWaiting != true { Permissions.requestAccessibility() }
+                }
                 NSWorkspace.shared.open(pane.url)
             case .openLoginItems:
                 SMAppService.openSystemSettingsLoginItems()

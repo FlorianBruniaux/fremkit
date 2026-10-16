@@ -25,7 +25,7 @@ final class PermissionFixTests: XCTestCase {
     }
 
     func testInformativeLinesDoNothing() {
-        for key in [L10nKey.touchActive, .touchBusy, .touchNoDisplay, .touchDisabled, .dockActive, .dockNoDock, .serverRunning, .loginFailed] {
+        for key in [L10nKey.touchActive, .touchBusy, .touchOpenFailed, .touchNoDisplay, .touchDisabled, .dockActive, .dockNoDock, .dockDisabled, .serverRunning, .serverRestarting, .loginFailed] {
             XCTAssertNil(PermissionFix.forLine(key), key.rawValue)
         }
     }
