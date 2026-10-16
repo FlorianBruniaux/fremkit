@@ -117,6 +117,10 @@ agent's in-flight work. Say where the worktree is, and remove it once the work h
   `server/src/bridge/sdk.ts`, not against the release: it goes up when the bridge gains a member
   a widget may rely on, in the commit that adds it (`bridge.test.ts` refuses a member no
   generation lists).
+- **Credits**: somebody's first merged pull request adds their handle to
+  `ui/src/shared/credits.ts`, which the admin's **Screen → About** reads, and to the README's
+  Credits section; `credits.test.ts` fails when the two disagree. A registry widget or theme
+  credits its own authors in its `author` field, which the registry refuses to leave empty.
 - **Tests before done**: `pnpm typecheck` and `pnpm test` green, the UI rebuilt if touched, a
   rescan if a manifest changed, and — for anything visible — a look at `/admin` or `/` in a
   browser. The widget catalogue test in `server/test/` reads the real `widgets/` folder, so a

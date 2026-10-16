@@ -17,6 +17,7 @@ import NavWidgetsEditor from './NavWidgetsEditor.vue'
 import { surfaceOpacity } from '../shared/background'
 import { pick, useI18n, type Locale } from '../shared/i18n'
 import { useConfirm } from '../shared/useConfirm'
+import { CONTRIBUTORS, MAINTAINER, REPOSITORY, VERSION } from '../shared/credits'
 import { BUILTIN_THEME, useThemes } from '../shared/theme'
 import { ADMIN_GESTURES, DEFAULT_ADMIN_GESTURE, NAV_HEIGHTS, navHeightOf,
   type AdminGesture, type Background, type NavHeight } from '../shared/types'
@@ -52,6 +53,10 @@ const themeNote = computed(() => themeOptions.value.find((o) => o.id === current
 function setTheme(id: string): void {
   if (id !== currentTheme.value) s.apply((c) => { c.display.theme = id })
 }
+
+/** "A, B and C" in the language in force, so a third contributor needs no new string. */
+const contributors = computed(() =>
+  new Intl.ListFormat(locale.value, { type: 'conjunction' }).format(CONTRIBUTORS.map((p) => p.handle)))
 
 const privacy = computed(() => s.state.config!.privacy)
 /**
@@ -313,6 +318,16 @@ function setBackground(patch: Partial<Background>): void {
     :label="t('admin.inspector.screen.macmonTemperature')"
     @update:model-value="setMacmonTemperature($event)" />
   <p class="ro">{{ t('admin.inspector.screen.macmonTemperature.hint') }}</p>
+  </BaseSection>
+
+  <BaseSection id="screen.about" :title="t('admin.inspector.screen.about')">
+  <p class="ro">{{ t('admin.inspector.screen.about.version', { version: VERSION }) }}</p>
+  <p class="ro">{{ t('admin.inspector.screen.about.authors', { maintainer: MAINTAINER.handle, contributors }) }}</p>
+  <!-- Text, not a link: in the helper's admin window a link would navigate the admin itself away,
+       with no way back but a reload. -->
+  <p class="ro mono">{{ REPOSITORY }}</p>
+  <p class="ro">{{ t('admin.inspector.screen.about.registry') }}</p>
+  <p class="ro">{{ t('admin.inspector.screen.about.icons') }}</p>
   </BaseSection>
 </template>
 

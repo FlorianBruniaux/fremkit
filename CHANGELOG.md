@@ -13,6 +13,7 @@ tagged `vX.Y.Z`.
 ## Unreleased
 
 ### Added
+- **About.** **/admin → Screen → About** shows the Fremkit version and who wrote it.
 - **RTK token savings.** For registry widgets: the tokens [RTK](https://github.com/rtk-ai/rtk) saved
   today, in total, and over the last 30 days, read from the `rtk` program when it is installed.
 
