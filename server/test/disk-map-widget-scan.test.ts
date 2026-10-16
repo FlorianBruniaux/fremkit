@@ -94,6 +94,9 @@ describe('disk map widget', () => {
     expect(ask.hidden).toBe(false)
     expect(w.doc.getElementById('askText')!.textContent).toBe(
       'macOS is asking whether Fremkit may open “Documents” — answer the window on the Mac (it may be behind the dashboard).')
+    expect(w.doc.getElementById('askShow')!.textContent).toBe('Show the request')
+    w.doc.getElementById('askShow')!.dispatchEvent(new w.doc.defaultView!.MouseEvent('click', { bubbles: true }))
+    expect(w.commands.at(-1)).toEqual(['disk-map', 'revealPrompt', {}])
     // The scan's own progress stays on.
     expect(w.doc.getElementById('progress')!.hidden).toBe(false)
     w.publish({ ...neverScanned, scanning: { ...scanning, waiting: null } })

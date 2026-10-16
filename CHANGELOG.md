@@ -17,8 +17,9 @@ tagged `vX.Y.Z`.
   reaches Documents, Desktop, Downloads, iCloud Drive or a removable volume for the first time,
   macOS asks whether Fremkit may open it, and the scan cannot go on until somebody answers — a
   question that could sit unseen behind the dashboard. The tile now says which folder macOS is
-  asking about and that the answer is on the Mac; after 30 seconds without one, the scan goes on
-  without that folder and counts it as unreadable.
+  asking about, and its **Show the request** button moves the dashboard out of the way for 45
+  seconds so the window can be answered on the Edge; after 30 seconds without an answer, the scan
+  goes on without that folder and counts it as unreadable.
 
 ## 0.4.0 — 2026-10-16
 

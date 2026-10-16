@@ -246,7 +246,9 @@ under the helper, your terminal under `pnpm dev`. What it meets there:
 
 While such a dialog waits for an answer the scan cannot open that folder, and the tile says so:
 *macOS is asking whether Fremkit may open "Documents" — answer the window on the Mac*. The dialog
-can be hidden behind the dashboard on the Edge, so look for it on the other screens too. If nobody
+can be hidden behind the dashboard on the Edge, so look for it on the other screens too; on the
+Edge, the tile's **Show the request** button sends the dashboard behind the other windows for 45
+seconds so the dialog can be seen and touched, and it comes back on its own. If nobody
 answers within 30 seconds the scan goes on without that folder, which then counts as unreadable;
 answer the dialog (or grant access in System Settings) and press ↻ to measure it.
 

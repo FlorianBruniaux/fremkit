@@ -73,6 +73,7 @@ describe('disk-map provider', () => {
   let home: string
   let scanner: ReturnType<typeof fakeScanner>
   let opened: string[][]
+  let revealed: number
   let provider: Provider<DiskMapSnapshot>
   const cmd = (name: string, payload: unknown, ctx: { loopback: boolean } | undefined = LOCAL) =>
     provider.commands![name](payload, ctx) as Promise<Record<string, any>>
@@ -82,6 +83,7 @@ describe('disk-map provider', () => {
     scanner: async () => scanner,
     mounts: async () => '/dev/disk7s1 on /Volumes/Example (apfs, local, journaled)\n',
     open: async (args) => { opened.push(args) },
+    revealHelper: async () => { revealed++ },
   })
 
   beforeEach(async () => {
@@ -91,6 +93,7 @@ describe('disk-map provider', () => {
     await writeFile(join(home, 'movie.mov'), 'x')
     scanner = fakeScanner()
     opened = []
+    revealed = 0
     provider = make()
   })
   afterEach(async () => {
@@ -160,12 +163,25 @@ describe('disk-map provider', () => {
   })
 
   it('acts on the Mac only for a local client', async () => {
-    for (const name of ['scan', 'cancel', 'reveal', 'openPrivacy']) {
+    for (const name of ['scan', 'cancel', 'reveal', 'openPrivacy', 'revealPrompt']) {
       expect((await cmd(name, { root: 'home' }, { loopback: false })).ok).toBe(false)
       expect((await provider.commands![name]({ root: 'home' })) as { ok: boolean }).toMatchObject({ ok: false })
     }
     expect(scanner.started).toHaveLength(0)
     expect(opened).toEqual([])
+    expect(revealed).toBe(0)
+  })
+
+  it('asks the helper to lower the dashboard so the privacy prompt can be answered', async () => {
+    expect(await cmd('revealPrompt', {})).toEqual({ ok: true })
+    expect(revealed).toBe(1)
+    expect((await cmd('revealPrompt', { seconds: 9999 })).ok).toBe(false)
+    expect(revealed).toBe(1)
+    const failing = createDiskMapProvider({
+      dataDir, home, scanner: async () => scanner, mounts: async () => '',
+      revealHelper: async () => { throw new Error('no helper') },
+    })
+    expect(await failing.commands!.revealPrompt({}, LOCAL)).toEqual({ ok: false, error: 'failed' })
   })
 
   it('reveals only what its own tree holds, resolved under the root', async () => {

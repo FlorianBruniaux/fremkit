@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { tr } from '../i18n.js'
 import { execCommand, type Exec } from './exec.js'
+import { HELPER_REVEAL_URL, openHelperUrl } from '../helper/routes.js'
 import {
   createDuScanner, createNativeScanner, resolveScannerBinary, ScanError,
   type DiskScanner, type ScanFailure, type ScanHandle, type ScanProgress, type ScanStats,
@@ -141,6 +142,8 @@ export interface DiskMapOptions {
   mounts?: () => Promise<string>
   /** Runs `/usr/bin/open` with these arguments. */
   open?: (args: string[]) => Promise<unknown>
+  /** Asks the helper to lower the dashboard for a while (`fremkit://reveal`). */
+  revealHelper?: () => Promise<void>
   now?: () => number
 }
 
@@ -167,6 +170,7 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
   const run: Exec = execCommand
   const mounts = opts.mounts ?? (() => run('/sbin/mount', []))
   const open = opts.open ?? ((args: string[]) => run('/usr/bin/open', args))
+  const revealHelper = opts.revealHelper ?? (() => openHelperUrl(HELPER_REVEAL_URL))
   const saveDir = join(opts.dataDir, 'disk-map')
 
   let scannerPromise: Promise<DiskScanner> | null = null
@@ -418,6 +422,23 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
         }
         try {
           await open(['-R', target])
+          return { ok: true }
+        } catch {
+          return { ok: false, error: 'failed' }
+        }
+      },
+      /**
+       * Lowers the dashboard behind the other windows for a while, so the privacy prompt a scan
+       * waits on can be seen and answered: on the Edge it opens under the kiosk. The widget cannot
+       * call `/api/helper/reveal` from its sandboxed frame, so it asks here. Without the helper
+       * (`pnpm dev`) `open` fails or finds nobody, and the answer says so; nothing else happens.
+       */
+      revealPrompt: async (payload, ctx?: CommandContext) => {
+        if (!ctx?.loopback) return localOnly()
+        const parsed = EmptyPayload.safeParse(payload ?? {})
+        if (!parsed.success) return invalid(parsed.error)
+        try {
+          await revealHelper()
           return { ok: true }
         } catch {
           return { ok: false, error: 'failed' }
