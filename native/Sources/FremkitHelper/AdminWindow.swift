@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import UniformTypeIdentifiers
 import FremkitCore
 import WebKit
 
@@ -111,7 +112,9 @@ final class AdminWindow: NSObject, NSWindowDelegate, WKUIDelegate, WKNavigationD
 
     // MARK: - WKUIDelegate
 
-    /// Backs the page's file inputs (background images) with the standard open panel.
+    /// Backs the page's file inputs (background images, the backup to restore) with the standard
+    /// open panel. WebKit does not pass the input's `accept` list on macOS, so the panel offers
+    /// the union of what the admin's inputs take; the server checks the file either way.
     func webView(_ webView: WKWebView,
                  runOpenPanelWith parameters: WKOpenPanelParameters,
                  initiatedByFrame frame: WKFrameInfo,
@@ -120,7 +123,7 @@ final class AdminWindow: NSObject, NSWindowDelegate, WKUIDelegate, WKNavigationD
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = parameters.allowsMultipleSelection
-        panel.allowedContentTypes = [.png, .jpeg, .webP]
+        panel.allowedContentTypes = [.png, .jpeg, .webP, .zip]
         guard let window else { completionHandler(nil); return }
         panel.beginSheetModal(for: window) { response in
             completionHandler(response == .OK ? panel.urls : nil)
