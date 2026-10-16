@@ -12,6 +12,10 @@ tagged `vX.Y.Z`.
 
 ## Unreleased
 
+### Added
+- **RTK token savings.** For registry widgets: the tokens [RTK](https://github.com/rtk-ai/rtk) saved
+  today, in total, and over the last 30 days, read from the `rtk` program when it is installed.
+
 ### Fixed
 - **Save a backup from the Fremkit admin window.** **Screen → Backup → Save** did nothing in the
   helper's own admin window, which dropped the download; it now asks where to save the archive,
