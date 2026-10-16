@@ -218,6 +218,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         accessibilityTimer = timer
     }
 
+    /// Quits the normal way (the server is stopped in `applicationWillTerminate`) and has a
+    /// detached shell open the bundle again once this process is gone.
+    private static func relaunch() {
+        let bundle = Bundle.main.bundleURL
+        guard bundle.pathExtension == "app" else {
+            // A bare executable has no bundle to reopen; quitting is all that can be done.
+            NSApp.terminate(nil)
+            return
+        }
+        let command = Relaunch.command(waitingFor: ProcessInfo.processInfo.processIdentifier, bundlePath: bundle.path)
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: command.executable)
+        process.arguments = command.arguments
+        do {
+            try process.run()
+        } catch {
+            FileHandle.standardError.write(Data("fremkit: cannot relaunch: \(error)\n".utf8))
+        }
+        NSApp.terminate(nil)
+    }
+
     // MARK: - Config
 
     /// Turns a configured string into a URL, naming the offending value before falling back.
@@ -389,6 +410,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 NSWorkspace.shared.open(pane.url)
             case .openLoginItems:
                 SMAppService.openSystemSettingsLoginItems()
+            case .relaunch:
+                Self.relaunch()
             }
         }
 

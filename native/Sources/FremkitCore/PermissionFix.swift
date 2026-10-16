@@ -22,6 +22,8 @@ public enum PermissionFix: Equatable {
     case openPrivacyPane(PrivacyPane)
     /// Open System Settings → General → Login Items, where the login item waits for approval.
     case openLoginItems
+    /// Quit the helper and open it again, so macOS applies a grant it already shows as given.
+    case relaunch
 
     /// The fix behind the line showing `key`, or nil for a line that only informs.
     public static func forLine(_ key: L10nKey) -> PermissionFix? {
@@ -32,6 +34,8 @@ public enum PermissionFix: Equatable {
             return .openPrivacyPane(.accessibility)
         case .loginNeedsApproval:
             return .openLoginItems
+        case .touchNeedsRelaunch:
+            return .relaunch
         default:
             return nil
         }

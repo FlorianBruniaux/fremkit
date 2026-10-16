@@ -38,6 +38,9 @@ tagged `vX.Y.Z`.
   missing — open Settings…" or "Fence: Accessibility missing — open Settings…" can be clicked: it
   opens the right pane of System Settings → Privacy & Security, with Fremkit listed there. The
   login item waiting for approval opens Login Items the same way.
+- **Touch tells you when a relaunch is all it needs.** Once Input Monitoring is granted, touch
+  starts by itself within a few seconds; when macOS wants Fremkit reopened before the grant
+  applies, the line says "Touch: allowed — quit and reopen Fremkit…", and clicking it does that.
 - **The signed app asks for Input Monitoring and Accessibility once more** on its first launch:
   macOS ties those grants to the signature, and the app is signed with the project's Developer ID
   rather than the local certificate of a source install. If the old grant is still ticked and

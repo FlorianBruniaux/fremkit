@@ -33,6 +33,7 @@ struct MenuState {
             // The driver is reading the panel, but without Accessibility nothing it posts lands.
             return accessibility ? .touchActive : .touchAccessibilityMissing
         case .notPermitted: return .touchNotPermitted
+        case .needsRelaunch: return .touchNeedsRelaunch
         case .busy(.exclusiveAccess): return .touchBusy
         case .busy(.openFailed): return .touchOpenFailed
         case .noDisplay: return .touchNoDisplay

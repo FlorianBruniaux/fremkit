@@ -154,6 +154,13 @@ let suites: [(String, () -> XCTestCase, [TestMethod])] = [
         ("testLoginApprovalOpensLoginItems", { ($0 as! PermissionFixTests).testLoginApprovalOpensLoginItems() }),
         ("testInformativeLinesDoNothing", { ($0 as! PermissionFixTests).testInformativeLinesDoNothing() }),
     ]),
+    ("TouchAccessGateTests", { TouchAccessGateTests() }, [
+        ("testNotGrantedIsMissing", { ($0 as! TouchAccessGateTests).testNotGrantedIsMissing() }),
+        ("testGrantedButStillRefusedAsksForARelaunch", { ($0 as! TouchAccessGateTests).testGrantedButStillRefusedAsksForARelaunch() }),
+        ("testARevokedGrantOrASuccessfulOpenStartsOver", { ($0 as! TouchAccessGateTests).testARevokedGrantOrASuccessfulOpenStartsOver() }),
+        ("testRelaunchWaitsForThePidThenOpensTheBundle", { ($0 as! TouchAccessGateTests).testRelaunchWaitsForThePidThenOpensTheBundle() }),
+        ("testRelaunchLineRelaunches", { ($0 as! TouchAccessGateTests).testRelaunchLineRelaunches() }),
+    ]),
 ]
 
 var passed = 0

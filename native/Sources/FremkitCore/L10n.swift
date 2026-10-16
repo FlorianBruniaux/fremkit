@@ -25,6 +25,7 @@ public enum L10nKey: String, CaseIterable {
     case touchActive
     case touchAccessibilityMissing
     case touchNotPermitted
+    case touchNeedsRelaunch
     case touchBusy
     /// One `%08X`: the IOKit result code.
     case touchOpenFailed
@@ -87,6 +88,7 @@ public enum L10n {
         .touchActive: "Tactile : actif",
         .touchAccessibilityMissing: "Tactile : Accessibilité manquante — ouvrir les Réglages…",
         .touchNotPermitted: "Tactile : Surveillance de l'entrée manquante — ouvrir les Réglages…",
+        .touchNeedsRelaunch: "Tactile : autorisé — quitter et rouvrir Fremkit…",
         .touchBusy: "Tactile : occupé par un autre driver",
         .touchOpenFailed: "Tactile : erreur d'ouverture (0x%08X)",
         .touchNoDisplay: "Tactile : écran absent",
@@ -141,6 +143,7 @@ public enum L10n {
         .touchActive: "Touch: active",
         .touchAccessibilityMissing: "Touch: Accessibility missing — open Settings…",
         .touchNotPermitted: "Touch: Input Monitoring missing — open Settings…",
+        .touchNeedsRelaunch: "Touch: allowed — quit and reopen Fremkit…",
         .touchBusy: "Touch: taken by another driver",
         .touchOpenFailed: "Touch: could not open it (0x%08X)",
         .touchNoDisplay: "Touch: display absent",
