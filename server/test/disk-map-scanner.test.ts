@@ -92,7 +92,7 @@ describe('DuParser', () => {
   })
   it('reads the refusals of GNU du too', () => {
     const p = new DuParser('/Volumes/Big', 'Big')
-    p.errorLine("du: cannot read directory '/Volumes/Big/locked': Permission denied")
+    p.errorLine("/usr/bin/du: cannot read directory '/Volumes/Big/locked': Permission denied")
     p.line('4\t/Volumes/Big/locked')
     p.line('8\t/Volumes/Big')
     const tree = p.finish(DEFAULT_POLICY, 5)
