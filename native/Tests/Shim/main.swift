@@ -98,6 +98,11 @@ let suites: [(String, () -> XCTestCase, [TestMethod])] = [
         ("testRefusesAnywhereElse", { ($0 as! KioskOriginTests).testRefusesAnywhereElse() }),
         ("testRefusesNothingAtAll", { ($0 as! KioskOriginTests).testRefusesNothingAtAll() }),
     ]),
+    ("ExternalLinkTests", { ExternalLinkTests() }, [
+        ("testOpensAnotherSiteInTheBrowser", { ($0 as! ExternalLinkTests).testOpensAnotherSiteInTheBrowser() }),
+        ("testKeepsTheAdminsOwnPagesInTheWindow", { ($0 as! ExternalLinkTests).testKeepsTheAdminsOwnPagesInTheWindow() }),
+        ("testRefusesEveryOtherScheme", { ($0 as! ExternalLinkTests).testRefusesEveryOtherScheme() }),
+    ]),
     ("HelperURLTests", { HelperURLTests() }, [
         ("testAdminHostOpensTheAdmin", { ($0 as! HelperURLTests).testAdminHostOpensTheAdmin() }),
         ("testTargetIsCaseInsensitiveAndIgnoresPathAndQuery", { ($0 as! HelperURLTests).testTargetIsCaseInsensitiveAndIgnoresPathAndQuery() }),

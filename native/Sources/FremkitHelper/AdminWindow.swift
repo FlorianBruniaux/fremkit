@@ -130,7 +130,38 @@ final class AdminWindow: NSObject, NSWindowDelegate, WKUIDelegate, WKNavigationD
         }
     }
 
+    /// A link with `target="_blank"` asks for a new window, which the admin never opens: a site
+    /// elsewhere goes to the default browser instead. Only a link the person clicked in the admin
+    /// itself, never one from a widget's frame in the preview.
+    func webView(_ webView: WKWebView,
+                 createWebViewWith configuration: WKWebViewConfiguration,
+                 for navigationAction: WKNavigationAction,
+                 windowFeatures: WKWindowFeatures) -> WKWebView? {
+        openInBrowserIfExternal(navigationAction)
+        return nil
+    }
+
+    /// True, and the link opened in the default browser, when it is one the admin should not load.
+    @discardableResult
+    private func openInBrowserIfExternal(_ action: WKNavigationAction) -> Bool {
+        guard action.navigationType == .linkActivated,
+              action.sourceFrame.isMainFrame,
+              let target = action.request.url,
+              ExternalLink.opensInBrowser(target, from: url)
+        else { return false }
+        NSWorkspace.shared.open(target)
+        return true
+    }
+
     // MARK: - WKNavigationDelegate
+
+    /// A plain link to another site would replace the admin, which has no back button: it opens
+    /// in the default browser instead, and the admin stays where it was.
+    func webView(_ webView: WKWebView,
+                 decidePolicyFor navigationAction: WKNavigationAction,
+                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        decisionHandler(openInBrowserIfExternal(navigationAction) ? .cancel : .allow)
+    }
 
     /// Turns an attachment, or anything WebKit cannot display, into a download instead of a
     /// failed navigation. Main frame only: the widgets in the preview are sandboxed iframes and
