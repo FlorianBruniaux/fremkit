@@ -107,6 +107,14 @@ echo "==> FremkitHelper (with Sparkle)"
     -framework IOKit \
     -framework ServiceManagement \
     -o "$WORK/FremkitHelper"
+# The disk map's scanner, which the server runs by the path the helper hands it in
+# FREMKIT_SCANNER. It needs nothing but FremkitCore and Foundation.
+echo "==> fremkit-scan"
+"$SWIFTC" -O -sdk "$SDK" -target "$TARGET" -swift-version "$SWIFT_VERSION" \
+    -module-name FremkitScan \
+    native/Sources/FremkitScan/main.swift \
+    -I "$WORK/swift" -L "$WORK/swift" -lFremkitCore \
+    -o "$WORK/fremkit-scan"
 
 # --- Server -------------------------------------------------------------------------------------
 echo "==> UI"
@@ -139,6 +147,7 @@ echo "==> app bundle"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Frameworks"
 cp "$WORK/FremkitHelper" "$APP/Contents/MacOS/FremkitHelper"
+cp "$WORK/fremkit-scan" "$APP/Contents/MacOS/fremkit-scan"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
 PLIST="$APP/Contents/Info.plist"
@@ -217,6 +226,9 @@ echo "==> signing with $IDENTITY ($TIMESTAMP)"
 sign() { codesign --force --options runtime "$TIMESTAMP" --sign "$IDENTITY" "$@"; }
 
 sign --entitlements native/Resources/node.entitlements "$RES/server/fremkit-server"
+# A nested executable gets its own identifier rather than the app's; it needs no entitlement (no
+# JIT, and what it may read is TCC's decision, granted to the app).
+sign --identifier dev.fremkit.scan "$APP/Contents/MacOS/fremkit-scan"
 SPARKLE_FW="$APP/Contents/Frameworks/Sparkle.framework"
 sign "$SPARKLE_FW/Versions/B/Autoupdate"
 sign "$SPARKLE_FW/Versions/B/Updater.app"
