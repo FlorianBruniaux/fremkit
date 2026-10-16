@@ -14,7 +14,7 @@ and "Notifications: active" above the toggles, and *Log…* opens the supervised
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| "Touch: Input Monitoring missing — open Settings…" | Input Monitoring not granted to *this build* of the helper | Click the line: it opens Privacy & Security → Input Monitoring with the helper listed. Turn "Fremkit" (the app) or "Fremkit Helper" (a source install) on, then relaunch it |
+| "Touch: Input Monitoring missing — open Settings…" | Input Monitoring not granted to *this build* of the helper, or [never asked](#input-monitoring-was-never-asked) | Click the line: it opens Privacy & Security → Input Monitoring with the helper listed. Turn "Fremkit" (the app) or "Fremkit Helper" (a source install) on, then relaunch it |
 | "Touch: allowed — quit and reopen Fremkit…" | Input Monitoring is granted, but macOS applies it only to a relaunched process | Click the line: Fremkit quits (stopping its server as usual) and opens again |
 | "Touch: taken by another driver" | Touchscreen Gestures, another driver or a `--probe` run holds the panel | Quit it, and unload its launchd agent so it does not come back |
 | "Fence: Accessibility missing — open Settings…" (or the same on the Touch or Notifications line) | Accessibility not granted | Click the line: it opens Privacy & Security → Accessibility. Turn "Fremkit" (the app) or "Fremkit Helper" (a source install) on, then relaunch it |
@@ -63,6 +63,24 @@ tccutil reset Accessibility dev.fremkit.helper
 
 Then open Fremkit again. The same applies to Local Network, which is asked the next time the
 server reaches a device on your LAN.
+
+## Input Monitoring was never asked
+
+macOS shows one privacy prompt at a time. Fremkit asks for Input Monitoring first and for
+Accessibility only once that is answered (or after a minute without an answer), so both prompts
+should appear on a first launch, one after the other. If only Accessibility was asked, and
+Fremkit is not listed under Privacy & Security → Input Monitoring at all:
+
+1. Click **"Touch: Input Monitoring missing — open Settings…"** in the menu bar menu. Fremkit
+   asks for the permission once more, which puts it in the list, and opens that pane. Turn
+   Fremkit on.
+2. If it is still not listed, add it by hand: **+** under the Input Monitoring list, pick
+   `Fremkit.app` in Applications (or `~/Applications/Fremkit Helper.app` for a source install), and turn it on.
+3. Touch starts by itself within a few seconds. If the line says **"Touch: allowed — quit and
+   reopen Fremkit…"** instead, click it: macOS applies the grant only to a relaunched process.
+
+The Accessibility lines ("… Accessibility missing — open Settings…") open the Accessibility pane
+the same way.
 
 ## Where the data lives
 
