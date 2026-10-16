@@ -261,11 +261,14 @@ export class DuParser {
    * One stderr line. `du: <path>: Permission denied` or `Operation not permitted` is a folder that
    * could not be read: it becomes an unreadable node, never a small one. Anything else (a dataless
    * iCloud folder answers "Resource deadlock avoided") is not a permission problem and is ignored.
+   * GNU du, which the CI runs on, names itself as it was run and words it differently:
+   * `/usr/bin/du: cannot read directory '<path>': Permission denied`.
    */
   errorLine(text: string): void {
-    const match = /^du: (.+): (Permission denied|Operation not permitted)$/.exec(text)
+    const match = /^(?:\/\S*\/)?du: (.+): (?:Permission denied|Operation not permitted)$/.exec(text)
     if (!match) return
-    const segments = this.segments(match[1])
+    const gnu = /^cannot (?:read directory|access) '(.+)'$/.exec(match[1])
+    const segments = this.segments(gnu ? gnu[1] : match[1])
     if (!segments) return
     if (segments.length === 0) { this.rootUnreadable = true; return }
     this.unreadable++
