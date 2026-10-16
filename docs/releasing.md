@@ -54,8 +54,9 @@ Still to do:
 ## Each release
 
 1. On `main`, rename `## Unreleased` in `CHANGELOG.md` to `## X.Y.Z`, bump the four `version`
-   fields (`package.json`, `server/package.json`, `ui/package.json`, `server/src/version.ts`),
-   commit.
+   fields (`package.json`, `server/package.json`, `ui/package.json`, `server/src/version.ts`)
+   and every `data-fremkit-version` in `site/index.html` (the landing page names the version it
+   offers, and Cloudflare Pages publishes it when the commit reaches `main`), commit.
 2. `bash scripts/release.sh X.Y.Z`. It refuses a dirty tree or a version that does not match,
    then builds and signs the app, notarizes and staples it, builds, signs, notarizes and staples
    the DMG, zips the app for Sparkle and signs the zip with the private key from the keychain
