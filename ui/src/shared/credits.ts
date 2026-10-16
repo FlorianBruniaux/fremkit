@@ -22,5 +22,8 @@ export const CONTRIBUTORS: readonly Person[] = [
 
 export const REPOSITORY = 'https://github.com/fdussert/fremkit'
 
+/** The Sietch: the registry's own repository, where widgets and themes are published. */
+export const REGISTRY_REPOSITORY = 'https://github.com/fdussert/fremkit-sietch'
+
 /** The UI's own version, bumped with the three others at every release. */
 export const VERSION: string = version
