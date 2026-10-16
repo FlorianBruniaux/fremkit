@@ -121,7 +121,7 @@ let suites: [(String, () -> XCTestCase, [TestMethod])] = [
 var passed = 0
 var failed = 0
 
-for (suiteName, make, methods) in suites {
+for (suiteName, make, methods) in suites + scanSuites {
     for (methodName, run) in methods {
         let name = "\(suiteName).\(methodName)"
         _ = TestReport.shared.drain()
