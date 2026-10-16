@@ -86,6 +86,8 @@ final class TouchDriver {
     private var timer: Timer?
     private var wakeObserver: NSObjectProtocol?
     private var running = false
+    /// True while the HID manager is really open; a display coming back says nothing about that.
+    private var opened = false
     private var reopenPending = false
     /// Current re-open delay: doubles on every failed open, back to `reopenDelay` on success.
     private var reopenBackoff = TouchDriver.reopenDelay
@@ -134,9 +136,10 @@ final class TouchDriver {
             guard running else { return }
             if bounds == nil {
                 state = .noDisplay
-            } else if state == .noDisplay {
+            } else if state == .noDisplay && opened {
                 state = .active
             }
+            // Not open: the retry already scheduled by the failed open sets the real state.
         }
     }
 
@@ -237,6 +240,7 @@ final class TouchDriver {
         let result = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeSeizeDevice))
         switch result {
         case IOResult.success:
+            opened = true
             accessGate.reset()
             state = displayBounds == nil ? .noDisplay : .active
             reopenBackoff = Self.reopenDelay
@@ -272,6 +276,7 @@ final class TouchDriver {
     }
 
     private func closeManager() {
+        opened = false
         guard let manager else { return }
         IOHIDManagerUnscheduleFromRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue)
         IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
