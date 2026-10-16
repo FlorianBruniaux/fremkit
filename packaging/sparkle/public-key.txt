@@ -4,3 +4,4 @@
 #
 # Generate the pair once with Sparkle's `generate_keys` (see docs/releasing.md) and paste the
 # base64 public key it prints on the line below, alone. Lines starting with # are ignored.
+6kw68iswxMDe30notBFNa/+WEOJN3PX613akcUi6OFc=
