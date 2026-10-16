@@ -49,18 +49,31 @@ final class DiskTreeTests: XCTestCase {
         XCTAssertFalse(root.more)
     }
 
-    func testDroppingAFolderBigEnoughToDrawMarksMore() {
-        let builder = DiskTreeBuilder(policy: policy(minBytes: 1, maxChildren: 1))
+    func testTheBudgetMarksMoreWhenItDropsSomethingWorthDrawing() {
+        let builder = DiskTreeBuilder(policy: policy(minBytes: 1, maxChildren: 10))
         builder.begin(name: "root")
         builder.begin(name: "a")
         builder.addFile(name: "x", allocated: 600, device: 1, inode: 1, links: 1)
-        builder.end()
-        builder.begin(name: "b")
         builder.addFile(name: "y", allocated: 400, device: 1, inode: 2, links: 1)
         builder.end()
         let root = builder.end()!
-        XCTAssertEqual(root.children.map(\.name), ["a"])
-        XCTAssertTrue(root.more)
+        XCTAssertFalse(root.children[0].more)
+        DiskTreePruner.applyBudget(root, budget: 2)
+        // "y" is 40 % of "a": dropped by the budget, so looking inside "a" rescans it.
+        XCTAssertEqual(root.children[0].children.map(\.name), ["x"])
+        XCTAssertTrue(root.children[0].more)
+    }
+
+    func testCandidatesAreTrimmedWhileTheFolderIsWalked() {
+        let builder = DiskTreeBuilder(policy: policy(minBytes: 1, maxChildren: 2))
+        builder.begin(name: "root")
+        for i in 1...50 { builder.addFile(name: "f\(i)", allocated: UInt64(i), device: 1, inode: UInt64(i), links: 1) }
+        let root = builder.end()!
+        XCTAssertEqual(root.children.map(\.name), ["f50", "f49"])
+        XCTAssertEqual(root.othersCount, 48)
+        XCTAssertEqual(root.size, 1275)
+        XCTAssertEqual(root.othersSize, 1275 - 99)
+        XCTAssertFalse(root.more)
     }
 
     func testEntriesBelowTheDepthAreNotHeldButCounted() {

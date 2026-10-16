@@ -252,7 +252,9 @@ public final class DiskWalker {
             let nameLength = Int(reference.loadUnaligned(fromByteOffset: 4, as: UInt32.self))
             let name = reference + offset
             guard nameLength > 0, name >= start, name + nameLength <= end else { return nil }
-            // The length counts the terminating NUL.
+            // The length counts the terminating NUL. APFS and HFS+ only store valid UTF-8 names;
+            // a name from elsewhere that is not decodes with U+FFFD, and the server then cannot
+            // find it again on disk: reveal and rescan answer "gone" for that one entry.
             entry.name = String(decoding: UnsafeRawBufferPointer(start: name, count: nameLength - 1), as: UTF8.self)
             field += 8
         }

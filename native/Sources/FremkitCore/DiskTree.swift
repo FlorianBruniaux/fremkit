@@ -63,8 +63,9 @@ public let diskVisibleShare: UInt64 = 120
 /// The walker calls `begin` when it enters a directory, `addFile`/`addUnreadable` for what it
 /// finds there, and `end` when the directory is done. Only directories at most `policy.depth`
 /// levels below the root hold child nodes, each keeping its `maxChildren` largest entries of at
-/// least `minBytes`; everything else only adds its size. Memory is bounded by the policy, not by
-/// the size of the disk.
+/// least `minBytes`; everything else only adds its size. A folder's candidates are trimmed to
+/// `maxChildren` as they arrive, so no folder holds more than twice that many at once; the node
+/// budget (`DiskTreePruner`) is applied once the walk is over.
 public final class DiskTreeBuilder {
     public let policy: DiskScanPolicy
 
@@ -114,6 +115,7 @@ public final class DiskTreeBuilder {
         guard stack[index].holdsChildren else { return }
         if allocated >= policy.minBytes && allocated > 0 {
             stack[index].candidates.append(DiskNode(name: name, kind: .file, size: allocated, files: 1))
+            trimIfFull(index)
         } else {
             stack[index].node.othersCount &+= 1
             stack[index].node.othersSize &+= allocated
@@ -161,6 +163,7 @@ public final class DiskTreeBuilder {
         if stack[parent].holdsChildren {
             if node.size >= policy.minBytes || node.unreadable > 0 {
                 stack[parent].candidates.append(node)
+                trimIfFull(parent)
             } else {
                 stack[parent].node.othersCount &+= 1
                 stack[parent].node.othersSize &+= node.size
@@ -169,8 +172,18 @@ public final class DiskTreeBuilder {
         return node
     }
 
+    /// A folder with thousands of large entries would hold them all until it ends: once there are
+    /// twice `maxChildren` candidates, the smallest are folded into "others" right away.
+    private func trimIfFull(_ index: Int) {
+        guard stack[index].candidates.count >= 2 * policy.maxChildren else { return }
+        DiskTreeBuilder.keepLargest(&stack[index].candidates, in: stack[index].node, maxChildren: policy.maxChildren)
+        stack[index].candidates = stack[index].node.children
+        stack[index].node.children = []
+    }
+
     /// Keeps the `maxChildren` largest candidates, and the unreadable ones up to the same count;
-    /// the rest goes into the node's "others".
+    /// the rest goes into the node's "others". This never marks the node `more`: scanning the
+    /// folder again would apply the same cut and show the same "others".
     static func keepLargest(_ candidates: inout [DiskNode], in node: DiskNode, maxChildren: Int) {
         var readable = candidates.filter { $0.kind != .unreadable }
         var unreadable = candidates.filter { $0.kind == .unreadable }
@@ -180,7 +193,6 @@ public final class DiskTreeBuilder {
             for dropped in readable[maxChildren...] {
                 node.othersCount &+= 1
                 node.othersSize &+= dropped.size
-                if dropped.size &* diskVisibleShare >= node.size { node.more = true }
             }
             readable.removeSubrange(maxChildren...)
         }

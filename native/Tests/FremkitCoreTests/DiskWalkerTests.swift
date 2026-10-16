@@ -117,7 +117,13 @@ final class DiskWalkerTests: XCTestCase {
         try? FileManager.default.createDirectory(atPath: mountPoint, withIntermediateDirectories: true)
         guard run("/usr/bin/hdiutil", ["create", "-size", "4m", "-fs", "HFS+", "-volname", "FremkitScanTest", "-ov", image]) == 0,
               run("/usr/bin/hdiutil", ["attach", image, "-mountpoint", mountPoint, "-nobrowse", "-noautoopen", "-noverify"]) == 0 else {
-            print("SKIP testAnotherDeviceIsNotCrossed: hdiutil could not attach a disk image here")
+            // Not a silent pass: the brief requires this to be checked. A machine that cannot attach
+            // a disk image (a sandbox) opts out explicitly.
+            if ProcessInfo.processInfo.environment["FREMKIT_SKIP_MOUNT_TEST"] == "1" {
+                print("SKIP testAnotherDeviceIsNotCrossed: FREMKIT_SKIP_MOUNT_TEST=1")
+                return
+            }
+            XCTFail("hdiutil could not attach a disk image; set FREMKIT_SKIP_MOUNT_TEST=1 to skip this test")
             return
         }
         mounted = mountPoint
