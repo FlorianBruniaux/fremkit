@@ -41,6 +41,12 @@ describe('parseGain', () => {
     expect(parseGain(JSON.stringify({ summary: JSON.parse(gain()).summary }), NOON).daily).toEqual([])
   })
 
+  it('ignores fields a newer RTK adds', () => {
+    const v1 = JSON.parse(gain())
+    v1.summary.oversized_excluded = 3
+    expect(parseGain(JSON.stringify(v1), NOON).total.saved).toBe(400)
+  })
+
   it('refuses malformed output', () => {
     expect(() => parseGain('not json')).toThrow(SyntaxError)
     expect(() => parseGain(JSON.stringify({ summary: { total_saved: -1 } }))).toThrow()

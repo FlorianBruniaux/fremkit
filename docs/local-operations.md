@@ -18,4 +18,6 @@ A listed model or process does not prove inference is running. HTTP responses ar
 
 ## RTK
 
+Install RTK with `brew install rtk` (or any method its README lists that puts `rtk` in one of the paths below) and set it up for your coding agent; Fremkit only reads the savings RTK already records. Versions 0.51 and 1.0 were checked.
+
 `rtk` reads the token savings of [RTK](https://github.com/rtk-ai/rtk), the CLI proxy that compacts command output for coding agents. It resolves the program from `/opt/homebrew/bin/rtk`, `/usr/local/bin/rtk`, `~/.cargo/bin/rtk` or `~/.local/bin/rtk`, runs `rtk gain --daily --format json` once a minute and publishes `{data, stale, error, updatedAt}` like `docker-local`. `data.total` has `commands`, `input`, `output`, `saved`, `percent` and `avgTimeMs`; `data.today` is the row for the local calendar day, zeros when RTK has not run yet; `data.daily` holds at most the last 30 days that have a row, oldest first, each with `date`, `commands`, `input`, `output`, `saved` and `percent`. A missing program returns `unavailable`, a failed run `offline`, malformed output `invalid`; a failure keeps the previous data with `stale: true` and retries after 15 seconds. The channel has no command, and no command text from RTK's history is published.
