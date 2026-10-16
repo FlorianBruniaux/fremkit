@@ -3,6 +3,7 @@ import ApplicationServices
 import CoreGraphics
 import Foundation
 import FremkitCore
+import ServiceManagement
 
 /// Wires the config, the Edge display, the touch driver, the mouse fence, the kiosk window,
 /// the server supervisor and the status menu together.
@@ -19,6 +20,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var admin: AdminWindow?
     private var server: ServerProcess?
     private var menu: StatusMenu?
+    #if FREMKIT_SPARKLE
+    private var updater: Updater?
+    #endif
     /// Latest Edge bounds, kept so the kiosk window can be created lazily when it appears.
     private var edge: CGRect?
     /// Polls the Accessibility grant until it lands, so the menu stops claiming it is missing.
@@ -28,8 +32,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// URL actions that arrived while launching, replayed as soon as everything exists.
     private var pendingActions: [HelperURLAction] = []
 
+    /// Orders the launch prompts: Input Monitoring first when touch needs it, then Accessibility.
+    private var permissions = PermissionSequencer(touch: false, fence: false, dock: false)
+    /// Polls the Input Monitoring answer while Accessibility waits for it.
+    private var permissionTimer: Timer?
+
     /// Period of the Accessibility re-check, matching the fence's own retry period.
     private static let accessibilityInterval: TimeInterval = 5
+    /// Period of the Input Monitoring check while the launch prompts wait on it.
+    private static let permissionInterval: TimeInterval = 1
+
+    private static var uptime: TimeInterval { ProcessInfo.processInfo.systemUptime }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -37,14 +50,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         config = Self.loadConfig()
         poster.scrollInvert = config.scrollInvert
 
-        // Accessibility is needed to post the synthetic events the touch driver generates, not
-        // just to create the fence tap, so ask for it once at launch whatever the fence setting is.
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-        _ = AXIsProcessTrustedWithOptions(options)
-
         let menu = StatusMenu()
         self.menu = menu
         wireMenu(menu)
+
+        #if FREMKIT_SPARKLE
+        // A build without Sparkle's public key (a local build before the owner generated one)
+        // could never accept an update, and Sparkle would complain at every launch: no updater.
+        if let key = Bundle.main.object(forInfoDictionaryKey: "SUPublicEDKey") as? String, !key.isEmpty {
+            let updater = Updater()
+            self.updater = updater
+            menu.onCheckForUpdates = { [weak updater] in updater?.checkForUpdates() }
+            menu.update { $0.updates = true }
+        }
+        #endif
 
         let driver = TouchDriver(poster: poster)
         driver.onState = { [weak self] state in
@@ -85,7 +104,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.edgeDidChange(edge)
         }
 
-        if config.touch { driver.start() }
+        // Accessibility is needed to post the synthetic events the touch driver generates, not
+        // just to create the fence tap, so it is asked at launch whatever the fence setting is —
+        // but after Input Monitoring when touch still needs that one: see `PermissionSequencer`.
+        // The sequencer also starts the touch driver.
+        permissions = PermissionSequencer(touch: config.touch, fence: config.fence, dock: config.dock)
+        performPermissions(permissions.begin(inputMonitoring: Permissions.inputMonitoring, now: Self.uptime))
+        if permissions.isWaiting { startPermissionSequence() }
         syncFences()
         if config.dock { dockBadges.start() }
 
@@ -135,6 +160,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         accessibilityTimer?.invalidate()
         accessibilityTimer = nil
+        permissionTimer?.invalidate()
+        permissionTimer = nil
         server?.stopAndWait(timeout: 2)
         driver?.stop()
         fence?.stop()
@@ -143,6 +170,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // MARK: - Permissions
+
+    private func performPermissions(_ actions: [PermissionSequencer.Action]) {
+        for action in actions {
+            switch action {
+            case .requestInputMonitoring:
+                Permissions.requestInputMonitoring()
+                // The driver is not started until the answer is in; say what it is waiting for.
+                menu?.update { $0.touch = .notPermitted }
+            case .requestAccessibility:
+                Permissions.requestAccessibility()
+            case .startTouch:
+                // The menu may have switched touch off while the prompt was up.
+                if config.touch { driver?.start() }
+            }
+        }
+    }
+
+    /// Waits for the Input Monitoring answer, then lets the sequencer ask for Accessibility.
+    private func startPermissionSequence() {
+        // `.common` so the check keeps ticking while a menu is being tracked.
+        let timer = Timer(timeInterval: Self.permissionInterval, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.performPermissions(self.permissions.poll(inputMonitoring: Permissions.inputMonitoring, now: Self.uptime))
+            guard !self.permissions.isWaiting else { return }
+            self.permissionTimer?.invalidate()
+            self.permissionTimer = nil
+            self.refreshMenu()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        permissionTimer = timer
+    }
 
     /// Re-checks the Accessibility grant every few seconds until it is granted, so the touch line
     /// stops warning about it as soon as the user comes back from System Settings.
@@ -158,6 +216,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         RunLoop.main.add(timer, forMode: .common)
         accessibilityTimer = timer
+    }
+
+    /// Quits the normal way (the server is stopped in `applicationWillTerminate`) and has a
+    /// detached shell open the bundle again once this process is gone.
+    private static func relaunch() {
+        let bundle = Bundle.main.bundleURL
+        guard bundle.pathExtension == "app" else {
+            // A bare executable has no bundle to reopen; quitting is all that can be done.
+            NSApp.terminate(nil)
+            return
+        }
+        let command = Relaunch.command(waitingFor: ProcessInfo.processInfo.processIdentifier, bundlePath: bundle.path)
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: command.executable)
+        process.arguments = command.arguments
+        do {
+            try process.run()
+        } catch {
+            FileHandle.standardError.write(Data("fremkit: cannot relaunch: \(error)\n".utf8))
+        }
+        NSApp.terminate(nil)
     }
 
     // MARK: - Config
@@ -273,7 +352,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             self.config.touch = on
             self.saveConfig()
-            if on { self.driver?.start() } else { self.driver?.stop() }
+            if on {
+                // Touch switched on after launch: the launch sequence did not ask for Input
+                // Monitoring, so ask now. Accessibility was asked at launch, so no prompt clashes.
+                if Permissions.inputMonitoring == .unknown { Permissions.requestInputMonitoring() }
+                self.driver?.start()
+            } else {
+                self.driver?.stop()
+            }
+            // The driver reports only changes; resync in case the menu showed the launch wait.
+            if let driver = self.driver { self.menu?.update { $0.touch = driver.state } }
             self.refreshMenu()
         }
 
@@ -311,6 +399,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.onOpenLog = {
             NSWorkspace.shared.open(ServerProcess.logURL)
+        }
+
+        menu.onFix = { [weak self] fix in
+            switch fix {
+            case let .openPrivacyPane(pane):
+                // Asking again is what puts the app in the pane's list when a lost first request
+                // left it out, so there is a switch to turn on once Settings opens.
+                switch pane {
+                case .inputMonitoring:
+                    Permissions.requestInputMonitoring()
+                case .accessibility:
+                    // Not while the Input Monitoring prompt may still be up: that is the very
+                    // clash the launch sequence avoids. The sequencer asks right after anyway.
+                    if self?.permissions.isWaiting != true { Permissions.requestAccessibility() }
+                }
+                NSWorkspace.shared.open(pane.url)
+            case .openLoginItems:
+                SMAppService.openSystemSettingsLoginItems()
+            case .relaunch:
+                Self.relaunch()
+            }
         }
 
         menu.onQuit = {

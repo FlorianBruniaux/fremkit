@@ -6,6 +6,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 # shellcheck source=lib/swiftc-common.sh
 source scripts/lib/swiftc-common.sh
+# shellcheck source=lib/version.sh
+source scripts/lib/version.sh
+VERSION="$(fremkit_version)"
 
 echo "SDK: $SDK"
 
@@ -42,12 +45,15 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$OUT/FremkitHelper" "$APP/Contents/MacOS/FremkitHelper"
 cp "$OUT/fremkit-scan" "$APP/Contents/MacOS/fremkit-scan"
 cp native/Resources/Info.plist "$APP/Contents/Info.plist"
+fremkit_stamp_version "$APP/Contents/Info.plist" "$VERSION"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
 # Brand assets: the app icon named by CFBundleIconFile, and the menu bar glyph. The "Template"
 # suffix in the file name is what makes AppKit tint the glyph for the current menu bar theme.
 cp brand/icon/Fremkit.icns "$APP/Contents/Resources/Fremkit.icns"
 cp brand/menubar/fremkitTemplate.png brand/menubar/fremkitTemplate@2x.png "$APP/Contents/Resources/"
+# The permission prompts' text, in French and English (see Info.plist).
+cp -R native/Resources/en.lproj native/Resources/fr.lproj "$APP/Contents/Resources/"
 
 # Ad-hoc signatures change with every build, and TCC ties its Input Monitoring and
 # Accessibility grants to the signature, so each rebuild forces the user to grant again.

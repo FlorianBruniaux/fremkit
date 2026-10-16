@@ -27,7 +27,8 @@ enum ServerState: Equatable {
     }
 }
 
-/// Supervises `pnpm --filter server start` in the repo, or steps aside when the port is already taken.
+/// Supervises the dashboard server — the checkout's under tsx, or the one bundled in the app (see
+/// `ServerLaunch`) — or steps aside when the port is already taken.
 ///
 /// All mutable state is touched on the main thread only: the probe and the termination handler hop
 /// back before changing anything.
@@ -46,6 +47,8 @@ final class ServerProcess {
     private static let quietTimeout: TimeInterval = 4
 
     private let config: HelperConfig
+    /// Checkout or bundle, decided once at launch from `repoPath` and what the bundle carries.
+    let launch: ServerLaunch
     private let probeQueue = DispatchQueue(label: "dev.fremkit.helper.server.probe")
 
     /// The child we currently supervise. Cleared the moment we ask it to die, so a rapid
@@ -87,12 +90,16 @@ final class ServerProcess {
 
     init(config: HelperConfig) {
         self.config = config
+        // Resolved like proc_pidpath resolves the child's executable, for the orphan guard.
+        let resources = Bundle.main.resourcePath.map(Self.realPath)
+        launch = ServerLaunch.decide(repoPath: config.repoPath, resourcesPath: resources) {
+            FileManager.default.isExecutableFile(atPath: $0)
+        }
     }
 
-    /// `~/Library/Logs/Fremkit/server.log`. Never rotated.
+    /// `~/Library/Logs/Fremkit/server.log`, rolled over by `openLog`.
     static var logURL: URL {
-        URL(fileURLWithPath: NSHomeDirectory())
-            .appendingPathComponent("Library/Logs/Fremkit/server.log")
+        HelperPaths.logDirectory().appendingPathComponent("server.log")
     }
 
     /// `~/Library/Application Support/Fremkit/server.pid`, holding the pid of the live child.
@@ -355,52 +362,23 @@ final class ServerProcess {
     // MARK: - Spawning
 
     private func spawn() {
-        let server = URL(fileURLWithPath: config.repoPath).appendingPathComponent("server")
-        let entry = server.appendingPathComponent("src/index.ts")
-        // A repoPath that is not a checkout — never configured, renamed, on an unmounted volume —
-        // used to be spawned anyway, failing once a second for ever behind the backoff. Say so
-        // once and stop instead.
-        guard FileManager.default.fileExists(atPath: entry.path) else {
-            NSLog("fremkit: no server/src/index.ts under repoPath; not starting a server. "
-                + "Fix repoPath in helper.json and relaunch the helper — this does not retry on its own.")
-            state = .stopped
-            return
-        }
-        let tsx = server.appendingPathComponent("node_modules/tsx/dist/cli.mjs")
-        guard FileManager.default.fileExists(atPath: tsx.path) else {
-            NSLog("fremkit: tsx is not installed in the checkout; run pnpm install, then relaunch "
-                + "the helper — this does not retry on its own.")
-            state = .stopped
-            return
-        }
-        guard let node = Self.resolveNode() else {
-            NSLog("fremkit: no node executable found; install Node 22 or later, then relaunch the "
-                + "helper — this does not retry on its own.")
-            state = .stopped
-            return
-        }
-
         let process = Process()
-        // Run the server itself, not a pnpm wrapper around it: the supervised process must be
-        // the one that binds the port, so its death (or a stray kill) is what we observe. node and
-        // tsx are named by absolute path rather than looked up through `env` and PATH, so a login
-        // item's environment cannot decide which interpreter runs the dashboard.
-        process.executableURL = node
-        process.arguments = [tsx.path, "src/index.ts"]
-        process.currentDirectoryURL = server
-
-        var environment = ProcessInfo.processInfo.environment
-        // A login item inherits a bare PATH; node lives in the usual Homebrew spots and tsx in the
-        // server package's own bin directory.
-        let extra = "\(config.repoPath)/server/node_modules/.bin:/opt/homebrew/bin:/usr/local/bin:\(NSHomeDirectory())/Library/pnpm"
-        environment["PATH"] = extra + ":" + (environment["PATH"] ?? "/usr/bin:/bin:/usr/sbin:/sbin")
-        // The disk map's scanner ships beside this executable. The server runs it by this absolute
-        // path when it is set, and falls back to `du` when it is not; nothing goes on PATH.
-        if let scanner = Bundle.main.executableURL?.deletingLastPathComponent().appendingPathComponent("fremkit-scan"),
-           FileManager.default.isExecutableFile(atPath: scanner.path) {
-            environment["FREMKIT_SCANNER"] = scanner.path
+        switch launch {
+        case let .checkout(repoPath):
+            guard configureCheckout(process, repoPath: repoPath) else { return }
+        case let .bundled(resourcesPath):
+            // Nothing to look for: decide() only picks this when the executable is there.
+            process.executableURL = URL(fileURLWithPath: resourcesPath)
+                .appendingPathComponent(ServerLaunch.bundledExecutable)
+            process.arguments = []
+            process.currentDirectoryURL = URL(fileURLWithPath: resourcesPath)
         }
-        process.environment = environment
+        process.environment = launch.environment(
+            inheriting: ProcessInfo.processInfo.environment,
+            port: config.port,
+            dataDirectory: HelperPaths.supportDirectory().path,
+            home: NSHomeDirectory(),
+            scanner: Self.diskScanner())
 
         // The handle has to exist before run(), so a failed launch closes it again rather than
         // leaking a descriptor on every retry of the backoff loop.
@@ -429,6 +407,44 @@ final class ServerProcess {
         state = .starting
         Self.writePidFile(process.processIdentifier)
         pollReady()
+    }
+
+    /// Points `process` at `node tsx src/index.ts` in the checkout, or says why it cannot and
+    /// returns false.
+    private func configureCheckout(_ process: Process, repoPath: String) -> Bool {
+        let server = URL(fileURLWithPath: repoPath).appendingPathComponent("server")
+        let entry = server.appendingPathComponent("src/index.ts")
+        // A repoPath that is not a checkout — never configured, renamed, on an unmounted volume —
+        // used to be spawned anyway, failing once a second for ever behind the backoff. Say so
+        // once and stop instead.
+        guard FileManager.default.fileExists(atPath: entry.path) else {
+            NSLog("fremkit: no server/src/index.ts under repoPath; not starting a server. "
+                + "Fix repoPath in helper.json and relaunch the helper — this does not retry on its own.")
+            state = .stopped
+            return false
+        }
+        let tsx = server.appendingPathComponent("node_modules/tsx/dist/cli.mjs")
+        guard FileManager.default.fileExists(atPath: tsx.path) else {
+            NSLog("fremkit: tsx is not installed in the checkout; run pnpm install, then relaunch "
+                + "the helper — this does not retry on its own.")
+            state = .stopped
+            return false
+        }
+        guard let node = Self.resolveNode() else {
+            NSLog("fremkit: no node executable found; install Node 22 or later, then relaunch the "
+                + "helper — this does not retry on its own.")
+            state = .stopped
+            return false
+        }
+
+        // Run the server itself, not a pnpm wrapper around it: the supervised process must be
+        // the one that binds the port, so its death (or a stray kill) is what we observe. node and
+        // tsx are named by absolute path rather than looked up through `env` and PATH, so a login
+        // item's environment cannot decide which interpreter runs the dashboard.
+        process.executableURL = node
+        process.arguments = [tsx.path, "src/index.ts"]
+        process.currentDirectoryURL = server
+        return true
     }
 
     /// Asks the port whether the fresh child is serving yet, once a second.
@@ -556,19 +572,12 @@ final class ServerProcess {
             return
         }
 
-        // Both, not either: "contains server and (repoPath or pnpm or node)" matched almost any
-        // Node process on the machine — the pid file is stale often enough that this was a real
-        // way to kill something else entirely. Our own child is `node …/tsx/… src/index.ts` run
-        // from this checkout, so it carries both the repo path and the entry point.
-        // An empty repoPath would make `contains` true for everything, which is how a guard
-        // meant to protect an unrelated process would kill it instead.
-        guard !config.repoPath.isEmpty else {
-            NSLog("fremkit: no repoPath configured; leaving pid %d alone", pid)
-            Self.removePidFile()
-            return
-        }
+        // The match is ServerLaunch's: both the repo path and the entry point for a checkout,
+        // the bundle's own executable for the app. "contains server and (repoPath or pnpm or
+        // node)" once matched almost any Node process on the machine — the pid file is stale
+        // often enough that this was a real way to kill something else entirely.
         let command = Self.commandLine(of: pid)
-        guard command.contains(config.repoPath), command.contains("src/index.ts") else {
+        guard launch.isOwnServer(commandLine: command, executablePath: Self.executablePath(of: pid)) else {
             // The command line is not logged: it is another process's, and the log is a file the
             // user may hand to someone else.
             NSLog("fremkit: pid %d from server.pid is not our server, leaving it alone", pid)
@@ -587,6 +596,28 @@ final class ServerProcess {
             Self.killTree(pid, signal: SIGKILL)
         }
         Self.removePidFile()
+    }
+
+    /// The executable `pid` runs, as the kernel knows it (symlinks resolved), or nil.
+    /// The disk map's scanner, built into `Contents/MacOS` beside this executable, if it is there.
+    private static func diskScanner() -> String? {
+        guard let scanner = Bundle.main.executableURL?.deletingLastPathComponent()
+            .appendingPathComponent("fremkit-scan"),
+            FileManager.default.isExecutableFile(atPath: scanner.path) else { return nil }
+        return scanner.path
+    }
+
+    private static func executablePath(of pid: pid_t) -> String? {
+        var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN) * 4)
+        guard proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0 else { return nil }
+        return String(cString: buffer)
+    }
+
+    /// `path` with every symlink resolved, or `path` itself when it cannot be.
+    private static func realPath(_ path: String) -> String {
+        guard let resolved = realpath(path, nil) else { return path }
+        defer { free(resolved) }
+        return String(cString: resolved)
     }
 
     /// Full command line of `pid` via `ps`, or an empty string when it cannot be read.

@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify'
 import '@fastify/static'
 import { readFile } from 'node:fs/promises'
 import { join, normalize } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { WIDGET_ID_RE } from '../config/schema.js'
 import type { WidgetCatalog } from './catalog.js'
 import type { ConfigStore } from '../config/store.js'
@@ -10,7 +9,6 @@ import { grantedCatalog, permissionsOf, type Permissions } from '../marketplace/
 import { SDK_VERSION } from '../bridge/sdk.js'
 import { tr } from '../i18n.js'
 
-const BRIDGE_PATH = fileURLToPath(new URL('../bridge/fremkit.js', import.meta.url))
 
 /**
  * What a widget may do, said in a header rather than left to the iframe.
@@ -61,8 +59,11 @@ export function injectBridge(html: string): string {
   return tag + html
 }
 
-export async function widgetRoutes(app: FastifyInstance, opts: { catalog: WidgetCatalog; store: ConfigStore; port?: number; dev?: boolean }): Promise<void> {
-  const bridge = await readFile(BRIDGE_PATH, 'utf8')
+export async function widgetRoutes(
+  app: FastifyInstance,
+  opts: { catalog: WidgetCatalog; store: ConfigStore; bridgePath: string; port?: number; dev?: boolean },
+): Promise<void> {
+  const bridge = await readFile(opts.bridgePath, 'utf8')
   const csp = widgetCsp(opts.port, opts.dev)
 
   app.get('/fremkit.js', async (_req, reply) => reply.type('application/javascript; charset=utf-8').send(bridge))

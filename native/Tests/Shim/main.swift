@@ -58,6 +58,7 @@ let suites: [(String, () -> XCTestCase, [TestMethod])] = [
         ("testCorruptFileFallsBackToDefaults", { try ($0 as! HelperConfigTests).testCorruptFileFallsBackToDefaults() }),
         ("testSaveThenLoadRoundTrips", { try ($0 as! HelperConfigTests).testSaveThenLoadRoundTrips() }),
         ("testSaveOverwritesAnExistingFile", { try ($0 as! HelperConfigTests).testSaveOverwritesAnExistingFile() }),
+        ("testRepoPathDecodesAndStaysAbsentWhenUnset", { try ($0 as! HelperConfigTests).testRepoPathDecodesAndStaysAbsentWhenUnset() }),
         ("testDefaultURL", { ($0 as! HelperConfigTests).testDefaultURL() }),
     ]),
     ("DockBadgeParserTests", { DockBadgeParserTests() }, [
@@ -120,6 +121,45 @@ let suites: [(String, () -> XCTestCase, [TestMethod])] = [
         ("testPicksEnglishForEverythingElse", { ($0 as! L10nTests).testPicksEnglishForEverythingElse() }),
         ("testEveryKeyIsWrittenInBothLanguages", { ($0 as! L10nTests).testEveryKeyIsWrittenInBothLanguages() }),
         ("testFormatsTheValuesThatCarryOne", { ($0 as! L10nTests).testFormatsTheValuesThatCarryOne() }),
+    ]),
+    ("ServerLaunchTests", { ServerLaunchTests() }, [
+        ("testRepoPathAlwaysMeansTheCheckout", { ($0 as! ServerLaunchTests).testRepoPathAlwaysMeansTheCheckout() }),
+        ("testNoRepoPathRunsTheBundledServer", { ($0 as! ServerLaunchTests).testNoRepoPathRunsTheBundledServer() }),
+        ("testEmptyRepoPathCountsAsAbsent", { ($0 as! ServerLaunchTests).testEmptyRepoPathCountsAsAbsent() }),
+        ("testNoRepoPathAndNoBundledServerFallsBackToTheDefaultCheckout", { ($0 as! ServerLaunchTests).testNoRepoPathAndNoBundledServerFallsBackToTheDefaultCheckout() }),
+        ("testCheckoutGuardNeedsBothTheRepoAndTheEntryPoint", { ($0 as! ServerLaunchTests).testCheckoutGuardNeedsBothTheRepoAndTheEntryPoint() }),
+        ("testBundledGuardNeedsTheBundleExecutableItself", { ($0 as! ServerLaunchTests).testBundledGuardNeedsTheBundleExecutableItself() }),
+        ("testCheckoutEnvironmentKeepsTheDeveloperPath", { ($0 as! ServerLaunchTests).testCheckoutEnvironmentKeepsTheDeveloperPath() }),
+        ("testBundledEnvironmentNamesTheBundleAndTheData", { ($0 as! ServerLaunchTests).testBundledEnvironmentNamesTheBundleAndTheData() }),
+        ("testBothLaunchesNameTheDiskScannerWhenThereIsOne", { ($0 as! ServerLaunchTests).testBothLaunchesNameTheDiskScannerWhenThereIsOne() }),
+    ]),
+    ("HelperPathsTests", { HelperPathsTests() }, [
+        ("testDefaultsAreUnderLibrary", { ($0 as! HelperPathsTests).testDefaultsAreUnderLibrary() }),
+        ("testOverrideMovesEverything", { ($0 as! HelperPathsTests).testOverrideMovesEverything() }),
+        ("testRelativeOrEmptyOverrideIsIgnored", { ($0 as! HelperPathsTests).testRelativeOrEmptyOverrideIsIgnored() }),
+    ]),
+    ("PermissionSequencerTests", { PermissionSequencerTests() }, [
+        ("testAsksInputMonitoringAloneWhenTouchNeedsIt", { ($0 as! PermissionSequencerTests).testAsksInputMonitoringAloneWhenTouchNeedsIt() }),
+        ("testAsksAccessibilityOnceInputMonitoringIsAnswered", { ($0 as! PermissionSequencerTests).testAsksAccessibilityOnceInputMonitoringIsAnswered() }),
+        ("testAsksAccessibilityAnywayAfterTheTimeout", { ($0 as! PermissionSequencerTests).testAsksAccessibilityAnywayAfterTheTimeout() }),
+        ("testAsksAccessibilityAtOnceWhenInputMonitoringIsAlreadyAnswered", { ($0 as! PermissionSequencerTests).testAsksAccessibilityAtOnceWhenInputMonitoringIsAlreadyAnswered() }),
+        ("testTouchOffNeverAsksInputMonitoring", { ($0 as! PermissionSequencerTests).testTouchOffNeverAsksInputMonitoring() }),
+        ("testEverythingOffAsksNothing", { ($0 as! PermissionSequencerTests).testEverythingOffAsksNothing() }),
+        ("testBeginOnlyActsOnce", { ($0 as! PermissionSequencerTests).testBeginOnlyActsOnce() }),
+    ]),
+    ("PermissionFixTests", { PermissionFixTests() }, [
+        ("testPanesOpenTheirPrivacyAnchor", { ($0 as! PermissionFixTests).testPanesOpenTheirPrivacyAnchor() }),
+        ("testTouchWithoutInputMonitoringOpensInputMonitoring", { ($0 as! PermissionFixTests).testTouchWithoutInputMonitoringOpensInputMonitoring() }),
+        ("testEveryAccessibilityLineOpensAccessibility", { ($0 as! PermissionFixTests).testEveryAccessibilityLineOpensAccessibility() }),
+        ("testLoginApprovalOpensLoginItems", { ($0 as! PermissionFixTests).testLoginApprovalOpensLoginItems() }),
+        ("testInformativeLinesDoNothing", { ($0 as! PermissionFixTests).testInformativeLinesDoNothing() }),
+    ]),
+    ("TouchAccessGateTests", { TouchAccessGateTests() }, [
+        ("testNotGrantedIsMissing", { ($0 as! TouchAccessGateTests).testNotGrantedIsMissing() }),
+        ("testGrantedButStillRefusedAsksForARelaunch", { ($0 as! TouchAccessGateTests).testGrantedButStillRefusedAsksForARelaunch() }),
+        ("testARevokedGrantOrASuccessfulOpenStartsOver", { ($0 as! TouchAccessGateTests).testARevokedGrantOrASuccessfulOpenStartsOver() }),
+        ("testRelaunchWaitsForThePidThenOpensTheBundle", { ($0 as! TouchAccessGateTests).testRelaunchWaitsForThePidThenOpensTheBundle() }),
+        ("testRelaunchLineRelaunches", { ($0 as! TouchAccessGateTests).testRelaunchLineRelaunches() }),
     ]),
 ]
 

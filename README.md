@@ -54,13 +54,52 @@ Nothing from Corsair: no iCUE, no driver. The helper opens the touch panel itsel
 Touchscreen Gestures must not be running (the panel takes one owner).
 
 - macOS 13 or later, Apple silicon
-- Xcode Command Line Tools (for the helper's Swift build)
-- Node 22 or later, and pnpm
 - a Corsair Xeneon Edge — everything except the touch driver works on any display
 - `jq`, only for the Claude Code status line
 - `ffmpeg`, only for the chamber camera of an X1 or H2 printer
+- to build from source only: Xcode Command Line Tools, Node 22 or later, and pnpm
 
 ## Install
+
+| Install the app | Build from source |
+|---|---|
+| For using Fremkit. One signed, notarized app that carries everything it needs, Node included, and updates itself. | For working on Fremkit. A checkout, the developer helper pointed at it, and your changes live on the Edge. |
+| [Download the DMG](https://github.com/fdussert/fremkit/releases/latest) and drag **Fremkit** to Applications — or `brew install --cask fdussert/fremkit/fremkit` | `git clone` + `pnpm setup`, below |
+| Data in `~/Library/Application Support/Fremkit` | Data in the checkout's `data/` |
+
+### Install the app
+
+1. **Download** `Fremkit-<version>.dmg` from the
+   [latest release](https://github.com/fdussert/fremkit/releases/latest), open it and drag
+   **Fremkit** onto **Applications** — or, with Homebrew:
+
+   ```sh
+   brew install --cask fdussert/fremkit/fremkit
+   ```
+
+2. **Quit iCUE and Touchscreen Gestures**, if you use them — see step 3 of the source install
+   below for the launchd agent that relaunches Touchscreen Gestures.
+
+3. **Open Fremkit.** It lives in the menu bar (the **F**), starts its own server and opens the
+   dashboard on the Edge. macOS asks for two permissions, both under System Settings → Privacy &
+   Security, both for **Fremkit**: **Accessibility** (to post the touch panel's clicks and
+   scrolls, and read the Dock's badges) and **Input Monitoring** (to read the touch panel).
+   Grant them, then quit Fremkit from its menu and open it again: grants take effect on the
+   next launch.
+
+4. **Allow Local Network** when macOS asks — the first time the server reaches a device on your
+   LAN, a printer or a Homey.
+
+Updates arrive by themselves (Sparkle, signed by the project), or with **Check for Updates…** in
+the menu. Your dashboard, connections and backgrounds live in
+`~/Library/Application Support/Fremkit`, never inside the app, so an update or a reinstall keeps
+them. The Claude Code hook and status line ship inside the app: see
+[docs/claude-code.md](docs/claude-code.md) for the path to put in `~/.claude/settings.json`.
+
+Already running the developer helper from a checkout? Nothing changes until you choose to move;
+[docs/troubleshooting.md](docs/troubleshooting.md#moving-from-a-checkout-to-the-app) says how.
+
+### Build from source
 
 1. **Clone and set up.**
 
@@ -336,13 +375,17 @@ from the marketplace included, and it is on the screen.
 Everything else Fremkit knows, you typed into it: the connections of the table above, whose
 secrets live in the macOS keychain (see [docs/connections.md](docs/connections.md)). Nothing is
 sent to any server other than the ones you configured, there is no telemetry, and the server
-listens on `127.0.0.1` only.
+listens on `127.0.0.1` only. The one exception is the app's update check: once a day it
+downloads `appcast.xml` from this project's GitHub releases, sending nothing but the request
+itself (Sparkle's system profile is off).
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| "Touch: permission missing" | Grant Input Monitoring to "Fremkit Helper", then relaunch it |
+| "Fremkit can't be opened" or "is damaged" | Download the DMG again from the release page; see the Gatekeeper section of the troubleshooting guide |
+| Permissions asked again after moving to the app | Expected once: the app is signed differently from the developer helper. Grant them to "Fremkit" |
+| "Touch: Input Monitoring missing — open Settings…" | Click the line, turn "Fremkit" (or "Fremkit Helper" for a source install) on in the Input Monitoring list it opens. Touch starts within seconds, or the line asks you to reopen Fremkit — click it |
 | "Touch: taken by another driver" | Quit Touchscreen Gestures and unload its launchd agent |
 | Permissions reset after every rebuild | Run `scripts/create-signing-identity.sh` and rebuild |
 | A LAN device answers `ping` but not Fremkit | Allow Local Network for the app running the server |
@@ -366,6 +409,7 @@ pnpm typecheck
 pnpm helper:build   # native/dist/Fremkit Helper.app
 pnpm helper:install
 pnpm helper:test
+bash scripts/build-app.sh   # native/dist/Fremkit.app: the self-contained app, see docs/releasing.md
 ```
 
 | Folder | What is in it |
@@ -374,7 +418,8 @@ pnpm helper:test
 | `ui/` | Vue 3 — the dashboard, the admin, and the code they share |
 | `native/` | The Swift helper — kiosk window, HID touch driver, mouse fence, admin window, Dock badges, server supervision, and `fremkit-scan`, the disk map's scanner |
 | `widgets/` | One folder per widget |
-| `scripts/` | Setup, dev, the helper's build and tests, the signing identity, kiosk, the Claude Code hooks |
+| `scripts/` | Setup, dev, the helper's build and tests, the app's build, notarization and release, the signing identity, kiosk, the Claude Code hooks |
+| `packaging/` | The Homebrew cask and Sparkle's public key |
 | `data/` | Your configuration and its assets. Git-ignored |
 | `brand/` | Icon, menu bar glyph, favicons, social image — see [brand/README-assets.md](brand/README-assets.md) |
 | `docs/` | This documentation |
@@ -387,6 +432,7 @@ aside. Your keychain secrets are keyed by connection id, so a fresh config never
 Working on Fremkit itself — the helper build, the configuration files:
 **[docs/contributing.md](docs/contributing.md)**.
 Working on it with a coding agent — layout, conventions, the gotchas: **[AGENTS.md](AGENTS.md)**.
+Building, notarizing and publishing a release: **[docs/releasing.md](docs/releasing.md)**.
 Feeding the Claude Code widgets: **[docs/claude-code.md](docs/claude-code.md)**.
 
 ## Security

@@ -13,6 +13,16 @@ tagged `vX.Y.Z`.
 ## Unreleased
 
 ### Added
+- **Fremkit as an app.** A signed, notarized `Fremkit.app`, on a DMG or with
+  `brew install --cask fdussert/fremkit/fremkit`, runs the whole dashboard on its own: no
+  checkout, no Node, no Xcode tools. Drag it to Applications, open it, grant two permissions.
+  Its data lives in `~/Library/Application Support/Fremkit`. Building from source works as
+  before and is untouched.
+- **Updates from the menu.** The app updates itself through Sparkle, and *Check for Updates…* in
+  the menu bar menu asks right away. Updates are signed; the dashboard server stops and starts
+  again around the update on its own.
+- The Claude Code hook and status line ship inside the app, at
+  `/Applications/Fremkit.app/Contents/Resources/scripts/`, for `~/.claude/settings.json` to name.
 - **Disk map.** A new built-in widget shows what fills your home folder or a volume, as rings you
   drill into with a finger beside a list of folders and sizes; holding one shows it in Finder.
   A scan runs only when you tap — the tile's **Scan** button the first time, ↻ after that — never on
@@ -28,7 +38,28 @@ tagged `vX.Y.Z`.
 - **RTK token savings.** For registry widgets: the tokens [RTK](https://github.com/rtk-ai/rtk) saved
   today, in total, and over the last 30 days, read from the `rtk` program when it is installed.
 
+### Changed
+- **Missing permissions say where to go.** A menu bar line such as "Touch: Input Monitoring
+  missing — open Settings…" or "Fence: Accessibility missing — open Settings…" can be clicked: it
+  opens the right pane of System Settings → Privacy & Security, with Fremkit listed there. The
+  login item waiting for approval opens Login Items the same way.
+- **Touch tells you when a relaunch is all it needs.** Once Input Monitoring is granted, touch
+  starts by itself within a few seconds; when macOS wants Fremkit reopened before the grant
+  applies, the line says "Touch: allowed — quit and reopen Fremkit…", and clicking it does that.
+- **The signed app asks for Input Monitoring and Accessibility once more** on its first launch:
+  macOS ties those grants to the signature, and the app is signed with the project's Developer ID
+  rather than the local certificate of a source install. If the old grant is still ticked and
+  touch does not work, run `tccutil reset ListenEvent dev.fremkit.helper` and
+  `tccutil reset Accessibility dev.fremkit.helper`, then open Fremkit again.
+- The helper reports its real version (it said 0.1.0).
+- A helper with touch, the mouse fence and the Dock badges all off no longer asks for
+  Accessibility, which none of the three is using.
+
 ### Fixed
+- **Input Monitoring is asked on a first launch.** Fremkit asked for Accessibility and Input
+  Monitoring at the same moment, and macOS, which shows one such prompt at a time, dropped the
+  second: touch said "permission missing" and Fremkit was not even listed under Input Monitoring.
+  It now asks for Input Monitoring first and for Accessibility once that is answered.
 - **Disks counts like Finder.** Sizes were binary gigabytes labelled GB, about 7 % below what
   Finder and Disk Utility show; they are decimal now, and a disk past 1,000 GB reads in TB.
 - **One row per disk on Disks.** Volumes that share one APFS disk — the Mac's own and a volume

@@ -10,15 +10,18 @@ enum DockReaderState: Equatable {
     case noDock
     case active
 
-    /// Menu label, in the language the helper picked at launch.
-    var label: String {
+    /// The text of the menu line, which also decides whether clicking it fixes something.
+    var key: L10nKey {
         switch self {
-        case .disabled: return L10n.string(.dockDisabled)
-        case .accessibilityMissing: return L10n.string(.dockAccessibilityMissing)
-        case .noDock: return L10n.string(.dockNoDock)
-        case .active: return L10n.string(.dockActive)
+        case .disabled: return .dockDisabled
+        case .accessibilityMissing: return .dockAccessibilityMissing
+        case .noDock: return .dockNoDock
+        case .active: return .dockActive
         }
     }
+
+    /// Menu label, in the language the helper picked at launch.
+    var label: String { L10n.string(key) }
 }
 
 /// Reads the Dock's badges through the accessibility API and posts them to the local server.

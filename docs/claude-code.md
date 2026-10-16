@@ -11,7 +11,14 @@ installed and nothing runs unless Claude Code calls it.
 
 ## Setup
 
-Add this to `~/.claude/settings.json`, replacing `<repo>` with the path to your checkout:
+Add this to `~/.claude/settings.json`, replacing `<repo>/scripts` with where the scripts are:
+
+- **the app**: `/Applications/Fremkit.app/Contents/Resources/scripts` — they ship inside it, and
+  an update replaces them in place, so the path stays valid;
+- **a source install**: `<checkout>/scripts`.
+
+Fremkit does not edit this file for you: it is Claude Code's, and holds your own hooks too.
+
 
 ```json
 "statusLine": { "type": "command", "command": "<repo>/scripts/claude-statusline.sh" },

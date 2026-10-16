@@ -25,6 +25,7 @@ public enum L10nKey: String, CaseIterable {
     case touchActive
     case touchAccessibilityMissing
     case touchNotPermitted
+    case touchNeedsRelaunch
     case touchBusy
     /// One `%08X`: the IOKit result code.
     case touchOpenFailed
@@ -54,6 +55,8 @@ public enum L10nKey: String, CaseIterable {
     case toggleManageServer
     case toggleLaunchAtLogin
     case openLog
+    /// Only in the app, which updates itself through Sparkle.
+    case checkForUpdates
     case quit
 
     // Admin window and its menu bar
@@ -83,21 +86,22 @@ public enum L10n {
         .serverRestarting: "Serveur : redémarrage dans %d s",
 
         .touchActive: "Tactile : actif",
-        .touchAccessibilityMissing: "Tactile : accessibilité manquante",
-        .touchNotPermitted: "Tactile : permission manquante",
+        .touchAccessibilityMissing: "Tactile : Accessibilité manquante — ouvrir les Réglages…",
+        .touchNotPermitted: "Tactile : Surveillance de l'entrée manquante — ouvrir les Réglages…",
+        .touchNeedsRelaunch: "Tactile : autorisé — quitter et rouvrir Fremkit…",
         .touchBusy: "Tactile : occupé par un autre driver",
         .touchOpenFailed: "Tactile : erreur d'ouverture (0x%08X)",
         .touchNoDisplay: "Tactile : écran absent",
         .touchDisabled: "Tactile : désactivé",
 
         .dockDisabled: "Notifications : désactivées",
-        .dockAccessibilityMissing: "Notifications : Accessibilité manquante",
+        .dockAccessibilityMissing: "Notifications : Accessibilité manquante — ouvrir les Réglages…",
         .dockNoDock: "Notifications : Dock introuvable",
         .dockActive: "Notifications : actives",
 
-        .fenceMissingPermission: "Barrière : permission manquante",
+        .fenceMissingPermission: "Barrière : Accessibilité manquante — ouvrir les Réglages…",
         .loginFailed: "Lancement au login : erreur",
-        .loginNeedsApproval: "Lancement à l'ouverture : approbation requise dans Réglages Système",
+        .loginNeedsApproval: "Lancement à l'ouverture : approbation requise dans Réglages Système…",
 
         .openAdmin: "Ouvrir l'admin",
         .openAdminInBrowser: "Admin dans le navigateur",
@@ -110,6 +114,7 @@ public enum L10n {
         .toggleManageServer: "Gérer le serveur",
         .toggleLaunchAtLogin: "Lancer au login",
         .openLog: "Journal…",
+        .checkForUpdates: "Rechercher les mises à jour…",
         .quit: "Quitter",
 
         .adminWindowTitle: "Fremkit — admin",
@@ -136,21 +141,22 @@ public enum L10n {
         .serverRestarting: "Server: restarting in %d s",
 
         .touchActive: "Touch: active",
-        .touchAccessibilityMissing: "Touch: Accessibility missing",
-        .touchNotPermitted: "Touch: permission missing",
+        .touchAccessibilityMissing: "Touch: Accessibility missing — open Settings…",
+        .touchNotPermitted: "Touch: Input Monitoring missing — open Settings…",
+        .touchNeedsRelaunch: "Touch: allowed — quit and reopen Fremkit…",
         .touchBusy: "Touch: taken by another driver",
         .touchOpenFailed: "Touch: could not open it (0x%08X)",
         .touchNoDisplay: "Touch: display absent",
         .touchDisabled: "Touch: disabled",
 
         .dockDisabled: "Notifications: disabled",
-        .dockAccessibilityMissing: "Notifications: Accessibility missing",
+        .dockAccessibilityMissing: "Notifications: Accessibility missing — open Settings…",
         .dockNoDock: "Notifications: Dock not found",
         .dockActive: "Notifications: active",
 
-        .fenceMissingPermission: "Fence: permission missing",
+        .fenceMissingPermission: "Fence: Accessibility missing — open Settings…",
         .loginFailed: "Launch at login: failed",
-        .loginNeedsApproval: "Open at login: approval required in System Settings",
+        .loginNeedsApproval: "Open at login: approval required in System Settings…",
 
         .openAdmin: "Open the admin",
         .openAdminInBrowser: "Admin in the browser",
@@ -163,6 +169,7 @@ public enum L10n {
         .toggleManageServer: "Manage the server",
         .toggleLaunchAtLogin: "Launch at login",
         .openLog: "Log…",
+        .checkForUpdates: "Check for Updates…",
         .quit: "Quit",
 
         .adminWindowTitle: "Fremkit — admin",

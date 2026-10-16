@@ -3,6 +3,9 @@
 Most problems are one of three things: a macOS privacy grant that was never given, a grant that
 was silently dropped when the helper was rebuilt, or another app holding the touch panel.
 
+"The helper" below is **Fremkit** for the app and **Fremkit Helper** for a source install: the
+same program, built two ways (see [Where the data lives](#where-the-data-lives)).
+
 The helper's menu tells you which: it shows state lines such as "Server: running", "Touch: active"
 and "Notifications: active" above the toggles, and *Log…* opens the supervised server's output at
 `~/Library/Logs/Fremkit/server.log`.
@@ -11,15 +14,131 @@ and "Notifications: active" above the toggles, and *Log…* opens the supervised
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| "Touch: permission missing" | Input Monitoring not granted to *this build* of the helper | Add "Fremkit Helper" under Privacy & Security → Input Monitoring, then relaunch it |
+| "Touch: Input Monitoring missing — open Settings…" | Input Monitoring not granted to *this build* of the helper, or [never asked](#input-monitoring-was-never-asked) | Click the line: it opens Privacy & Security → Input Monitoring with the helper listed. Turn "Fremkit" (the app) or "Fremkit Helper" (a source install) on. Touch starts within seconds, or the line asks for a relaunch |
+| "Touch: allowed — quit and reopen Fremkit…" | Input Monitoring is granted, but macOS applies it only to a relaunched process | Click the line: Fremkit quits (stopping its server as usual) and opens again |
 | "Touch: taken by another driver" | Touchscreen Gestures, another driver or a `--probe` run holds the panel | Quit it, and unload its launchd agent so it does not come back |
-| "Fence: permission missing" | Accessibility not granted | Add "Fremkit Helper" under Privacy & Security → Accessibility, then relaunch it |
+| "Fence: Accessibility missing — open Settings…" (or the same on the Touch or Notifications line) | Accessibility not granted | Click the line: it opens Privacy & Security → Accessibility, with the helper listed. Turn "Fremkit" (the app) or "Fremkit Helper" (a source install) on; the line clears within seconds |
+| "Fremkit can't be opened" / "is damaged and can't be opened" | The download was altered or is not the published one | Download the DMG again from the release page; see [Gatekeeper](#gatekeeper) |
+| Input Monitoring and Accessibility asked again after moving to the app | The app's Developer ID signature is a new code identity | Expected once; see [The app asks for permissions again](#the-app-asks-for-permissions-again) |
 | Permissions reset after every rebuild | Ad-hoc signature: a new code identity each build | Run `scripts/create-signing-identity.sh`, rebuild, grant once more |
 | The helper is ticked in Privacy & Security and still has no permission | One stale grant per past ad-hoc identity, which macOS keeps in its cache and matches before the new one | `tccutil reset ListenEvent dev.fremkit.helper && tccutil reset Accessibility dev.fremkit.helper`, relaunch the helper, and accept the two prompts. Removing and re-adding the app in the list does not clear those entries |
 | Printer unreachable (`EHOSTUNREACH`) while `ping` and `curl` work | Local Network not granted to the app that runs the server | Allow it under Privacy & Security → Local Network |
 | "Server: external" | Something already answers port 4242, so the helper steps aside | Expected under `pnpm dev`; otherwise stop the stray server, or turn *Manage the server* off |
 | The disk map says folders could not be read | macOS privacy protection (TCC) refuses the scan some folders | Give Fremkit Helper **Full Disk Access**, then scan again — [details](#the-disk-map-says-folders-could-not-be-read) |
 | The disk map is slow and shows no files, "du (no helper)" | The server runs without the helper, or the helper predates the disk map | Rebuild and reinstall the helper — [details](#the-disk-map-uses-du) |
+
+## Gatekeeper
+
+The app and its DMG are signed with the project's Developer ID and notarized by Apple, with the
+ticket stapled to both: macOS opens them without a warning and without a network check. A
+warning that it "can't be opened because Apple cannot check it for malicious software", or that
+it "is damaged", means the file is not the one that was published — a truncated download, or a
+copy from somewhere else. Delete it and download the DMG again from the
+[release page](https://github.com/fdussert/fremkit/releases/latest).
+
+To see what macOS thinks of a copy:
+
+```sh
+spctl -a -t exec -vv /Applications/Fremkit.app      # "accepted", "source=Notarized Developer ID"
+codesign --verify --strict --verbose=2 /Applications/Fremkit.app
+```
+
+Never work around it with `xattr -d com.apple.quarantine` or by turning Gatekeeper off: the
+check is what tells a genuine copy from a modified one.
+
+## The app asks for permissions again
+
+macOS ties Input Monitoring and Accessibility to the code signature. The app is signed with a
+Developer ID, the developer helper with the local "Fremkit Helper Dev" certificate: to macOS they
+are two different programs that happen to share the bundle id `dev.fremkit.helper`. The first
+launch of the app — and the first launch of a signed release after a self-signed build — asks
+for both permissions again. Updates keep the same signature, so it happens once.
+
+If the old entry is still ticked and the app still has no permission, the stale grant of the
+other signature is matched first. Clear both and accept the prompts once more:
+
+```sh
+tccutil reset ListenEvent dev.fremkit.helper
+tccutil reset Accessibility dev.fremkit.helper
+```
+
+Then open Fremkit again. The same applies to Local Network, which is asked the next time the
+server reaches a device on your LAN.
+
+## Input Monitoring was never asked
+
+macOS shows one privacy prompt at a time. Fremkit asks for Input Monitoring first and for
+Accessibility only once that is answered (or after a minute without an answer), so both prompts
+should appear on a first launch, one after the other. If only Accessibility was asked, and
+Fremkit is not listed under Privacy & Security → Input Monitoring at all:
+
+1. Click **"Touch: Input Monitoring missing — open Settings…"** in the menu bar menu. Fremkit
+   asks for the permission once more, which puts it in the list, and opens that pane. Turn
+   Fremkit on.
+2. If it is still not listed, add it by hand: **+** under the Input Monitoring list, pick
+   `Fremkit.app` in Applications (or `~/Applications/Fremkit Helper.app` for a source install), and turn it on.
+3. Touch starts by itself within a few seconds. If the line says **"Touch: allowed — quit and
+   reopen Fremkit…"** instead, click it: macOS applies the grant only to a relaunched process.
+
+The Accessibility lines ("… Accessibility missing — open Settings…") open the Accessibility pane
+the same way.
+
+## Where the data lives
+
+| | The app | A source install |
+|---|---|---|
+| Dashboard, connections, backgrounds, installed widgets and themes | `~/Library/Application Support/Fremkit` | the checkout's `data/` |
+| Helper settings (`helper.json`) | `~/Library/Application Support/Fremkit` | the same |
+| Server log | `~/Library/Logs/Fremkit/server.log` | the same |
+| Connection secrets | the login keychain, service `fremkit` | the same |
+
+The app never writes inside itself: its bundle is replaced by every update and its signature
+has to stay intact. What decides which server runs is `repoPath` in `helper.json`: present, the
+helper runs the checkout's server, exactly as a source install always has; absent, the app runs
+the server it carries.
+
+## Moving from a checkout to the app
+
+Nothing moves on its own: a source install keeps working untouched beside a downloaded app, and
+the two must not run at the same time (they would fight over the touch panel and port 4242). To
+switch:
+
+1. Quit **Fremkit Helper** from its menu bar **F**, and turn its *Launch at login* off first if it
+   was on.
+2. Copy the dashboard over, if you want to keep it — the app starts empty otherwise:
+
+   ```sh
+   mkdir -p ~/Library/Application\ Support/Fremkit
+   rsync -a <checkout>/data/ ~/Library/Application\ Support/Fremkit/
+   ```
+
+   Secrets are in the keychain, keyed by connection id, so the copied connections find them.
+3. Remove the `"repoPath"` line from `~/Library/Application Support/Fremkit/helper.json`.
+4. Move `~/Applications/Fremkit Helper.app` to the Trash.
+5. Install and open **Fremkit**, grant the permissions again (see above), and turn *Launch at
+   login* back on from its menu.
+6. In `~/.claude/settings.json`, point the Claude Code hook and status line at the app (see
+   [claude-code.md](claude-code.md)).
+
+Going back is the same in reverse: quit Fremkit, run `pnpm setup` in the checkout (it writes
+`repoPath` again and installs the developer helper).
+
+## Removing everything
+
+Quit Fremkit from its menu, turn *Launch at login* off first if it is on, then:
+
+```sh
+rm -rf /Applications/Fremkit.app            # or: brew uninstall --zap --cask fremkit
+rm -rf ~/Library/Application\ Support/Fremkit ~/Library/Logs/Fremkit
+rm -rf ~/Library/Caches/dev.fremkit.helper ~/Library/HTTPStorages/dev.fremkit.helper
+rm -rf ~/Library/WebKit/dev.fremkit.helper
+defaults delete dev.fremkit.helper
+tccutil reset All dev.fremkit.helper
+```
+
+The connection secrets stay in the login keychain until you delete them: open Keychain Access
+and search for `fremkit`, or `security delete-generic-password -s fremkit` once per secret. If you
+added the Claude Code hook, remove its lines from `~/.claude/settings.json`.
 
 ## The helper's icon is missing from the menu bar
 
@@ -51,7 +170,8 @@ the menu bar and open it again.
 ## Touch does not work
 
 1. **Input Monitoring.** The driver reads the panel's raw HID reports and cannot open it without
-   the grant. The menu says "Touch: permission missing".
+   the grant. The menu says "Touch: Input Monitoring missing — open Settings…"; clicking it opens
+   the right pane.
 2. **Another driver has the panel.** Touchscreen Gestures seizes the touch controller
    exclusively; the helper replaces it, it does not coexist with it. Quitting the app is not
    enough while its launchd agent relaunches it:
@@ -80,7 +200,8 @@ macOS 15 and later gate LAN access per application, and the server has no identi
 runs inside whatever launched it. So the app to allow under System Settings → Privacy & Security →
 **Local Network** is:
 
-- **Fremkit Helper**, when the helper manages the server (the normal case);
+- **Fremkit** (the app) or **Fremkit Helper** (a source install), when the helper manages the
+  server (the normal case);
 - **your terminal** (Terminal, iTerm, Ghostty…), when you run `pnpm dev` yourself.
 
 Without the grant, every connection to a LAN device fails as `EHOSTUNREACH`. This is the usual
@@ -90,7 +211,7 @@ cause of a Bambu printer or a Homey that looks perfectly reachable.
 the filter — on the same address, from the same shell, `curl` answers 200 while Node gets
 `EHOSTUNREACH`. So the test that means something is: `ping` or `curl` reaches the device but
 **Node** — the server, or a script — does not. That is the grant missing on the app that runs
-Node: Fremkit Helper for the live server, your terminal for anything you run yourself.
+Node: Fremkit or Fremkit Helper for the live server, your terminal for anything you run yourself.
 
 **After a reinstall the helper may vanish from the Local Network list.** The grant is tied to the
 installed bundle, and deleting it drops the grant silently. Reinstall with

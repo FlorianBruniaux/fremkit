@@ -1,15 +1,24 @@
-import { isAbsolute } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { isAbsolute, join } from 'node:path'
 import { buildApp } from './app.js'
 import { providers } from './providers/index.js'
+import { shippedPaths } from './paths.js'
+import { DEFAULT_BACKGROUND } from './backgrounds/seed.js'
 
-const root = fileURLToPath(new URL('../..', import.meta.url))
+// A checkout's own folders, or the app bundle's when the helper sets `FREMKIT_ROOT`: see paths.ts.
+let shipped: ReturnType<typeof shippedPaths>
+try {
+  shipped = shippedPaths()
+} catch (error) {
+  console.error(`fremkit: ${(error as Error).message}`)
+  process.exit(1)
+}
 // A second checkout (a worktree, a test bench) can run beside the live server on another port.
-// The native helper, the dashboard and the admin still assume 4242: this is for development only.
+// The helper passes its own configured port here; 4242 is what everything assumes otherwise.
 const port = Number(process.env.FREMKIT_PORT) || 4242
 
 /**
- * Where the config, the backgrounds and the caches live. `<checkout>/data` unless told otherwise.
+ * Where the config, the backgrounds and the caches live. `<checkout>/data` unless told otherwise;
+ * the app always tells, because its bundle is replaced by every update.
  *
  * `FREMKIT_DATA_DIR` is what makes a from-scratch run possible on the live checkout without
  * moving anything: the dashboard, the connections list and the background library all come from
@@ -24,7 +33,13 @@ if (configured && !isAbsolute(configured)) {
   console.error(`fremkit: FREMKIT_DATA_DIR must be an absolute path, got ${configured}`)
   process.exit(1)
 }
-const dataDir = configured || `${root}/data`
+// Inside the app, `<root>/data` would be inside the signed bundle, which every update replaces:
+// the helper always passes FREMKIT_DATA_DIR there, and a hand-run bundled server must too.
+if (!configured && process.env.FREMKIT_ROOT) {
+  console.error('fremkit: FREMKIT_ROOT is set but FREMKIT_DATA_DIR is not; refusing to write data inside the app')
+  process.exit(1)
+}
+const dataDir = configured || `${shipped.root}/data`
 
 /**
  * A registry served from somewhere else, for development only.
@@ -45,14 +60,25 @@ if (requestedRegistry && !dev) {
   console.error(`fremkit: FREMKIT_DEV=1, installing widgets from ${requestedRegistry}`)
 }
 
-const app = await buildApp({
-  dataDir,
-  widgetsDir: `${root}/widgets`,
-  ...(registryUrl ? { registryUrl, registryDev: true } : {}),
-  themesDir: `${root}/themes`,
-  uiDist: `${root}/ui/dist`,
-  providers,
-  logger: true,
-  port,
+// Not a top-level await: the app's bundled server is CommonJS (see server/scripts/bundle.mjs),
+// which has none. A failure still ends the process with a non-zero status, as it did.
+async function main(): Promise<void> {
+  const app = await buildApp({
+    dataDir,
+    widgetsDir: shipped.widgetsDir,
+    ...(registryUrl ? { registryUrl, registryDev: true } : {}),
+    themesDir: shipped.themesDir,
+    uiDist: shipped.uiDist,
+    bridgePath: shipped.bridgePath,
+    wallpaperPath: join(shipped.wallpaperDir, DEFAULT_BACKGROUND),
+    providers,
+    logger: true,
+    port,
+  })
+  await app.listen({ port, host: '127.0.0.1' })
+}
+
+main().catch((error: unknown) => {
+  console.error(error)
+  process.exit(1)
 })
-await app.listen({ port, host: '127.0.0.1' })
