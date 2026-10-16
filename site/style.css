@@ -416,3 +416,9 @@ details p { margin: 0 0 22px; color: var(--muted); max-width: 640px; }
   .edge { transform: none; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* 404: one centred block, no script (the CSP allows none inline, and the page needs none) */
+.notfound { min-height: 100vh; display: grid; place-items: center; text-align: center; padding: 40px 0; }
+.notfound .lede { margin-inline: auto; }
+.notfound .lede.fr { margin-top: 8px; font-size: 16px; color: var(--dim); }
+.notfound .hero-buttons { margin-top: 36px; }
