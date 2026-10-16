@@ -183,7 +183,14 @@ export class DuParser {
   /** du could not read the folder it was asked about. */
   rootUnreadable = false
 
-  constructor(private readonly path: string, rootName: string) {
+  /** Children by name, so a folder with 50 000 subfolders is not a quadratic walk. */
+  private readonly index = new WeakMap<DiskNode, Map<string, DiskNode>>()
+
+  /**
+   * `minBytes` lets the parser drop small folders as soon as their parent is printed (du prints
+   * a folder after everything in it), so what it holds follows the policy, not the disk.
+   */
+  constructor(private readonly path: string, rootName: string, private readonly minBytes = 0) {
     this.root = { name: rootName, kind: 'd', size: 0 }
     this.prefix = path.endsWith('/') ? path : `${path}/`
   }
@@ -201,15 +208,38 @@ export class DuParser {
   private nodeAt(segments: string[]): DiskNode {
     let node = this.root
     for (const segment of segments) {
-      node.children ??= []
-      let next = node.children.find((c) => c.name === segment)
+      let byName = this.index.get(node)
+      if (!byName) { byName = new Map(); this.index.set(node, byName) }
+      let next = byName.get(segment)
       if (!next) {
         next = { name: segment, kind: 'd', size: 0 }
-        node.children.push(next)
+        byName.set(segment, next)
+        ;(node.children ??= []).push(next)
       }
       node = next
     }
     return node
+  }
+
+  /** A folder is complete: its subfolders under `minBytes` go into its "others" now. */
+  private compact(node: DiskNode): void {
+    if (!this.minBytes || !node.children) return
+    const byName = this.index.get(node)
+    const kept: DiskNode[] = []
+    let count = 0
+    let size = 0
+    for (const child of node.children) {
+      if (child.size >= this.minBytes || child.kind === 'x' || (child.unreadable ?? 0) > 0) { kept.push(child); continue }
+      count++
+      size += child.size
+      byName?.delete(child.name)
+    }
+    if (count) {
+      const [c, s] = node.others ?? [0, 0]
+      node.others = [c + count, s + size]
+    }
+    if (kept.length) node.children = kept
+    else delete node.children
   }
 
   /** One stdout line: `<kilobytes>\t<path>`. Returns the path below the root, or null. */
@@ -221,7 +251,9 @@ export class DuParser {
     const segments = this.segments(text.slice(tab + 1))
     if (!segments) return null
     this.lines++
-    this.nodeAt(segments).size = kb * 1024
+    const node = this.nodeAt(segments)
+    node.size = kb * 1024
+    this.compact(node)
     return segments
   }
 
@@ -254,9 +286,10 @@ export class DuParser {
       const children = node.children ?? []
       for (const child of children) settle(child, depth + 1)
       if (node.kind === 'x') return
-      const held = children.reduce((sum, c) => sum + c.size, 0)
+      const [count, folded] = node.others ?? [0, 0]
+      const held = children.reduce((sum, c) => sum + c.size, 0) + folded
       const rest = Math.max(0, node.size - held)
-      if (rest > 0) node.others = [0, rest]
+      if (rest > 0 || count > 0) node.others = [count, folded + rest]
       // At du's depth limit the subfolders were not listed: say so, so a drill rescans.
       if (depth >= maxDepth && node.size >= policy.minBytes) node.more = true
     }
@@ -275,7 +308,7 @@ export function createDuScanner(spawnImpl: Spawn = spawn, du = '/usr/bin/du'): D
     kind: 'du',
     start(path, policy, onProgress) {
       const depth = Math.min(policy.depth, DU_MAX_DEPTH)
-      const parser = new DuParser(path, path.split('/').filter(Boolean).pop() ?? '/')
+      const parser = new DuParser(path, path.split('/').filter(Boolean).pop() ?? '/', policy.minBytes)
       const started = Date.now()
       let cancelled = false
       let lastProgress = 0

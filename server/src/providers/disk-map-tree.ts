@@ -86,33 +86,30 @@ export function findNode(tree: DiskNode, segments: readonly string[]): DiskNode 
 }
 
 /**
- * Puts a freshly scanned subtree in place of the node at `segments`, and corrects the sizes and
- * counts of every ancestor by the difference. Returns false when the path is no longer in the tree.
+ * A folder was measured again: it and every ancestor take the difference in size, files and
+ * unreadable folders, so the rings above it still add up. The held tree keeps its own shape — the
+ * new measurement is held beside it — so this never grows the tree. False when the path is not in
+ * the tree.
  */
-export function graft(tree: DiskNode, segments: readonly string[], subtree: DiskNode): boolean {
+export function resize(tree: DiskNode, segments: readonly string[], measured: DiskNode): boolean {
   if (segments.length === 0) return false
   const chain: DiskNode[] = [tree]
-  for (const segment of segments.slice(0, -1)) {
+  for (const segment of segments) {
     const next = chain[chain.length - 1].children?.find((c) => c.name === segment)
     if (!next) return false
     chain.push(next)
   }
-  const parent = chain[chain.length - 1]
-  const index = parent.children?.findIndex((c) => c.name === segments[segments.length - 1]) ?? -1
-  if (index < 0 || !parent.children) return false
-  const old = parent.children[index]
-  const replacement: DiskNode = { ...subtree, name: old.name }
-  parent.children[index] = replacement
-  const dSize = replacement.size - old.size
-  const dFiles = (replacement.files ?? 0) - (old.files ?? 0)
-  const dUnreadable = (replacement.unreadable ?? 0) - (old.unreadable ?? 0)
-  for (const ancestor of chain) {
-    ancestor.size = Math.max(0, ancestor.size + dSize)
-    if (dFiles) ancestor.files = Math.max(0, (ancestor.files ?? 0) + dFiles)
+  const target = chain[chain.length - 1]
+  const dSize = measured.size - target.size
+  const dFiles = (measured.files ?? 0) - (target.files ?? 0)
+  const dUnreadable = (measured.unreadable ?? 0) - (target.unreadable ?? 0)
+  for (const node of chain) {
+    node.size = Math.max(0, node.size + dSize)
+    if (dFiles) node.files = Math.max(0, (node.files ?? 0) + dFiles)
     if (dUnreadable) {
-      const u = Math.max(0, (ancestor.unreadable ?? 0) + dUnreadable)
-      if (u) ancestor.unreadable = u
-      else delete ancestor.unreadable
+      const u = Math.max(0, (node.unreadable ?? 0) + dUnreadable)
+      if (u) node.unreadable = u
+      else delete node.unreadable
     }
   }
   return true
@@ -146,8 +143,8 @@ export function pruneTree(node: DiskNode, policy: DiskPolicy, depth = 0): void {
   for (const child of readable) {
     const keep = kept.length < policy.maxChildren && (child.size >= policy.minBytes || (child.unreadable ?? 0) > 0)
     if (keep) { kept.push(child); continue }
+    // Never `more` here: a rescan would make the same cut and show the same "others".
     addOthers(node, 1, child.size)
-    if (child.size * VISIBLE_SHARE >= node.size && child.size >= policy.minBytes) node.more = true
   }
   const keptUnreadable = unreadable.slice(0, policy.maxChildren)
   if (unreadable.length > keptUnreadable.length) addOthers(node, unreadable.length - keptUnreadable.length, 0)

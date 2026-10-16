@@ -8,7 +8,7 @@ import {
   createDuScanner, createNativeScanner, resolveScannerBinary, ScanError,
   type DiskScanner, type ScanFailure, type ScanHandle, type ScanProgress, type ScanStats,
 } from './disk-map-scanner.js'
-import { buildView, DEFAULT_POLICY, findNode, validateTree, type DiskNode, type DiskPolicy, type ViewNode } from './disk-map-tree.js'
+import { buildView, DEFAULT_POLICY, findNode, resize, validateTree, type DiskNode, type DiskPolicy, type ViewNode } from './disk-map-tree.js'
 import type { CommandContext, Provider } from './types.js'
 
 /**
@@ -48,7 +48,8 @@ export interface DiskMapSnapshot {
   roots: { id: string; label: string; kind: DiskRoot['kind'] }[]
   scanning: { root: string; path: string[]; startedAt: number; directories: number; files: number; current: string[] } | null
   results: Record<string, RootSummary>
-  error: { root: string; path: string[]; code: ScanFailure | 'gone' } | null
+  /** The last failure per root; `path` is the folder that was being rescanned, [] for the root. */
+  errors: Record<string, { path: string[]; code: ScanFailure | 'gone' }>
 }
 
 /** `/sbin/mount` lines for the volumes worth offering: local, browsable, under /Volumes. */
@@ -216,7 +217,8 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
 
   let running: Running | null = null
   let nextId = 1
-  let lastError: DiskMapSnapshot['error'] = null
+  /** The last failure per root, until a scan of that root succeeds. */
+  const errors = new Map<string, { path: string[]; code: ScanFailure | 'gone' }>()
 
   /**
    * The node at `segments`, looked up in the main tree and, where that tree stops (`more`), in a
@@ -235,19 +237,18 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
     const root = (await listRoots()).find((r) => r.id === rootId)
     if (!root) return { ok: false, error: 'unknown-root' }
     const h = held.get(rootId)
-    // A folder is rescanned only inside a tree the server holds; anything else scans the root.
-    let segments = h && wanted.length > 0 && lookup(h, wanted) ? wanted : []
+    // A folder is rescanned only inside a tree the server holds. One that is no longer there is
+    // "gone" — never a reason to walk the whole root instead.
+    const segments = wanted.length > 0 && h ? wanted : []
+    if (wanted.length > 0 && (!h || !lookup(h, wanted))) return { ok: false, error: 'gone' }
     let path: string
     try {
       path = await resolveInside(root.path, segments)
       if (!(await stat(path)).isDirectory()) throw new Error('not a directory')
     } catch {
-      if (segments.length === 0) {
-        lastError = { root: rootId, path: [], code: 'missing' }
-        return { ok: false, error: 'missing' }
-      }
-      segments = []
-      path = await resolveInside(root.path, [])
+      if (segments.length > 0) return { ok: false, error: 'gone' }
+      errors.set(rootId, { path: [], code: 'missing' })
+      return { ok: false, error: 'missing' }
     }
     const policy: DiskPolicy = segments.length === 0 ? DEFAULT_POLICY : {
       ...DEFAULT_POLICY,
@@ -255,15 +256,17 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
       // Detail in proportion to the folder: 1/4000 of it, between 4 KB and the root's 1 MB.
       minBytes: Math.min(DEFAULT_POLICY.minBytes, Math.max(4096, Math.floor((lookup(h!, segments)?.size ?? 0) / 4000))),
     }
-    running?.handle.cancel()
     const s = await scanner()
+    // No await between the cancel and `running = …`: two commands racing would otherwise both
+    // cancel nothing, and the first scan would walk on with nobody reading it.
+    running?.handle.cancel()
     const id = nextId++
     const handle = s.start(path, policy, (progress) => { if (running?.id === id) running.progress = progress })
     running = { id, root: rootId, segments, startedAt: now(), progress: { directories: 0, files: 0, path: [] }, handle }
-    lastError = null
     handle.result.then(async (outcome) => {
       if (running?.id !== id) return
       running = null
+      errors.delete(rootId)
       const current = held.get(rootId)
       if (segments.length === 0 || !current) {
         const next: Held = {
@@ -273,6 +276,8 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
         held.set(rootId, next)
         await save(next).catch((err: unknown) => console.error('disk-map: could not save the scan:', (err as Error).message))
       } else {
+        // The folder's parents in the main tree take its new size, so the rings above it add up.
+        resize(current.tree, segments, outcome.tree)
         current.subtrees.delete(key(segments))
         current.subtrees.set(key(segments), { ...outcome.tree, name: segments[segments.length - 1] })
         while (current.subtrees.size > MAX_SUBTREES) current.subtrees.delete(current.subtrees.keys().next().value!)
@@ -282,7 +287,7 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
       if (running?.id !== id) return
       running = null
       const code: ScanFailure = err instanceof ScanError ? err.code : 'failed'
-      if (code !== 'cancelled') lastError = { root: rootId, path: segments, code }
+      if (code !== 'cancelled') errors.set(rootId, { path: segments, code })
     })
     return { ok: true }
   }
@@ -309,7 +314,7 @@ export function createDiskMapProvider(opts: DiskMapOptions): Provider<DiskMapSna
         directories: running.progress.directories, files: running.progress.files, current: running.progress.path,
       },
       results,
-      error: lastError,
+      errors: Object.fromEntries(roots.flatMap((r) => { const e = errors.get(r.id); return e ? [[r.id, e]] : [] })),
     }
   }
 

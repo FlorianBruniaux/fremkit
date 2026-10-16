@@ -77,6 +77,19 @@ describe('DuParser', () => {
     expect(findNode(tree, ['Library'])?.others).toEqual([0, (3072 - 2048 - 4) * 1024])
     expect(tree.others).toEqual([0, 2048 * 1024])
   })
+  it('folds small folders away as their parent completes, and stays fast on a huge folder', () => {
+    const p = new DuParser('/Volumes/Big', 'Big', 1024 * 1024)
+    const started = Date.now()
+    for (let i = 0; i < 50_000; i++) p.line(`8\t/Volumes/Big/cache/item-${i}`)
+    p.line('4096\t/Volumes/Big/cache/large')
+    p.line(`${8 * 50_000 + 4096 + 4}\t/Volumes/Big/cache`)
+    p.line(`${8 * 50_000 + 4096 + 4}\t/Volumes/Big`)
+    expect(Date.now() - started).toBeLessThan(2000)
+    const tree = p.finish({ ...DEFAULT_POLICY, minBytes: 1024 * 1024 }, 5)
+    const cache = findNode(tree, ['cache'])!
+    expect(cache.children?.map((c) => c.name)).toEqual(['large'])
+    expect(cache.others).toEqual([50_000, (8 * 50_000 + 4) * 1024])
+  })
   it('notices that the root itself was refused', () => {
     const p = new DuParser('/Volumes/Locked', 'Locked')
     p.errorLine('du: /Volumes/Locked: Permission denied')

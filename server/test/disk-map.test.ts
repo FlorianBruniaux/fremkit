@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mkdir, mkdtemp, readdir, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -126,8 +126,8 @@ describe('disk-map provider', () => {
     const view = await cmd('view', { root: 'home', path: [], rings: 2, instanceId: 'dm-1' })
     expect(view.view.name).toBe('~')
     expect(view.view.children.map((c: DiskNode) => c.name)).toEqual(['Library', 'movie.mov', 'Mail'])
-    await flush()
-    expect(await readdir(join(dataDir, 'disk-map'))).toEqual(['home.json'])
+    // The save is written after the result is published; give a loaded machine a moment.
+    await vi.waitFor(async () => expect(await readdir(join(dataDir, 'disk-map'))).toEqual(['home.json']))
 
     // A restart reads it back, date included.
     provider = make()
@@ -178,7 +178,26 @@ describe('disk-map provider', () => {
     await flush()
     const snap = await provider.poll!()
     expect(snap.scanning).toBeNull()
-    expect(snap.error).toBeNull()
+    expect(snap.errors).toEqual({})
+  })
+
+  it('cancels the first of two scans asked for at the same time', async () => {
+    await Promise.all([cmd('scan', { root: 'home' }), cmd('scan', { root: 'home' })])
+    expect(scanner.started).toHaveLength(2)
+    expect(scanner.started[0].cancelled).toBe(true)
+    expect(scanner.started[1].cancelled).toBe(false)
+  })
+
+  it('answers gone for a folder that is no longer there, and never rescans the root instead', async () => {
+    await cmd('scan', { root: 'home' })
+    scanner.started[0].resolve(outcome(homeTree()))
+    await flush()
+    // In the tree, not on disk any more.
+    await rm(join(home, 'Library/Caches'), { recursive: true })
+    expect(await cmd('scan', { root: 'home', path: ['Library', 'Caches'] })).toEqual({ ok: false, error: 'gone' })
+    // Not in the tree at all.
+    expect(await cmd('scan', { root: 'home', path: ['Nowhere'] })).toEqual({ ok: false, error: 'gone' })
+    expect(scanner.started).toHaveLength(1)
   })
 
   it('keeps the last good result and says what failed', async () => {
@@ -190,7 +209,7 @@ describe('disk-map provider', () => {
     await flush()
     const snap = await provider.poll!()
     expect(snap.results.home?.size).toBe(1000)
-    expect(snap.error).toEqual({ root: 'home', path: [], code: 'unreadable' })
+    expect(snap.errors).toEqual({ home: { path: [], code: 'unreadable' } })
   })
 
   it('rescans a folder the tree did not hold the inside of, and serves it from then on', async () => {
@@ -208,7 +227,11 @@ describe('disk-map provider', () => {
     const after = await cmd('view', { root: 'home', path: ['Library', 'Caches'] })
     expect(after.view.more).toBeUndefined()
     expect(after.view.children[0].name).toBe('com.example.app')
-    expect((await provider.poll!()).results.home?.generation).toBe(2)
+    const snap = await provider.poll!()
+    expect(snap.results.home?.generation).toBe(2)
+    // The parents take the folder's new size.
+    expect(snap.results.home?.size).toBe(1010)
+    expect((await cmd('view', { root: 'home', path: ['Library'], rings: 1 })).view.size).toBe(710)
     expect(await cmd('reveal', { root: 'home', path: ['Library', 'Caches', 'com.example.app'] })).toEqual({ ok: false, error: 'gone' })
   })
 })

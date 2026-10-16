@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  applyBudget, buildView, countNodes, findNode, graft, pruneTree, validateTree, DEFAULT_POLICY, type DiskNode,
+  applyBudget, buildView, countNodes, findNode, pruneTree, resize, validateTree, DEFAULT_POLICY, type DiskNode,
 } from '../src/providers/disk-map-tree.js'
 
 const dir = (name: string, size: number, children?: DiskNode[], extra: Partial<DiskNode> = {}): DiskNode =>
@@ -30,17 +30,20 @@ describe('validateTree', () => {
   })
 })
 
-describe('findNode and graft', () => {
-  it('finds a node by names and corrects the ancestors after a graft', () => {
+describe('findNode and resize', () => {
+  it('finds a node by names and gives its ancestors a folder\'s new size', () => {
     const tree = dir('~', 100, [dir('Library', 80, [dir('Caches', 50, undefined, { more: true })]), file('a', 20)])
     expect(findNode(tree, ['Library', 'Caches'])?.size).toBe(50)
     expect(findNode(tree, ['Library', 'nope'])).toBeNull()
-    expect(graft(tree, ['Library', 'Caches'], dir('ignored', 70, [file('big', 60)], { files: 4 }))).toBe(true)
-    expect(findNode(tree, ['Library', 'Caches'])?.name).toBe('Caches')
+    expect(resize(tree, ['Library', 'Caches'], dir('Caches', 70, [file('big', 60)], { files: 4 }))).toBe(true)
+    const caches = findNode(tree, ['Library', 'Caches'])!
+    expect(caches.size).toBe(70)
+    // The shape stays: the measurement is held elsewhere, the tree only takes the numbers.
+    expect(caches.children).toBeUndefined()
     expect(tree.size).toBe(120)
     expect(tree.children?.[0].size).toBe(100)
     expect(tree.files).toBe(4)
-    expect(graft(tree, ['Gone', 'x'], file('x', 1))).toBe(false)
+    expect(resize(tree, ['Gone', 'x'], file('x', 1))).toBe(false)
   })
 })
 
@@ -50,8 +53,8 @@ describe('pruneTree and applyBudget', () => {
     pruneTree(tree, { ...DEFAULT_POLICY, minBytes: 10, maxChildren: 1 })
     expect(tree.children?.map((c) => c.name)).toEqual(['big', 'locked'])
     expect(tree.others).toEqual([2, 301])
-    // "mid" is 30 % of the folder and was cut by maxChildren: looking inside rescans.
-    expect(tree.more).toBe(true)
+    // Cut by maxChildren, not by the budget: a rescan would cut the same way, so no `more`.
+    expect(tree.more).toBeUndefined()
   })
   it('cuts below the depth and says there is more', () => {
     const tree = dir('r', 100, [dir('a', 100, [dir('b', 100, [file('c', 100)])])])
