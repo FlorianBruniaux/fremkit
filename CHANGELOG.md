@@ -17,6 +17,9 @@ tagged `vX.Y.Z`.
   drill into with a finger beside a list of folders and sizes; holding one shows it in Finder.
   Scans run only when you ask, at low priority, and never delete anything. Folders macOS would not
   let it read are shown as such, with a button to the Full Disk Access settings.
+- **About.** **/admin → Screen → About** shows the Fremkit version, who wrote it, and links to
+  Fremkit's and the Sietch's repositories, which open in your browser, from the Fremkit admin
+  window too.
 - **RTK token savings.** For registry widgets: the tokens [RTK](https://github.com/rtk-ai/rtk) saved
   today, in total, and over the last 30 days, read from the `rtk` program when it is installed.
 

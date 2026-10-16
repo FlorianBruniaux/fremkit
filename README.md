@@ -387,6 +387,11 @@ limits, and how to report a problem: **[SECURITY.md](SECURITY.md)**.
 
 ## Credits and trademarks
 
+Fremkit is written by [usul](https://github.com/fdussert), with
+[FlorianBruniaux](https://github.com/FlorianBruniaux) and [mcouzinet](https://github.com/mcouzinet).
+The widgets and themes on the registry name their own authors on their cards. The admin's
+**Screen → About** lists the same people, from `ui/src/shared/credits.ts`.
+
 The icons are a subset of [Lucide](https://lucide.dev) (ISC licence, © Lucide Contributors),
 inlined in `ui/src/shared/icons.ts` so the interface takes no runtime icon dependency.
 

@@ -62,3 +62,23 @@ public enum KioskOrigin {
         return scheme == originScheme && host == originHost && candidate.port == origin.port
     }
 }
+
+/// Which links the admin window hands to the default browser.
+public enum ExternalLink {
+    /**
+     True when a link belongs in the user's browser rather than in the admin window: an `http`
+     or `https` address on another origin than the admin's own.
+
+     The admin window has no address bar and no back button, so another site loaded in it would
+     replace the admin with no way back but a reload. Every other scheme is refused outright —
+     `file:`, `javascript:`, an application's own scheme — rather than handed to whatever claims it.
+     */
+    public static func opensInBrowser(_ candidate: URL?, from admin: URL) -> Bool {
+        guard let candidate,
+              let scheme = candidate.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              candidate.host?.isEmpty == false
+        else { return false }
+        return !KioskOrigin.sameOrigin(candidate, as: admin)
+    }
+}
