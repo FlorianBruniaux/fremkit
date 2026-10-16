@@ -31,7 +31,9 @@ Fremkit turns a Corsair Xeneon Edge (a 2560 × 720 touch strip) into a widget da
 - `native/` — the Swift helper (kiosk window, HID touch driver, admin window, Dock badges). It
   supervises the server: it spawns `tsx src/index.ts`, restarts it when it dies, and takes over
   an external server it finds on 4242. Built with `scripts/build-helper.sh` (plain `swiftc`, no
-  Xcode project), tested with `scripts/test-helper.sh`.
+  Xcode project), tested with `scripts/test-helper.sh`. The bundle also carries `fremkit-scan`
+  (`native/Sources/FremkitScan`), the disk map's scanner, which the server runs by the path the
+  helper passes in `FREMKIT_SCANNER`; without it the server falls back to `du`.
 - `scripts/` — setup, dev, build/install/test of the helper, signing identity.
 - `themes/<id>/theme.json` — a palette, fonts and text size as validated tokens, painted on the
   dashboard, the editor and inside every widget. Two ship; the rest are published on the registry

@@ -394,6 +394,12 @@ final class ServerProcess {
         // server package's own bin directory.
         let extra = "\(config.repoPath)/server/node_modules/.bin:/opt/homebrew/bin:/usr/local/bin:\(NSHomeDirectory())/Library/pnpm"
         environment["PATH"] = extra + ":" + (environment["PATH"] ?? "/usr/bin:/bin:/usr/sbin:/sbin")
+        // The disk map's scanner ships beside this executable. The server runs it by this absolute
+        // path when it is set, and falls back to `du` when it is not; nothing goes on PATH.
+        if let scanner = Bundle.main.executableURL?.deletingLastPathComponent().appendingPathComponent("fremkit-scan"),
+           FileManager.default.isExecutableFile(atPath: scanner.path) {
+            environment["FREMKIT_SCANNER"] = scanner.path
+        }
         process.environment = environment
 
         // The handle has to exist before run(), so a failed launch closes it again rather than
