@@ -8,7 +8,7 @@ cask "fremkit" do
   url "https://github.com/fdussert/fremkit/releases/download/v#{version}/Fremkit-#{version}.dmg"
   name "Fremkit"
   desc "Widget dashboard for the Corsair Xeneon Edge touch display"
-  homepage "https://github.com/fdussert/fremkit"
+  homepage "https://fremkit.app"
 
   livecheck do
     url :url
