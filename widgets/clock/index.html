@@ -37,6 +37,8 @@
     padding:0 calc(var(--h,80px) * .10)}
   /* One run of inline text rather than a flex row: only that way does the ellipsis land on the
      line as a whole when the bar runs out of room, instead of on each span separately. */
+  .clock-icon{display:inline-block;width:1em;height:1em;margin-right:.4em;vertical-align:-.12em;color:var(--accent,#d9b36a)}
+  html.accent-fill .clock-icon{color:var(--on-surface,#0b0d10)}
   html.compact .cline{min-width:0;font-size:calc(clamp(13px, calc(var(--h,80px) * .30), 26px) * var(--text-scale, 1));
     font-weight:600;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* The date and the cities read at the time's own size, set apart by their weight and colour. */
@@ -45,7 +47,7 @@
   /* Right cluster: the bar pushes the iframe against the dots, so its content hugs that edge too. */
   html.compact.slot-right .cwrap{justify-content:flex-end;text-align:right}
 </style></head><body><div class="wrap"><div class="main"><div class="big" id="t">--:--</div><div class="muted" id="d"></div></div><div class="cities" id="cities"></div></div>
-<div class="cwrap"><div class="cline"><span id="ct">--:--</span><span class="cmuted" id="cdate"></span><span class="cmuted" id="ccities"></span></div></div>
+<div class="cwrap"><div class="cline"><svg class="clock-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span id="ct">--:--</span><span class="cmuted" id="cdate"></span><span class="cmuted" id="ccities"></span></div></div>
 <script>
   var L = {
     dayAhead: { fr: '+1 j', en: '+1 d' },

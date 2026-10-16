@@ -10,4 +10,24 @@
  * The bridge repeats the number as a literal (`Fremkit.sdk`), because it is a plain browser
  * script with no imports; `bridge.test.ts` holds the two together.
  */
-export const SDK_VERSION = 1
+export const SDK_VERSION = 2
+
+/**
+ * What each generation put on the `Fremkit` global, by name.
+ *
+ * Generations only add: a widget written for 1 still installs and runs on a build that speaks 2,
+ * because the comparison is `manifest.sdk > SDK_VERSION`. `bridge.test.ts` refuses a member of
+ * the bridge that no generation lists, so a new helper cannot ship without someone deciding
+ * whether it needs a new generation — the miss that let `installedApps` and `appIcon` reach a
+ * build still saying 1.
+ */
+export const SDK_GENERATIONS: Readonly<Record<number, readonly string[]>> = {
+  1: [
+    'ready', 'sdk', 'instanceId', 'settings', 'locale', 'tokens',
+    'accentMode', 'accentColor', 'onSurface', 'showTitle', 'compact', 'slot', 'size',
+    'whenReady', 'subscribe', 'sendCommand', 'fetch',
+    'esc', 'el', 'color', 't', 'onResize', 'onSettings', 'onLocale',
+  ],
+  // Fremkit 0.3.0: images a sandboxed frame cannot load itself, fetched by the host.
+  2: ['favicon', 'image', 'installedApps', 'appIcon'],
+}

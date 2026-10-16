@@ -20,6 +20,7 @@ export interface SessionClient {
   pid?: number
   tty?: string
   terminalSession?: string
+  cmux?: { workspace: string; surface: string }
   orca?: { pane?: string; tab?: string; terminal?: string }
 }
 

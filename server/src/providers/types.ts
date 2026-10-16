@@ -22,5 +22,12 @@ export interface Provider<T = unknown> {
   /** Called when the last subscriber leaves, and when the provider is unregistered. */
   stop?(): void
   commands?: Record<string, (payload: unknown, ctx?: CommandContext) => Promise<unknown>>
+  /**
+   * Set by a provider whose snapshot can carry the account's e-mail address (see `privacy.ts`).
+   * Toggling `privacy.showAccountEmail` then polls it again at once, instead of leaving the old
+   * answer on screen until its next tick. Requires `poll`: the registry refuses the flag on a
+   * provider without one.
+   */
+  publishesAccountEmail?: boolean
 }
 export type Publish = (channel: string, data: unknown) => void

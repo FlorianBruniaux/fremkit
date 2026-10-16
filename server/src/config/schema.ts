@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { HistorySourceSchema } from '../codex/sources.js'
 import { BUILTIN_THEME } from '../themes/theme.js'
 import { defaultSecretsBackend } from '../secrets/index.js'
 import { tr } from '../i18n.js'
@@ -237,6 +238,18 @@ const PrivacySchema = z.object({
    * undocumented and may disappear.
    */
   claudeAccountUsage: z.boolean().default(false),
+  /**
+   * Let an account provider (Claude, Codex, …) put the account's e-mail address in what it
+   * publishes. Off, the field is never in the snapshot: anything on a channel reaches every
+   * widget subscribed to it, a third-party one with network access included, and the Edge sits
+   * on a desk. The plan and the sign-in method are published either way. Providers read it with
+   * `withAccountEmail()` from `privacy.ts` on every poll.
+   */
+  showAccountEmail: z.boolean().default(false),
+  codexAccount: z.boolean().default(false),
+  codexHistorySources: z.array(HistorySourceSchema).max(10).default([]),
+  /** Read CPU temperature from the optional local macmon executable. */
+  macmonTemperature: z.boolean().default(false),
 }).prefault({})
 
 /**
@@ -341,7 +354,7 @@ export const DEFAULT_CONFIG: Config = {
   connections: [],
   secrets: { backend: defaultSecretsBackend() },
   locale: defaultLocale(),
-  privacy: { claudeAccountUsage: false },
+  privacy: { claudeAccountUsage: false, showAccountEmail: false, codexAccount: false, codexHistorySources: [], macmonTemperature: false },
   marketplace: { installed: {} },
   pages: [
     {

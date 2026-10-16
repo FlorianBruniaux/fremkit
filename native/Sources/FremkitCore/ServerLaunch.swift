@@ -63,15 +63,23 @@ public enum ServerLaunch: Equatable {
      (`FREMKIT_DATA_DIR`), since it has no checkout to find a `data/` folder in. `NODE_OPTIONS` is
      dropped for it: a user's `--require` or `--inspect` meant for their own Node has no business
      in the app's.
+
+     `scanner` is the disk map's `fremkit-scan`, which ships beside the helper's executable in
+     both setups. The server runs it by this absolute path, and falls back to `du` without it;
+     nothing goes on `PATH`.
      */
     public func environment(inheriting base: [String: String],
                             port: Int,
                             dataDirectory: String,
-                            home: String) -> [String: String] {
+                            home: String,
+                            scanner: String? = nil) -> [String: String] {
         var environment = base
         let inherited = base["PATH"] ?? "/usr/bin:/bin:/usr/sbin:/sbin"
         let homebrew = "/opt/homebrew/bin:/usr/local/bin"
         environment["FREMKIT_PORT"] = String(port)
+        if let scanner, !scanner.isEmpty {
+            environment["FREMKIT_SCANNER"] = scanner
+        }
         switch self {
         case let .checkout(repoPath):
             environment["PATH"] = "\(repoPath)/server/node_modules/.bin:\(homebrew):\(home)/Library/pnpm:\(inherited)"

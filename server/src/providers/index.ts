@@ -1,5 +1,5 @@
+import { createDockerProvider, createLocalModelsProvider } from './local-operations.js'
 import type { Provider } from './types.js'
-import { systemProvider } from './system.js'
 import { processesProvider } from './processes.js'
 import { createVolumeProvider } from './volume.js'
 import { createSpotifyProvider } from './spotify.js'
@@ -8,9 +8,11 @@ import { createCleanshotProvider } from './cleanshot.js'
 import { createClipboardProvider } from './clipboard.js'
 import { createNetworkProvider } from './network.js'
 import { createBatteryProvider } from './battery.js'
+import { createRtkProvider } from './rtk.js'
 
 export const providers: Provider[] = [
-  systemProvider,
+  createDockerProvider(),
+  createLocalModelsProvider(),
   processesProvider,
   createVolumeProvider(),
   createSpotifyProvider(),
@@ -19,4 +21,5 @@ export const providers: Provider[] = [
   createClipboardProvider(),
   createNetworkProvider(),
   createBatteryProvider(),
+  createRtkProvider(),
 ]

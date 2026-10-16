@@ -29,11 +29,21 @@ echo "==> FremkitHelper"
 
 echo "built: $OUT/FremkitHelper"
 
+# The disk map's scanner: its own small executable, which the server runs like `du` (the helper
+# tells it where through FREMKIT_SCANNER). It needs nothing but FremkitCore and Foundation.
+echo "==> fremkit-scan"
+"$SWIFTC" -O -sdk "$SDK" -target "$TARGET" -swift-version "$SWIFT_VERSION" \
+    -module-name FremkitScan \
+    native/Sources/FremkitScan/main.swift \
+    -I "$OUT" -L "$OUT" -lFremkitCore \
+    -o "$OUT/fremkit-scan"
+
 echo "==> app bundle"
 APP="native/dist/Fremkit Helper.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$OUT/FremkitHelper" "$APP/Contents/MacOS/FremkitHelper"
+cp "$OUT/fremkit-scan" "$APP/Contents/MacOS/fremkit-scan"
 cp native/Resources/Info.plist "$APP/Contents/Info.plist"
 fremkit_stamp_version "$APP/Contents/Info.plist" "$VERSION"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
@@ -54,14 +64,18 @@ IDENTITY="${FREMKIT_SIGN_IDENTITY:-Fremkit Helper Dev}"
 # `--options runtime` turns on the hardened runtime, which is what makes the bundle's TCC grants
 # (Input Monitoring, Accessibility) belong to *this* signed code rather than to whatever happens
 # to sit at the path. `--deep` is deprecated and signs nested code with the outer identity
-# instead of its own; this bundle nests nothing, so it buys nothing and hides mistakes.
+# instead of its own. The one nested executable, fremkit-scan, is signed on its own first, with
+# its own identifier, and the bundle after it: inside out.
 if security find-identity -v -p codesigning 2>/dev/null | grep -q "\"$IDENTITY\""; then
     echo "signing with: $IDENTITY"
-    codesign --force --options runtime --sign "$IDENTITY" "$APP"
+    SIGN_AS="$IDENTITY"
 else
     echo "signing ad hoc (no \"$IDENTITY\" identity in the keychain; run scripts/create-signing-identity.sh)"
-    codesign --force --options runtime --sign - "$APP"
+    SIGN_AS="-"
 fi
+codesign --force --options runtime --identifier dev.fremkit.scan --sign "$SIGN_AS" "$APP/Contents/MacOS/fremkit-scan"
+codesign --force --options runtime --sign "$SIGN_AS" "$APP"
+codesign --verify --strict "$APP"
 
 # The bundle declares the `fremkit://` URL scheme, and LaunchServices registers every copy it
 # notices — including this build folder. `open -b dev.fremkit.helper fremkit://admin` would then

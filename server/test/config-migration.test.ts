@@ -32,6 +32,19 @@ describe('migrateConfig', () => {
     const c2 = migrateConfig(v1)
     expect(migrateConfig(c2)).toEqual(c2)
   })
+  it('keeps older dashboards opted out of Codex account and history reads', () => {
+    const old = migrateConfig(v1)
+    delete (old.privacy as Partial<typeof old.privacy>).codexAccount
+    delete (old.privacy as Partial<typeof old.privacy>).codexHistorySources
+    expect(migrateConfig(old).privacy).toMatchObject({
+      codexAccount: false,
+      codexHistorySources: [],
+    })
+    expect(migrateConfig(v1).privacy).toMatchObject({
+      codexAccount: false,
+      codexHistorySources: [],
+    })
+  })
   it('rejects an unknown version with a clear message', () => {
     // Translated now, so match either language rather than the French wording.
     expect(() => migrateConfig({ ...v1, version: 7 })).toThrow(/(version de config inconnue|unknown config version).*7/)
@@ -99,7 +112,7 @@ describe('ConfigStore migration', () => {
   })
 })
 
-describe('privacy.claudeAccountUsage on an older config', () => {
+describe('privacy settings on an older config', () => {
   const page = (widgets: object[]) => ({ id: 'home', name: 'Accueil', widgets })
   const widget = (widgetId: string) => ({ instanceId: 'a', widgetId, x: 0, y: 0, w: 8, h: 4 })
 
@@ -142,6 +155,66 @@ describe('privacy.claudeAccountUsage on an older config', () => {
 
   it('leaves a fresh install off', () => {
     expect(DEFAULT_CONFIG.privacy.claudeAccountUsage).toBe(false)
+  })
+  it('keeps macmon sampling off for existing configs and fresh installs', () => {
+    const page = { id: 'home', name: 'Home', widgets: [{ instanceId: 'cpu-1', widgetId: 'cpu', x: 0, y: 0, w: 8, h: 4 }] }
+    expect(migrateConfig({ version: 2, pages: [page] }).privacy.macmonTemperature).toBe(false)
+    expect(migrateConfig({ ...DEFAULT_CONFIG, privacy: { claudeAccountUsage: false } }).privacy.macmonTemperature).toBe(false)
+    expect(DEFAULT_CONFIG.privacy.macmonTemperature).toBe(false)
+  })
+
+  it('preserves explicit consent to macmon sampling', () => {
+    expect(migrateConfig({ ...DEFAULT_CONFIG, privacy: { claudeAccountUsage: false, macmonTemperature: true } })
+      .privacy.macmonTemperature).toBe(true)
+  })
+})
+
+describe('privacy.showAccountEmail on an older config', () => {
+  const page = (widgets: object[]) => ({ id: 'home', name: 'Accueil', widgets })
+  const widget = (widgetId: string) => ({ instanceId: 'a', widgetId, x: 0, y: 0, w: 8, h: 4 })
+
+  it('starts off for every config written before it existed', () => {
+    // Even next to the Claude opt-in being inferred on: reading the usage is not showing the e-mail.
+    const v3 = migrateConfig({ ...migrateConfig(v1), privacy: { claudeAccountUsage: true } })
+    // toMatchObject: other privacy keys arrive in other branches and must not break this.
+    expect(v3.privacy).toMatchObject({ claudeAccountUsage: true, showAccountEmail: false })
+    expect(migrateConfig({ version: 2, pages: [page([widget('claude-usage')])] }).privacy)
+      .toMatchObject({ claudeAccountUsage: true, showAccountEmail: false })
+    expect(migrateConfig(v1).privacy.showAccountEmail).toBe(false)
+  })
+
+  it('respects the field once the file carries it', () => {
+    const v3 = (showAccountEmail: boolean) => migrateConfig({
+      ...migrateConfig(v1), privacy: { claudeAccountUsage: false, showAccountEmail },
+    }).privacy.showAccountEmail
+    expect(v3(true)).toBe(true)
+    expect(v3(false)).toBe(false)
+  })
+
+  it('leaves a v3 file without the field untouched on disk', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'fremkit-mig-'))
+    const file = join(dir, 'fremkit.json')
+    const { privacy: _privacy, ...rest } = migrateConfig(v1)
+    const before = JSON.stringify({ ...rest, privacy: { claudeAccountUsage: false } }, null, 2)
+    await writeFile(file, before)
+    const cfg = await new ConfigStore(file).load()
+    expect(cfg.privacy.showAccountEmail).toBe(false)
+    expect(await readFile(file, 'utf8')).toBe(before)
+  })
+
+  it('never rewrites a file whose value it cannot read', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'fremkit-mig-'))
+    const file = join(dir, 'fremkit.json')
+    const original = JSON.stringify({ ...migrateConfig(v1), privacy: { claudeAccountUsage: false, showAccountEmail: 'yes' } })
+    await writeFile(file, original)
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const store = new ConfigStore(file)
+    const cfg = await store.load()
+    err.mockRestore()
+    expect(store.degraded).toBe(true)
+    expect(cfg.privacy.showAccountEmail).toBe(false)
+    expect(await readFile(file, 'utf8')).toBe(original)
+    expect(await readdir(dir)).toEqual(['fremkit.json'])
   })
 })
 

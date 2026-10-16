@@ -14,6 +14,8 @@ import { fileURLToPath } from 'node:url'
 interface StubNode {
   tag: string; className: string; textContent: string; src: string
   children: StubNode[]
+  parentNode: StubNode | null
+  isConnected: boolean
   retryTimer?: unknown
 }
 
@@ -24,6 +26,7 @@ interface Loaded {
   artwork(): StubNode | undefined
   /** Hands the widget one answer from the dock channel, as the host delivers it. */
   publishDock(data: unknown): void
+  iconRequests(): string[]
 }
 
 async function loadWidget(installed: unknown, settings: Record<string, unknown>): Promise<Loaded> {
@@ -33,15 +36,15 @@ async function loadWidget(installed: unknown, settings: Record<string, unknown>)
   const node = (tag = 'div'): StubNode => {
     const self = {
       tag, className: '', textContent: '', src: '', alt: '', hidden: false, clientHeight: 300,
-      children: [] as StubNode[],
+      children: [] as StubNode[], parentNode: null, isConnected: true,
       style: { setProperty: () => {} },
       classList: { add: () => {}, remove: () => {}, toggle: () => {} },
-      appendChild: (child: StubNode) => { self.children.push(child) },
-      replaceChild: (next: StubNode, old: StubNode) => { self.children.splice(self.children.indexOf(old), 1, next) },
+      appendChild: (child: StubNode) => { child.parentNode = self; self.children.push(child) },
+      replaceChild: (next: StubNode, old: StubNode) => { old.parentNode = null; next.parentNode = self; self.children.splice(self.children.indexOf(old), 1, next) },
       addEventListener: () => {},
       onclick: null,
       // The widget empties the grid this way before rebuilding it.
-      set innerHTML(_v: string) { self.children.length = 0 },
+      set innerHTML(_v: string) { self.children.forEach((child) => { child.parentNode = null; child.isConnected = false }); self.children.length = 0 },
       get innerHTML() { return '' },
     } as unknown as StubNode
     return self
@@ -52,6 +55,7 @@ async function loadWidget(installed: unknown, settings: Record<string, unknown>)
     return nodes.get(id)!
   }
   const dockSubscribers: ((data: unknown) => void)[] = []
+  const iconRequests: string[] = []
   const document = {
     documentElement: node('html'),
     getElementById: byId,
@@ -77,6 +81,7 @@ async function loadWidget(installed: unknown, settings: Record<string, unknown>)
     esc: (value: unknown) => String(value ?? ''),
     color: (_value: unknown, fallback: string) => fallback,
     installedApps: () => (installed === REFUSED ? Promise.reject(new Error('unavailable')) : Promise.resolve(installed)),
+    appIcon: (bundleId: string) => { iconRequests.push(bundleId); return Promise.resolve('data:image/png;base64,aWNvbg==') },
   }
   // The widget refreshes the list on a timer; a test wants the one call it makes on startup.
   new Function('document', 'Fremkit', 'setInterval', script)(document, Fremkit, () => 0)
@@ -85,6 +90,7 @@ async function loadWidget(installed: unknown, settings: Record<string, unknown>)
     buttons: () => grid().children,
     artwork: () => grid().children[0]?.children[0],
     publishDock: (data) => dockSubscribers.forEach((cb) => cb(data)),
+    iconRequests: () => iconRequests,
   }
 }
 
@@ -98,7 +104,8 @@ describe('the shortcuts widget application icons', () => {
     await Promise.resolve()
     await Promise.resolve()
     expect(loaded.artwork()?.tag).toBe('img')
-    expect(loaded.artwork()?.src).toBe('/api/apps/icon/com.apple.Terminal')
+    expect(loaded.artwork()?.src).toBe('data:image/png;base64,aWNvbg==')
+    expect(loaded.iconRequests()).toContain('com.apple.Terminal')
   })
 
   it('matches the bundle a name is filed under, not only its own name', async () => {
@@ -107,7 +114,8 @@ describe('the shortcuts widget application icons', () => {
     })
     await Promise.resolve()
     await Promise.resolve()
-    expect(loaded.artwork()?.src).toBe('/api/apps/icon/com.microsoft.VSCode')
+    expect(loaded.artwork()?.src).toBe('data:image/png;base64,aWNvbg==')
+    expect(loaded.iconRequests()).toContain('com.microsoft.VSCode')
   })
 
   it('keeps the glyph while the host has not answered, and when it never does', async () => {
@@ -122,6 +130,8 @@ describe('the shortcuts widget application icons', () => {
     await Promise.resolve()
     await Promise.resolve()
     loaded.publishDock({ available: true, apps: [{ name: 'Terminal', bundleId: 'com.apple.Terminal', badge: null, running: true }] })
-    expect(loaded.artwork()?.src).toBe('/api/apps/icon/com.apple.Terminal')
+    await Promise.resolve()
+    expect(loaded.artwork()?.src).toBe('data:image/png;base64,aWNvbg==')
+    expect(loaded.iconRequests()).toContain('com.apple.Terminal')
   })
 })

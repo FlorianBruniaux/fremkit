@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { SDK_VERSION } from '../src/bridge/sdk.js'
+import { SDK_GENERATIONS, SDK_VERSION } from '../src/bridge/sdk.js'
 
 /**
  * The bridge is a plain browser script, injected into every widget. It is evaluated here against
@@ -9,6 +9,7 @@ import { SDK_VERSION } from '../src/bridge/sdk.js'
  * widget now relies on for escaping can be exercised without a DOM.
  */
 interface Bridge {
+  appIcon(bundleId: string): Promise<string>
   sdk: number
   esc(value: unknown): string
   el(tag: string, className?: string, text?: unknown): { tagName: string; className: string; textContent: string }
@@ -17,6 +18,7 @@ interface Bridge {
 
 /** What the loaded bridge did to its document, for the kiosk-behaviour tests. */
 interface LoadResult {
+  posted: Record<string, unknown>[]
   bridge: Bridge
   listeners: string[]
   styles: { attrs: Record<string, string>; textContent: string }[]
@@ -29,8 +31,9 @@ interface LoadResult {
 async function loadBridge(): Promise<LoadResult> {
   const src = await readFile(fileURLToPath(new URL('../src/bridge/fremkit.js', import.meta.url)), 'utf8')
   let onMessage: ((event: { source: unknown; data: unknown }) => void) | null = null
+  const posted: Record<string, unknown>[] = []
   const window: Record<string, unknown> = {
-    parent: { postMessage: () => {} },
+    parent: { postMessage: (message: Record<string, unknown>) => { posted.push(message) } },
     addEventListener: (type: string, cb: (event: { source: unknown; data: unknown }) => void) => {
       if (type === 'message') onMessage = cb
     },
@@ -71,6 +74,7 @@ async function loadBridge(): Promise<LoadResult> {
   }
   new Function('window', 'document', 'console', src)(window, document, console)
   return {
+    posted,
     bridge: window.Fremkit as Bridge,
     listeners,
     styles,
@@ -89,6 +93,25 @@ describe('Fremkit.sdk', () => {
     // literal. A bump on one side and not the other would have the server accept a manifest the
     // bridge cannot honour, which is exactly what the number exists to prevent.
     expect(F.sdk).toBe(SDK_VERSION)
+  })
+
+  it('lists every member of the bridge under a generation this build speaks', () => {
+    // A helper added to the bridge without a generation is one a registry widget could call on
+    // an older Fremkit, which would install it and leave it broken. Listing it forces the call:
+    // a new generation (and a bump of SDK_VERSION), or a member nothing may rely on.
+    const generations = Object.keys(SDK_GENERATIONS).map(Number)
+    expect(Math.max(...generations)).toBe(SDK_VERSION)
+    const listed = new Set(Object.values(SDK_GENERATIONS).flat())
+    expect(Object.keys(F).filter((name) => !listed.has(name))).toEqual([])
+  })
+
+  it('exposes what each generation after the first added', () => {
+    // The first generation includes `tokens`, set only once a theme arrives; the later ones are
+    // methods, there from the start, and a widget asking for their generation calls them blind.
+    for (const [generation, names] of Object.entries(SDK_GENERATIONS)) {
+      if (Number(generation) === 1) continue
+      for (const name of names) expect(typeof (F as unknown as Record<string, unknown>)[name], name).toBe('function')
+    }
   })
 })
 
@@ -228,5 +251,16 @@ describe('a widget under a theme', () => {
     expect(loaded.properties.get('--accent')).toBe('#a2622a')
     // The theme that follows leaves the token out: back to the widget's own fallback.
     expect(loaded.properties.has('--text')).toBe(false)
+  })
+})
+
+describe('Fremkit.appIcon', () => {
+  it('requests a bundle id from the host and returns its image data', async () => {
+    const loaded = await loadBridge()
+    const promise = loaded.bridge.appIcon('com.apple.mail')
+    const message = loaded.posted.at(-1)!
+    expect(message).toMatchObject({ type: 'fremkit:app-icon', bundleId: 'com.apple.mail' })
+    loaded.send({ type: 'fremkit:result', id: message.id, result: 'data:image/png;base64,aWNvbg==' })
+    await expect(promise).resolves.toBe('data:image/png;base64,aWNvbg==')
   })
 })

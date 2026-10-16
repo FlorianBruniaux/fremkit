@@ -24,12 +24,12 @@ The name is the Fremen survival kit from *Dune*.
   auto-rotation.
 - **A live editor** at `/admin`: the real page rendered with real widgets, drag and resize with
   snapping, overlap refused, keyboard nudges, undo/redo and autosave.
-- **Twenty-eight widgets** — clock, weather, a pomodoro timer, CPU, memory, disks, network
+- **Thirty widgets** — clock, weather, a pomodoro timer, CPU, memory, disks, a disk map, network
   throughput, batteries, processes, volume, Spotify, Dock badges, a clipboard history, shortcut
   buttons, service status checks, published calendars, Claude Code sessions and limits; and,
   *from the registry*, meeting controls, CleanShot X actions, Azure DevOps builds, GitHub
   notifications and Actions, a Bambu Lab printer, Homey devices and flows, a Synology NAS.
-  Eighteen ship with Fremkit; the rest are one press away in the admin.
+  Twenty ship with Fremkit; the rest are one press away in the admin.
 - **Compact widgets** in the navigation bar, with a full-size popover on touch.
 - **Per-tile appearance** — background colour, opacity, background image, accent colour and how
   much of the tile the accent paints.
@@ -46,6 +46,7 @@ The name is the Fremen survival kit from *Dune*.
   and the widgets all wear the one you pick.
 - **Two languages** — the whole interface is French or English, switched in the admin.
 - **A widget SDK** that is a folder, a JSON file and an HTML page.
+- **Optional local operations** show Docker containers and Ollama/MLX models through registry widgets. See [docs/local-operations.md](docs/local-operations.md).
 
 ## Requirements
 
@@ -254,8 +255,9 @@ the widget library and the widgets themselves, live, without a reload.
 helper adds what a browser cannot — its own HID driver for the Edge's touch panel, a fence that
 keeps the mouse cursor on your other displays, a kiosk window with no chrome and no cursor, the
 Dock's notification badges, and supervision of the server. Its menu bar **F** shows what is
-running: *Open the admin*, *Admin in the browser*, *Reload the dashboard*, the *Touch* / *Mouse
-fence* / *Notifications* / *Manage the server* / *Launch at login* toggles, *Log…* and *Quit*,
+running: *Open the admin*, *Admin in the browser*, *Hide the dashboard* / *Show the dashboard*,
+*Reload the dashboard*, the *Touch* / *Mouse fence* / *Notifications* / *Manage the server* /
+*Launch at login* toggles, *Log…* and *Quit*,
 above state lines such as "Server: running" and "Touch: active".
 
 ## Widgets
@@ -269,8 +271,10 @@ above state lines such as "Server: running" and "Touch: active".
 | `clipboard` | Recent clipboard entries, tap to copy back | — | — |
 | `clock` | Time, date and other cities | — | ● |
 | `cpu` | CPU load and temperature | — | ● |
-| `disk` | Disk usage | — | — |
-| `memory` | Memory usage | — | ● |
+| `disk` | Disk usage and available space | — | — |
+| `disk-map` | What fills the disk, as rings you drill into; long press shows it in Finder | — | ● |
+| `memory` | Memory usage, available RAM and swap | — | ● |
+| `uptime` | Time since the Mac last booted | — | — |
 | `network` | Live network throughput, with a sparkline | — | ● |
 | `notifications` | Unread badges read from the Dock | — | — |
 | `pomodoro` | A work and break timer, driven by touch | — | ● |
@@ -324,6 +328,8 @@ What the installer checks, what a consent record is and how an update asks again
 How to obtain each credential, what is stored where, and what is never logged:
 **[docs/connections.md](docs/connections.md)**.
 
+The optional [Codex provider](docs/codex.md) reads selected local account and chat data after an explicit opt-in. Its dashboard widgets are distributed separately.
+
 ## Backup
 
 **/admin → Screen → Backup** downloads the whole dashboard — the configuration and the background
@@ -351,6 +357,13 @@ The list is short and it is all of it.
 | The clipboard, through `pbpaste` | the `clipboard` widget | whenever that widget is on the dashboard |
 | The Dock's badge counts and the icons of installed applications | the `notifications` and `shortcuts` widgets, through the helper | whenever one of those widgets is on the dashboard |
 | The volume, the battery, the disks, the processes, the network | those widgets, through `pmset`, `df`, `ps` and friends | whenever one of them is on the dashboard |
+| The names and sizes of the folders and files under your home folder or a volume — never their contents | the `disk-map` widget, through `fremkit-scan` or `du`; the last scan is kept in `data/disk-map/` | only when you scan, from that widget |
+
+A widget that shows an account — its plan, how you signed in — never gets the account's e-mail
+address unless you tick **/admin → Screen → Privacy → Show the account e-mail address**. It is off
+by default, and the server leaves the address out of what it sends, so no widget can show it or
+pass it on. Once on, every widget that reads that account's channel receives it, one installed
+from the marketplace included, and it is on the screen.
 
 Everything else Fremkit knows, you typed into it: the connections of the table above, whose
 secrets live in the macOS keychain (see [docs/connections.md](docs/connections.md)). Nothing is
@@ -419,6 +432,11 @@ The threat model, what a widget can and cannot do, what the helper's permissions
 limits, and how to report a problem: **[SECURITY.md](SECURITY.md)**.
 
 ## Credits and trademarks
+
+Fremkit is written by [usul](https://github.com/fdussert), with
+[FlorianBruniaux](https://github.com/FlorianBruniaux) and [mcouzinet](https://github.com/mcouzinet).
+The widgets and themes on the registry name their own authors on their cards. The admin's
+**Screen → About** lists the same people, from `ui/src/shared/credits.ts`.
 
 The icons are a subset of [Lucide](https://lucide.dev) (ISC licence, © Lucide Contributors),
 inlined in `ui/src/shared/icons.ts` so the interface takes no runtime icon dependency.

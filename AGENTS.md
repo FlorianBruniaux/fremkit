@@ -31,7 +31,9 @@ Fremkit turns a Corsair Xeneon Edge (a 2560 × 720 touch strip) into a widget da
 - `native/` — the Swift helper (kiosk window, HID touch driver, admin window, Dock badges). It
   supervises the server: it spawns `tsx src/index.ts`, restarts it when it dies, and takes over
   an external server it finds on 4242. Built with `scripts/build-helper.sh` (plain `swiftc`, no
-  Xcode project), tested with `scripts/test-helper.sh`.
+  Xcode project), tested with `scripts/test-helper.sh`. The bundle also carries `fremkit-scan`
+  (`native/Sources/FremkitScan`), the disk map's scanner, which the server runs by the path the
+  helper passes in `FREMKIT_SCANNER`; without it the server falls back to `du`.
 - `scripts/` — setup, dev, build/install/test of the helper, signing identity, and the
   downloadable app: `build-app.sh` (self-contained, signed `Fremkit.app` with Sparkle and the
   server as a Node single executable), `notarize.sh`, `release.sh` (builds a release and stops
@@ -98,6 +100,10 @@ agent's in-flight work. Say where the worktree is, and remove it once the work h
   `unauthorized`, `unconfigured`, …) instead of an empty one, retry sooner after a failure, and
   validate every command payload with zod. Commands that run a program use `execFile` with an
   argument list, never a shell, and only accept what a closed list or a strict schema allows.
+  An account provider never publishes the account's e-mail unless `privacy.showAccountEmail` is
+  on: build the snapshot with `withAccountEmail()` from `server/src/privacy.ts`, pass every
+  snapshot it returns — the error path's `{ ...last, error }` included — through
+  `gateAccountEmail()`, applied to the object that carries `email` when it is nested, and set `publishesAccountEmail: true` (see `docs/connections.md`).
 - **Config schema** changes go through `server/src/config/schema.ts` with a migration in the
   same commit and a test; the store never rewrites a file it could not migrate.
 - **Commits**: small, one concern each — a native fix noticed *while I was in there* is its own
@@ -112,8 +118,15 @@ agent's in-flight work. Say where the worktree is, and remove it once the work h
 - **Changelog**: anything that changes what the dashboard, the admin or a widget can do gets a
   line under `## Unreleased` in `CHANGELOG.md`, in the same commit, written for the person
   using Fremkit (not the commit subject). A release is its own commit: rename the section,
-  bump the four `version` fields (`package.json`, `server/`, `ui/`, `server/src/version.ts` —
-  the registry compares a widget's `sdk` against that one) and tag `vX.Y.Z`.
+  bump the four `version` fields (`package.json`, `server/`, `ui/`, `server/src/version.ts`)
+  and tag `vX.Y.Z`. A widget's `sdk` is compared against `SDK_VERSION` in
+  `server/src/bridge/sdk.ts`, not against the release: it goes up when the bridge gains a member
+  a widget may rely on, in the commit that adds it (`bridge.test.ts` refuses a member no
+  generation lists).
+- **Credits**: somebody's first merged pull request adds their handle to
+  `ui/src/shared/credits.ts`, which the admin's **Screen → About** reads, and to the README's
+  Credits section; `credits.test.ts` fails when the two disagree. A registry widget or theme
+  credits its own authors in its `author` field, which the registry refuses to leave empty.
 - **Tests before done**: `pnpm typecheck` and `pnpm test` green, the UI rebuilt if touched, a
   rescan if a manifest changed, and — for anything visible — a look at `/admin` or `/` in a
   browser. The widget catalogue test in `server/test/` reads the real `widgets/` folder, so a

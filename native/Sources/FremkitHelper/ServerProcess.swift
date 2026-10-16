@@ -377,7 +377,8 @@ final class ServerProcess {
             inheriting: ProcessInfo.processInfo.environment,
             port: config.port,
             dataDirectory: HelperPaths.supportDirectory().path,
-            home: NSHomeDirectory())
+            home: NSHomeDirectory(),
+            scanner: Self.diskScanner())
 
         // The handle has to exist before run(), so a failed launch closes it again rather than
         // leaking a descriptor on every retry of the backoff loop.
@@ -598,6 +599,14 @@ final class ServerProcess {
     }
 
     /// The executable `pid` runs, as the kernel knows it (symlinks resolved), or nil.
+    /// The disk map's scanner, built into `Contents/MacOS` beside this executable, if it is there.
+    private static func diskScanner() -> String? {
+        guard let scanner = Bundle.main.executableURL?.deletingLastPathComponent()
+            .appendingPathComponent("fremkit-scan"),
+            FileManager.default.isExecutableFile(atPath: scanner.path) else { return nil }
+        return scanner.path
+    }
+
     private static func executablePath(of pid: pid_t) -> String? {
         var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN) * 4)
         guard proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0 else { return nil }

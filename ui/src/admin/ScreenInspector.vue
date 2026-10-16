@@ -17,6 +17,7 @@ import NavWidgetsEditor from './NavWidgetsEditor.vue'
 import { surfaceOpacity } from '../shared/background'
 import { pick, useI18n, type Locale } from '../shared/i18n'
 import { useConfirm } from '../shared/useConfirm'
+import { CONTRIBUTORS, MAINTAINER, REGISTRY_REPOSITORY, REPOSITORY, VERSION } from '../shared/credits'
 import { BUILTIN_THEME, useThemes } from '../shared/theme'
 import { ADMIN_GESTURES, DEFAULT_ADMIN_GESTURE, NAV_HEIGHTS, navHeightOf,
   type AdminGesture, type Background, type NavHeight } from '../shared/types'
@@ -53,6 +54,10 @@ function setTheme(id: string): void {
   if (id !== currentTheme.value) s.apply((c) => { c.display.theme = id })
 }
 
+/** "A, B and C" in the language in force, so a third contributor needs no new string. */
+const contributors = computed(() =>
+  new Intl.ListFormat(locale.value, { type: 'conjunction' }).format(CONTRIBUTORS.map((p) => p.handle)))
+
 const privacy = computed(() => s.state.config!.privacy)
 /**
  * Turning the Claude usage on is the whole consent step: until it is ticked the server does not
@@ -61,6 +66,27 @@ const privacy = computed(() => s.state.config!.privacy)
  */
 function setClaudeAccountUsage(on: boolean): void {
   s.apply((c) => { c.privacy.claudeAccountUsage = on })
+}
+const CODEX_SOURCES = ['appServer', 'vscode', 'cli', 'exec', 'subAgent', 'unknown'] as const
+const CODEX_SUBAGENT_SOURCES = ['subAgentReview', 'subAgentCompact', 'subAgentThreadSpawn', 'subAgentOther'] as const
+type CodexSource = typeof CODEX_SOURCES[number] | typeof CODEX_SUBAGENT_SOURCES[number]
+function setCodexAccount(on: boolean): void {
+  s.apply((c) => { c.privacy.codexAccount = on })
+}
+function setCodexSource(source: CodexSource, on: boolean): void {
+  s.apply((c) => { c.privacy.codexHistorySources = on
+    ? [...new Set([...c.privacy.codexHistorySources, source])]
+    : c.privacy.codexHistorySources.filter(value => value !== source) })
+}
+function setMacmonTemperature(on: boolean): void {
+  s.apply((c) => { c.privacy.macmonTemperature = on })
+}
+/**
+ * Off, the server leaves the account e-mail out of every snapshot it publishes; this box does
+ * not hide it in a widget, it decides whether any widget is sent it at all.
+ */
+function setShowAccountEmail(on: boolean): void {
+  s.apply((c) => { c.privacy.showAccountEmail = on })
 }
 /**
  * Backup and restore.
@@ -263,17 +289,69 @@ function setBackground(patch: Partial<Background>): void {
     :label="t('admin.inspector.screen.claudeUsage')"
     @update:model-value="setClaudeAccountUsage($event)" />
   <p class="ro">{{ t('admin.inspector.screen.claudeUsage.hint') }}</p>
+  <BaseCheckbox :model-value="privacy.showAccountEmail"
+    :label="t('admin.inspector.screen.accountEmail')"
+    @update:model-value="setShowAccountEmail($event)" />
+  <p class="ro">{{ t('admin.inspector.screen.accountEmail.hint') }}</p>
+  <BaseCheckbox :model-value="privacy.codexAccount"
+    :label="t('admin.inspector.screen.codexAccount')"
+    @update:model-value="setCodexAccount($event)" />
+  <p class="ro">{{ t('admin.inspector.screen.codexAccount.hint') }}</p>
+  <p class="ro">{{ t('admin.inspector.screen.codexSources') }}</p>
+  <p class="ro">{{ t('admin.inspector.screen.codexSources.hint') }}</p>
+  <div class="codex-sources">
+    <BaseCheckbox v-for="source in CODEX_SOURCES" :key="source"
+      :model-value="privacy.codexHistorySources.includes(source)"
+      :label="t('admin.inspector.screen.codexSource.' + source)"
+      @update:model-value="setCodexSource(source, $event)" />
+  </div>
+  <details class="codex-subagent-sources">
+    <summary>{{ t('admin.inspector.screen.codexSources.subagents') }}</summary>
+    <div class="codex-sources">
+      <BaseCheckbox v-for="source in CODEX_SUBAGENT_SOURCES" :key="source"
+        :model-value="privacy.codexHistorySources.includes(source)"
+        :label="t('admin.inspector.screen.codexSource.' + source)"
+        @update:model-value="setCodexSource(source, $event)" />
+    </div>
+  </details>
+  <BaseCheckbox :model-value="privacy.macmonTemperature"
+    :label="t('admin.inspector.screen.macmonTemperature')"
+    @update:model-value="setMacmonTemperature($event)" />
+  <p class="ro">{{ t('admin.inspector.screen.macmonTemperature.hint') }}</p>
+  </BaseSection>
+
+  <BaseSection id="screen.about" :title="t('admin.inspector.screen.about')">
+  <p class="ro">{{ t('admin.inspector.screen.about.version', { version: VERSION }) }}</p>
+  <p class="ro">{{ t('admin.inspector.screen.about.authors', { maintainer: MAINTAINER.handle, contributors }) }}</p>
+  <!-- A new tab in a browser; the helper's admin window hands these to the default browser
+       rather than replacing the admin with them. -->
+  <dl class="links">
+    <dt>{{ t('admin.inspector.screen.about.source') }}</dt>
+    <dd><a class="mono" :href="REPOSITORY" target="_blank" rel="noopener noreferrer">{{ REPOSITORY.replace('https://', '') }}</a></dd>
+    <dt>{{ t('admin.inspector.screen.about.sietch') }}</dt>
+    <dd><a class="mono" :href="REGISTRY_REPOSITORY" target="_blank" rel="noopener noreferrer">{{ REGISTRY_REPOSITORY.replace('https://', '') }}</a></dd>
+  </dl>
+  <p class="ro">{{ t('admin.inspector.screen.about.registry') }}</p>
+  <p class="ro">{{ t('admin.inspector.screen.about.icons') }}</p>
   </BaseSection>
 </template>
 
 <style scoped>
 .ro { margin: 0 0 var(--space-2); font-size: var(--fs-sm); color: var(--text-muted); }
 .ro.warn { color: var(--danger); }
+.codex-sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--space-1); margin-bottom: var(--space-3); }
+.codex-subagent-sources { margin-bottom: var(--space-3); }
+.codex-subagent-sources summary { cursor: pointer; margin-bottom: var(--space-2); }
 .row { display: flex; gap: var(--space-2); margin-bottom: var(--space-2); }
 .hidden { display: none; }
 .bad { margin: 0 0 var(--space-2); font-size: var(--fs-sm); color: var(--danger); white-space: pre-wrap; }
 .ok { margin: 0 0 var(--space-2); font-size: var(--fs-sm); color: var(--ok); }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+.links { display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-3); margin: 0 0 var(--space-2);
+  font-size: var(--fs-sm); color: var(--text-muted); }
+.links dd { margin: 0; min-width: 0; }
+.links a { color: var(--accent); text-decoration: none; }
+.links a:hover { text-decoration: underline; }
 h3 { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted);
   margin: var(--space-4) 0 var(--space-2); }
 .theme { display: flex; gap: var(--space-2); align-items: center; }

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -233,6 +233,21 @@ describe('GET /api/apps/installed', () => {
 })
 
 describe('GET /api/apps/icon/:bundleId with an extraction fallback', () => {
+  it('refuses cross-site image probes before looking up an installed app', async () => {
+    const app = Fastify()
+    const get = vi.fn(async () => PNG)
+    await app.register(dockRoutes, {
+      state: new DockState({ iconsDir: join(tmpdir(), 'fremkit-icon-probe-test') }),
+      appIcons: { get },
+    })
+    const res = await app.inject({
+      url: '/api/apps/icon/com.example.a',
+      headers: { 'sec-fetch-site': 'cross-site' },
+    })
+    expect(res.statusCode).toBe(403)
+    expect(get).not.toHaveBeenCalled()
+    await app.close()
+  })
   it('serves the extracted icon when the helper never uploaded one', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'fremkit-iconroute-'))
     const app = Fastify()

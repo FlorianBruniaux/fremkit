@@ -72,5 +72,17 @@ final class ServerLaunchTests: XCTestCase {
         XCTAssertEqual(env["PATH"], "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin")
         XCTAssertNil(env["NODE_OPTIONS"])
         XCTAssertEqual(env["HOME"], "/Users/u")
+        XCTAssertNil(env["FREMKIT_SCANNER"])
+    }
+
+    func testBothLaunchesNameTheDiskScannerWhenThereIsOne() {
+        let scanner = "/Applications/Fremkit.app/Contents/MacOS/fremkit-scan"
+        for launch in [ServerLaunch.checkout(repoPath: "/r"), .bundled(resourcesPath: resources)] {
+            let env = launch.environment(inheriting: [:], port: 4242, dataDirectory: "/support",
+                                         home: "/Users/u", scanner: scanner)
+            XCTAssertEqual(env["FREMKIT_SCANNER"], scanner)
+            XCTAssertNil(launch.environment(inheriting: [:], port: 4242, dataDirectory: "/support",
+                                            home: "/Users/u", scanner: "")["FREMKIT_SCANNER"])
+        }
     }
 }

@@ -16,8 +16,10 @@ To write your own, see [writing-widgets.md](writing-widgets.md).
 | [clipboard](#clipboard) | Recent clipboard entries, tap to copy back | — | — | 16 × 8 |
 | [clock](#clock) | Time, date and other cities | — | 5 cells | 16 × 4 |
 | [cpu](#cpu) | CPU load and temperature | — | 4 cells | 8 × 4 |
-| [disk](#disk) | Disk usage | — | — | 16 × 4 |
-| [memory](#memory) | Memory usage | — | 4 cells | 8 × 4 |
+| [disk](#disk) | Disk usage and available space | — | — | 16 × 4 |
+| [disk-map](#disk-map) | What fills the disk, as rings you drill into | — | 2 cells | 24 × 9 |
+| [memory](#memory) | Memory usage, available RAM and swap | — | 4 cells | 8 × 4 |
+| [uptime](#uptime) | Time since the Mac last booted | — | — | 8 × 4 |
 | [network](#network) | Live network throughput | — | 6 cells | 12 × 4 |
 | [notifications](#notifications) | Unread badges read from the Dock | — | — | 16 × 4 |
 | [pomodoro](#pomodoro) | A work and break timer | — | 5 cells | 8 × 6 |
@@ -162,7 +164,7 @@ Each `cities` item: `label` (string), `timezone` (timezone), `hour12` (boolean, 
 
 ## cpu
 
-*CPU* — load and, when the machine reports one, temperature.
+*CPU* — load and, when the machine reports one, temperature. On Apple Silicon, install the third-party open-source tool with `brew install macmon`, then enable **Read the CPU temperature with macmon** in Screen privacy settings. Fremkit does not install macmon. After opt-in, it runs only `/opt/homebrew/bin/macmon` or `/usr/local/bin/macmon` locally every 10 seconds, returns the last reading without delaying CPU load, and falls back to the system value if no recent macmon sample is available.
 
 Minimum size 8 × 4, default 8 × 4. Compact width 4 cells.
 
@@ -172,15 +174,49 @@ Minimum size 8 × 4, default 8 × 4. Compact width 4 cells.
 
 ## disk
 
-*Disks* — usage of the startup disk and of every volume mounted under `/Volumes`.
+*Disks* shows used and available capacity of the Mac disk and volumes under `/Volumes`. On APFS it prefers the data volume to avoid presenting the sealed system volume as the usable disk. The Mac disk uses container size minus reported available space so its numbers add up. System disk readings omit purgeable capacity, so free space may be lower than Finder shows.
 
 Minimum size 8 × 4, default 16 × 4. No settings.
 
+## disk-map
+
+*Disk map* — what takes the space, DaisyDisk-style: the folders of the home folder or of a volume
+as rings around the folder in the centre, and beside them the same folders as a list with their
+sizes. Tap a segment or a row to go into that folder, tap the centre or a crumb of the path to go
+back up, hold a row or a segment to show it in Finder. ↻ scans again, ✕ stops a scan. Nothing is
+ever deleted or moved: the widget only looks.
+
+Sizes are the space a file actually takes on the disk, as `du` counts it; a hard-linked file counts
+once, a symlink is never followed, another volume mounted inside is not entered, and an iCloud
+file that is only in the cloud counts what it takes locally — it is never downloaded. A folder that
+could not be read is drawn hatched with a lock and counted apart, never as small: see
+[troubleshooting](troubleshooting.md#the-disk-map-says-folders-could-not-be-read).
+
+A scan runs only when asked — the ↻, or the first time a root is shown — never on a timer, one at
+a time. Under the helper it uses `fremkit-scan`, which ships inside the helper's bundle and reads
+at low priority; without the helper (`pnpm dev`) it falls back to `du`, slower and without single
+files. The last scan is kept under `data/disk-map/` and shown with its date after a restart.
+
+Minimum size 8 × 6, default 24 × 9. A tile at least 1.6 times wider than tall gets the list
+beside the ring; a narrower one, and the compact rendering (2 cells), show the ring alone.
+
+| Setting | Type | Default | Scope | What it is |
+|---|---|---|---|---|
+| `root` | enum | `home` | both | `home` (the home folder) or `volume` |
+| `volume` | string | `""` | both | With `volume`: its name under `/Volumes`. Network volumes are not offered |
+| `rings` | enum | `3` | tile | Rings around the centre, 2 to 4 |
+
 ## memory
 
-*Memory* — memory usage.
+*Memory* shows used and available RAM plus swap usage when the system reports it.
 
 Minimum size 8 × 4, default 8 × 4. Compact width 4 cells. No settings.
+
+## uptime
+
+*Uptime* shows the time since the Mac last booted in days, hours and minutes. If the system cannot provide a reading, the widget shows it as unavailable.
+
+Minimum size 8 × 4, default 8 × 4. No settings.
 
 ## network
 

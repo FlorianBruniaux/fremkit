@@ -161,8 +161,9 @@ whoever owns a DNS record. Neither trusts the other.
 - The package must be a plain folder: no dotfile, no symlink, no nested archive, no absolute or
   climbing path, at most 200 files, 5 MB packed, 20 MB unpacked.
 - The manifest must validate, its `id` must be the one you asked for, and its `sdk` must be one
-  this Fremkit speaks. A widget asking for a newer SDK says "needs a newer Fremkit" rather than
-  installing and half-working.
+  this Fremkit speaks — any generation up to its own, since a generation only adds to the bridge
+  (see [SDK generations](writing-widgets.md#sdk-generations)). A widget asking for a newer SDK
+  says "needs a newer Fremkit" rather than installing and half-working.
 - `permissions.network` may not name a private, loopback or link-local host — the same rule a
   built-in lives under, so a widget cannot use the proxy to read your own machine.
 

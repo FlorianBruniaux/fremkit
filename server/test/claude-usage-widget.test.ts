@@ -15,6 +15,7 @@ interface StubNode { innerHTML: string; textContent: string; hidden: boolean }
 interface Loaded {
   /** The elements the widget asked for by id, so a test can read what it put in them. */
   nodes: Map<string, StubNode>
+  markup: string
   /** Hands the widget one answer from a channel, as the host delivers it. */
   publish(channel: string, data: Record<string, unknown>): void
 }
@@ -60,7 +61,7 @@ async function loadWidget(): Promise<Loaded> {
   // The widget redraws itself every second for the countdowns; a test wants the renders it asks for.
   new Function('document', 'Fremkit', 'setInterval', script)(document, Fremkit, () => 0)
   return {
-    nodes,
+    nodes, markup: html,
     publish: (channel, data) => (subscribers.get(channel) ?? []).forEach((cb) => cb(data)),
   }
 }
@@ -74,8 +75,8 @@ describe('the claude-usage widget', () => {
   it('puts the day in its footer', async () => {
     const loaded = await loadWidget()
     loaded.publish('claude-usage', { fiveHour: { pct: 10, resetsAt: 0 }, sevenDay: { pct: 20, resetsAt: 0 }, today, updatedAt: Date.now() })
-    expect(loaded.nodes.get('foot')?.innerHTML).toContain('aujourd’hui')
-    expect(loaded.nodes.get('foot')?.innerHTML).toContain('4 k tokens')
+    expect(loaded.nodes.get('foot-text')?.innerHTML).toContain('aujourd’hui')
+    expect(loaded.nodes.get('foot-text')?.innerHTML).toContain('4 k tokens')
   })
 
   it('escapes what the account names, since a limit name is not ours', async () => {
@@ -85,7 +86,7 @@ describe('the claude-usage widget', () => {
       limits: [{ name: 'Opus', percent: 40, resetsAt: 0 }],
       breakdown: [{ name: '<img src=x>', percent: 30 }],
     })
-    expect(loaded.nodes.get('foot')?.innerHTML).toContain('&lt;img src=x&gt;')
+    expect(loaded.nodes.get('foot-text')?.innerHTML).toContain('&lt;img src=x&gt;')
   })
 
   it('draws the histogram that follows the footer', async () => {
@@ -93,5 +94,23 @@ describe('the claude-usage widget', () => {
     loaded.publish('claude-usage', { fiveHour: null, sevenDay: null, today: { ...today, hourly: new Array(24).fill(1) }, updatedAt: Date.now() })
     expect(loaded.nodes.get('histrow')?.hidden).toBe(false)
     expect(loaded.nodes.get('hist')?.innerHTML).toContain('height:100%')
+  })
+})
+
+describe('Claude plan in its usage widget', () => {
+  it('shows a known plan independently of account usage being disabled', async () => {
+    const widget = await loadWidget()
+    widget.publish('claude-account', { error: 'disabled' })
+    widget.publish('claude-identity', { loggedIn: true, subscriptionType: 'max', authMethod: 'claude.ai', stale: false })
+    expect(widget.nodes.get('plan')?.textContent).toBe('Claude Max')
+    expect(widget.nodes.get('plan')?.hidden).toBe(false)
+    expect(widget.markup).toMatch(/<div class=\"foot\"[^>]*><span class=\"plan\"[^>]*id=\"plan\"/)
+  })
+  it('hides the badge when the plan is stale or the user signs out', async () => {
+    const widget = await loadWidget()
+    widget.publish('claude-identity', { loggedIn: true, subscriptionType: 'pro', authMethod: 'claude.ai', stale: true })
+    expect(widget.nodes.get('plan')?.hidden).toBe(true)
+    widget.publish('claude-identity', { loggedIn: false, subscriptionType: null, stale: false })
+    expect(widget.nodes.get('plan')?.textContent).toBe('')
   })
 })

@@ -110,6 +110,9 @@ export function placesClaudeUsage(config: Config): boolean {
  * working, and an upgrade that silently blanked them would be a regression rather than a choice —
  * so that case starts enabled, and the admin's toggle is where it is turned back off. A config
  * that already carries the field is left exactly as written.
+ *
+ * `showAccountEmail` needs no such inference: no release ever published an account's e-mail, so
+ * an older config is read as off by the schema's default, which is what it always meant.
  */
 function adoptPrivacy(config: Config, raw: unknown): Config {
   const stated = (raw as { privacy?: unknown } | null)?.privacy
@@ -149,7 +152,7 @@ export function migrateConfig(raw: unknown): Config {
     connections: [],
     secrets: { backend: defaultSecretsBackend() },
     locale: defaultLocale(),
-    privacy: { claudeAccountUsage: false },
+    privacy: { claudeAccountUsage: false, showAccountEmail: false, codexAccount: false, codexHistorySources: [], macmonTemperature: false },
     // A v1 config predates the marketplace by a long way; nothing can have been installed.
     marketplace: { installed: {} },
     pages: v1.pages.map((p) => ({

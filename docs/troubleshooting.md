@@ -23,6 +23,7 @@ and "Notifications: active" above the toggles, and *Log…* opens the supervised
 | The helper is ticked in Privacy & Security and still has no permission | One stale grant per past ad-hoc identity, which macOS keeps in its cache and matches before the new one | `tccutil reset ListenEvent dev.fremkit.helper && tccutil reset Accessibility dev.fremkit.helper`, relaunch the helper, and accept the two prompts. Removing and re-adding the app in the list does not clear those entries |
 | Printer unreachable (`EHOSTUNREACH`) while `ping` and `curl` work | Local Network not granted to the app that runs the server | Allow it under Privacy & Security → Local Network |
 | "Server: external" | Something already answers port 4242, so the helper steps aside | Expected under `pnpm dev`; otherwise stop the stray server, or turn *Manage the server* off |
+| The disk map says folders could not be read | macOS privacy protection (TCC) refuses the scan some folders | Give Fremkit Helper **Full Disk Access**, then scan again — [details](#the-disk-map-says-folders-could-not-be-read) |
 
 ## Gatekeeper
 
@@ -206,6 +207,34 @@ macOS asks again.
   placeholder.
 
 See [connections.md](connections.md#the-chamber-camera).
+
+## The disk map says folders could not be read
+
+macOS protects some folders from every application that has not been given access, and the
+scanner that measures them runs on behalf of the app that started the server: **Fremkit Helper**
+under the helper, your terminal under `pnpm dev`. What it meets there:
+
+- **Refused without a question** — the data of Mail, Messages, Safari, Photos, HomeKit, cookies,
+  Spotlight and several system services under `~/Library`, and the containers of other
+  applications (`~/Library/Containers`, `~/Library/Group Containers`). On a Mac used every day
+  that is commonly several hundred folders, most of them other apps' containers.
+- **Asked once, per folder** — Desktop, Documents and Downloads, iCloud Drive, and a removable or
+  network volume: macOS shows a "would like to access files in…" dialog the first time the scan
+  reaches it, and remembers the answer. A folder you said no to stays unreadable until you change
+  it under Privacy & Security → Files and Folders.
+
+The widget never counts such a folder as small or empty: it is drawn hatched with a lock, listed
+as *unreadable*, and the tile says how many could not be read. Its size is simply unknown.
+
+To scan everything, give the app **Full Disk Access**: the widget's **Full Disk Access** button
+opens System Settings at Privacy & Security → Full Disk Access; turn on *Fremkit Helper* (add it
+with + from `~/Applications` if it is not listed), then press ↻. Full Disk Access also removes the
+per-folder dialogs. It is a broad grant — the helper and the server it runs can then read every
+file of the account — so it is your call, and the disk map works without it, minus those folders.
+
+Two things that are not permissions: a folder kept only in iCloud (or another File Provider) is
+not downloaded to be measured, it counts what it takes on this Mac; and a volume mounted inside
+the scanned folder is not entered, exactly like `du -x`.
 
 ## The calendar widget is empty or stale
 

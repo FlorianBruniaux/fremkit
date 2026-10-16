@@ -168,3 +168,72 @@ describe('the focus command', () => {
     await expect(provider(new ClaudeTracker()).commands!.focus({}, { loopback: true })).rejects.toThrow()
   })
 })
+
+
+describe('cmux session navigation', () => {
+  const workspace = '85F7E39D-4EC1-43B6-ADA7-CDCDF7A354EB'
+  const surface = '22C82604-948E-469D-B2B4-849070102A18'
+  it('uses the live process panel even when the hook already named cmux', async () => {
+    const calls: string[][] = []
+    const reader = async (_cmd: string, args: string[]) => args[0] === 'eww'
+      ? `claude TERM_PROGRAM=ghostty __CFBundleIdentifier=com.cmuxterm.app CMUX_WORKSPACE_ID=${workspace} CMUX_SURFACE_ID=${surface}` : 'ttys003'
+    const result = await focusClient({ bundleId: 'com.cmuxterm.app', program: 'ghostty', pid: 123 }, '/x',
+      async (cmd, args) => { calls.push([cmd, ...args]) }, 123, reader)
+    expect(result).toEqual({ ok: true, how: 'pane' })
+    expect(calls).toEqual([
+      ['/Applications/cmux.app/Contents/Resources/bin/cmux', 'focus-panel', '--panel', surface, '--workspace', workspace],
+      ['/usr/bin/open', '-b', 'com.cmuxterm.app'],
+    ])
+  })
+  it.each([
+    ['vscode', 'com.microsoft.VSCode', ['/usr/bin/open', '-b', 'com.microsoft.VSCode', '/project']],
+    ['iTerm.app', 'com.googlecode.iterm2', ['/usr/bin/open', '-b', 'com.googlecode.iterm2']],
+    ['Apple_Terminal', 'com.apple.Terminal', ['/usr/bin/open', '-b', 'com.apple.Terminal']],
+  ])('honours %s over inherited cmux IDs', async (program, _bundle, expected) => {
+    const calls: string[][] = []
+    const reader = async (_cmd: string, args: string[]) => args[0] === 'eww'
+      ? `claude TERM_PROGRAM=${program} __CFBundleIdentifier=com.cmuxterm.app CMUX_WORKSPACE_ID=${workspace} CMUX_SURFACE_ID=${surface}` : 'ttys003'
+    const result = await focusClient({ bundleId: 'com.cmuxterm.app', pid: 123 }, '/project',
+      async (cmd, args) => { calls.push([cmd, ...args]) }, 123, reader)
+    expect(result.ok).toBe(true)
+    expect(calls.some(call => call[0].endsWith('/cmux'))).toBe(false)
+    expect(calls.at(-1)).toEqual(expected)
+  })
+  it('falls back to fronting cmux when selecting the panel fails', async () => {
+    const calls: string[][] = []
+    const reader = async (_cmd: string, args: string[]) => args[0] === 'eww'
+      ? `claude __CFBundleIdentifier=com.cmuxterm.app CMUX_WORKSPACE_ID=${workspace} CMUX_SURFACE_ID=${surface}` : 'ttys003'
+    const result = await focusClient({ bundleId: 'com.cmuxterm.app' }, '/x', async (cmd, args) => {
+      calls.push([cmd, ...args])
+      if (cmd.endsWith('/cmux')) throw new Error('panel closed')
+    }, 123, reader)
+    expect(result).toEqual({ ok: true, how: 'app' })
+    expect(calls.at(-1)).toEqual(['/usr/bin/open', '-b', 'com.cmuxterm.app'])
+  })
+  it('does not route an inherited cmux handle ahead of an Orca pane', async () => {
+    const calls: string[][] = []
+    const reader = async (_cmd: string, args: string[]) => args[0] === 'eww'
+      ? `claude __CFBundleIdentifier=com.cmuxterm.app ORCA_TERMINAL_HANDLE=term_123 CMUX_WORKSPACE_ID=${workspace} CMUX_SURFACE_ID=${surface}` : 'ttys003'
+    const result = await focusClient({ bundleId: 'com.stablyai.orca', orca: { terminal: 'term_123' } }, '/x',
+      async (cmd, args) => { calls.push([cmd, ...args]) }, 123, reader)
+    expect(result).toEqual({ ok: true, how: 'pane' })
+    expect(calls[0]?.[0]).toContain('/orca')
+    expect(calls.some(call => call[0].endsWith('/cmux'))).toBe(false)
+  })
+  it('uses the live client when an unrelated process inherited CMUX variables', async () => {
+    const calls: string[][] = []
+    const reader = async (_cmd: string, args: string[]) => args[0] === 'eww'
+      ? `code __CFBundleIdentifier=com.microsoft.VSCode CMUX_WORKSPACE_ID=${workspace} CMUX_SURFACE_ID=${surface}` : 'ttys003'
+    const result = await focusClient({ bundleId: 'com.cmuxterm.app' }, '/project',
+      async (cmd, args) => { calls.push([cmd, ...args]) }, 123, reader)
+    expect(result).toEqual({ ok: true, how: 'app' })
+    expect(calls).toEqual([['/usr/bin/open', '-b', 'com.microsoft.VSCode', '/project']])
+  })
+  it('never puts invalid process handles into a link', async () => {
+    const calls: string[][] = []
+    const reader = async () => 'CMUX_WORKSPACE_ID=--bad CMUX_SURFACE_ID=../../evil __CFBundleIdentifier=com.cmuxterm.app'
+    expect(await focusClient({ bundleId: 'com.cmuxterm.app' }, '/x', async (cmd, args) => { calls.push([cmd, ...args]) }, 123, reader))
+      .toEqual({ ok: true, how: 'app' })
+    expect(calls).toEqual([['/usr/bin/open', '-b', 'com.cmuxterm.app']])
+  })
+})

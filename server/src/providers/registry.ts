@@ -21,6 +21,8 @@ interface State {
   backoffMs: number
   lastJson: string | undefined
   inFlight: boolean
+  /** Poll again as soon as the one in flight returns: it may have read a setting since changed. */
+  pollAgain: boolean
 }
 
 export class ProviderRegistry {
@@ -38,12 +40,17 @@ export class ProviderRegistry {
   ) {}
 
   register(provider: Provider): void {
+    // A poll is the only way anything reaches a channel, so a provider without one publishes no
+    // address and could never take one back: the flag there is a mistake, not a no-op.
+    if (provider.publishesAccountEmail && !provider.poll) {
+      throw new Error(`provider ${provider.channel}: publishesAccountEmail needs a poll()`)
+    }
     const previous = this.states.get(provider.channel)
     // Read before the teardown, which zeroes it: the widgets watching this channel did not go
     // away because the connection behind it was edited, so the replacement inherits them.
     const subscribers = previous?.subscribers ?? 0
     if (previous) this.teardown(previous, 'gone')
-    const state: State = { provider, subscribers, started: false, timer: null, backoffMs: 0, lastJson: undefined, inFlight: false }
+    const state: State = { provider, subscribers, started: false, timer: null, backoffMs: 0, lastJson: undefined, inFlight: false, pollAgain: false }
     this.states.set(provider.channel, state)
     if (state.subscribers > 0) this.activate(state)
   }
@@ -57,6 +64,26 @@ export class ProviderRegistry {
   }
 
   channels(): string[] { return [...this.states.keys()] }
+
+  /**
+   * `privacy.showAccountEmail` changed: every provider that can publish the address answers again
+   * now, rather than at its next tick — five minutes for an account endpoint, during which an
+   * address the user has just hidden would stay on screen.
+   *
+   * The cached value goes first, watched or not, so the hub hands nothing stale to a widget that
+   * subscribes before the new answer arrives. A watched channel is then polled at once. A poll
+   * already in flight may have read the old setting, so its answer is thrown away when it returns
+   * — whether anyone is still watching or not — and the channel is polled again if someone is.
+   */
+  reconsiderAccountEmail(): void {
+    for (const s of this.states.values()) {
+      if (!s.provider.publishesAccountEmail) continue
+      s.lastJson = undefined
+      this.forget(s.provider.channel)
+      if (s.inFlight) s.pollAgain = true
+      else if (s.subscribers > 0) this.schedule(s, 0)
+    }
+  }
 
   has(channel: string): boolean { return this.states.has(channel) }
 
@@ -162,6 +189,15 @@ export class ProviderRegistry {
     }
     // Checked again after the await, not only before it: this is where the replacement happens.
     if (!this.isCurrent(s)) return
+    if (s.pollAgain) {
+      // Computed under a privacy setting the user has changed since: never published. Forgotten
+      // again in case the channel went idle meanwhile, so nothing is cached for the next widget.
+      s.pollAgain = false
+      s.lastJson = undefined
+      this.forget(s.provider.channel)
+      if (s.subscribers > 0) this.schedule(s, 0)
+      return
+    }
     const json = JSON.stringify(data)
     if (json !== s.lastJson) {
       s.lastJson = json

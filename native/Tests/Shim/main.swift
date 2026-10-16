@@ -99,12 +99,22 @@ let suites: [(String, () -> XCTestCase, [TestMethod])] = [
         ("testRefusesAnywhereElse", { ($0 as! KioskOriginTests).testRefusesAnywhereElse() }),
         ("testRefusesNothingAtAll", { ($0 as! KioskOriginTests).testRefusesNothingAtAll() }),
     ]),
+    ("ExternalLinkTests", { ExternalLinkTests() }, [
+        ("testOpensAnotherSiteInTheBrowser", { ($0 as! ExternalLinkTests).testOpensAnotherSiteInTheBrowser() }),
+        ("testKeepsTheAdminsOwnPagesInTheWindow", { ($0 as! ExternalLinkTests).testKeepsTheAdminsOwnPagesInTheWindow() }),
+        ("testRefusesEveryOtherScheme", { ($0 as! ExternalLinkTests).testRefusesEveryOtherScheme() }),
+    ]),
     ("HelperURLTests", { HelperURLTests() }, [
         ("testAdminHostOpensTheAdmin", { ($0 as! HelperURLTests).testAdminHostOpensTheAdmin() }),
         ("testTargetIsCaseInsensitiveAndIgnoresPathAndQuery", { ($0 as! HelperURLTests).testTargetIsCaseInsensitiveAndIgnoresPathAndQuery() }),
         ("testHostlessSpellingIsAccepted", { ($0 as! HelperURLTests).testHostlessSpellingIsAccepted() }),
         ("testAnotherSchemeIsIgnored", { ($0 as! HelperURLTests).testAnotherSchemeIsIgnored() }),
         ("testUnknownTargetIsIgnored", { ($0 as! HelperURLTests).testUnknownTargetIsIgnored() }),
+    ]),
+    ("DashboardVisibilityTests", { DashboardVisibilityTests() }, [
+        ("testUserHideSurvivesDisplayReconfiguration", { ($0 as! DashboardVisibilityTests).testUserHideSurvivesDisplayReconfiguration() }),
+        ("testShowingWithoutDisplayKeepsWindowAbsent", { ($0 as! DashboardVisibilityTests).testShowingWithoutDisplayKeepsWindowAbsent() }),
+        ("testApplicationHideDoesNotClearUserPreference", { ($0 as! DashboardVisibilityTests).testApplicationHideDoesNotClearUserPreference() }),
     ]),
     ("L10nTests", { L10nTests() }, [
         ("testPicksFrenchForAFrenchSystem", { ($0 as! L10nTests).testPicksFrenchForAFrenchSystem() }),
@@ -121,6 +131,7 @@ let suites: [(String, () -> XCTestCase, [TestMethod])] = [
         ("testBundledGuardNeedsTheBundleExecutableItself", { ($0 as! ServerLaunchTests).testBundledGuardNeedsTheBundleExecutableItself() }),
         ("testCheckoutEnvironmentKeepsTheDeveloperPath", { ($0 as! ServerLaunchTests).testCheckoutEnvironmentKeepsTheDeveloperPath() }),
         ("testBundledEnvironmentNamesTheBundleAndTheData", { ($0 as! ServerLaunchTests).testBundledEnvironmentNamesTheBundleAndTheData() }),
+        ("testBothLaunchesNameTheDiskScannerWhenThereIsOne", { ($0 as! ServerLaunchTests).testBothLaunchesNameTheDiskScannerWhenThereIsOne() }),
     ]),
     ("HelperPathsTests", { HelperPathsTests() }, [
         ("testDefaultsAreUnderLibrary", { ($0 as! HelperPathsTests).testDefaultsAreUnderLibrary() }),
@@ -132,7 +143,7 @@ let suites: [(String, () -> XCTestCase, [TestMethod])] = [
 var passed = 0
 var failed = 0
 
-for (suiteName, make, methods) in suites {
+for (suiteName, make, methods) in suites + scanSuites {
     for (methodName, run) in methods {
         let name = "\(suiteName).\(methodName)"
         _ = TestReport.shared.drain()

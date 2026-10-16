@@ -2,11 +2,13 @@
 <html lang="en"><head><meta charset="utf-8"><title>Disks</title>
 <style>
   html,body{margin:0;height:100%;background:transparent;color:var(--text, #e6e8eb);font-family:var(--font, -apple-system,system-ui,sans-serif);overflow:hidden}
-  .wrap{box-sizing:border-box;height:100%;padding:14px 18px;position:relative;display:flex;flex-direction:column;justify-content:center;gap:6px}
+  .wrap{box-sizing:border-box;height:100%;padding:14px 18px;position:relative;display:flex;flex-direction:column;justify-content:safe center;overflow-y:auto;gap:5px}
   .big{font-size:calc(44px * var(--text-scale, 1));font-weight:600;line-height:1}
-  .bar{height:8px;border-radius:4px;background:var(--surface-3, #252a32);overflow:hidden}
+  .bar{height:8px;flex-shrink:0;border-radius:4px;background:var(--surface-3, #252a32);overflow:hidden}
   .bar>i{display:block;height:100%;background:var(--accent, #d9b36a);width:0;transition:width .4s}
-  .row{display:flex;justify-content:space-between;font-size:calc(15px * var(--text-scale, 1))}
+  .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:calc(13px * var(--text-scale, 1))}
+  .row span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .muted{font-size:calc(12px * var(--text-scale, 1));white-space:nowrap}
   .muted{color:var(--text-muted, #8b93a0)}
   button{font:inherit;border:0;border-radius:10px;background:var(--surface-3, #252a32);color:var(--text, #e6e8eb);padding:10px 14px;font-size:calc(18px * var(--text-scale, 1))}
   button:active{background:var(--accent, #d9b36a)}
@@ -19,7 +21,12 @@
   html.accent-fill .bar>i{background:var(--on-surface,#0b0d10)}
 </style></head><body><div class="wrap" id="list"></div>
 <script>
-  var L = { gigabytes: { fr: '{n} Go', en: '{n} GB' } }
+  var L = {
+    gigabytes: { fr: '{n} Go', en: '{n} GB' },
+    free: { fr: '{n} libres', en: '{n} free' },
+    unknown: { fr: 'Libre ?', en: 'Free ?' },
+    system: { fr: 'Disque du Mac', en: 'Mac disk' }
+  }
   function gb(b) { return Fremkit.t(L.gigabytes, { n: Math.round(b / 1073741824) }) }
   Fremkit.whenReady(function () {
     var last = null
@@ -36,8 +43,9 @@
       // name is escaped, and the width is a number before it reaches the style attribute.
       el.innerHTML = d.disks.map(function (k) {
         var use = Math.max(0, Math.min(100, Number(k.use) || 0))
-        return '<div class="row"><span>' + Fremkit.esc(k.mount) + '</span><span class="muted">'
-          + Fremkit.esc(gb(k.used)) + ' / ' + Fremkit.esc(gb(k.size)) + '</span></div>'
+        var free = k.available == null ? Fremkit.t(L.unknown) : Fremkit.t(L.free, { n: gb(k.available) })
+        return '<div class="row"><span>' + Fremkit.esc(k.mount==='/'?Fremkit.t(L.system):k.mount) + '</span><span class="muted">'
+          + Fremkit.esc(gb(k.used)) + ' / ' + Fremkit.esc(gb(k.size)) + ' · ' + Fremkit.esc(free) + '</span></div>'
           + '<div class="bar"><i style="width:' + use + '%"></i></div>'
       }).join('')
     }

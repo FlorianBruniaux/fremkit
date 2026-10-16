@@ -37,6 +37,9 @@ import { ClaudeTracker } from './claude/tracker.js'
 import { ClaudeUsage } from './claude/usage.js'
 import { claudeRoutes } from './claude/routes.js'
 import { createClaudeSessionsProvider, createClaudeUsageProvider, createClaudeAccountProvider } from './claude/providers.js'
+import { createCodexProvider } from './providers/codex.js'
+import { createLocalChatValidator } from './codex/local-chats.js'
+import { createClaudeIdentityProvider } from './claude/identity.js'
 import { createAttention } from './claude/attention.js'
 import { DockState } from './dock/state.js'
 import { dockRoutes } from './dock/routes.js'
@@ -52,6 +55,8 @@ import { backupRoutes } from './backup/routes.js'
 import { bambuRoutes } from './bambu/routes.js'
 import { createShortcutsProvider } from './providers/shortcuts.js'
 import { createServiceStatusProvider } from './providers/service-status.js'
+import { createSystemProvider } from './providers/system.js'
+import { createDiskMapProvider } from './providers/disk-map.js'
 import { findInstance, findInstances } from './config/instances.js'
 import { migrateHomeySecret } from './config/migrate.js'
 import { BYTES_CSP, isByteRoute } from './http/headers.js'
@@ -151,13 +156,25 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   )
   hub = new Hub(registry)
   for (const p of opts.providers ?? []) registry.register(p)
+  // Consent lives in the config store, so this provider is registered beside the Claude providers.
+  registry.register(createSystemProvider({ macmonTemperatureEnabled: () => store.get().privacy.macmonTemperature }))
   registry.register(createClaudeSessionsProvider(tracker))
   registry.register(createClaudeUsageProvider(usage))
+  registry.register(createClaudeIdentityProvider())
   registry.register(createClaudeAccountProvider({
     filePath: join(opts.dataDir, 'claude-account.json'),
     enabled: () => store.get().privacy.claudeAccountUsage,
   }))
+  const codex = createCodexProvider({
+    enabled: () => store.get().privacy.codexAccount || store.get().privacy.codexHistorySources.length > 0,
+    accountEnabled: () => store.get().privacy.codexAccount,
+    historySources: () => store.get().privacy.codexHistorySources,
+  }, { isLocalChat: createLocalChatValidator() })
+  registry.register(codex)
+  registry.register(codex.sessions)
   registry.register(createDockProvider(dock))
+  // Registered here, not in providers/index.ts, because its last scan is saved under the data dir.
+  registry.register(createDiskMapProvider({ dataDir: opts.dataDir }))
   // These two act on the user's behalf — opening an application, knocking on a host — so they
   // resolve what to act on from the saved dashboard rather than from the widget's message.
   // Registered here, not in providers/index.ts, because that is where the config store lives.
@@ -205,8 +222,13 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   retainCameras(store.get())
 
   hub.broadcast('config', store.get())
+  let showAccountEmail = store.get().privacy.showAccountEmail
   store.onChange((cfg) => {
     setServerLocale(cfg.locale)
+    if (cfg.privacy.showAccountEmail !== showAccountEmail) {
+      showAccountEmail = cfg.privacy.showAccountEmail
+      registry.reconsiderAccountEmail()
+    }
     syncDeclared()
     hub.broadcast('config', cfg)
     // Fire and forget: a failed sync must not break the save that triggered it.
@@ -251,7 +273,13 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
 
   await app.register(configRoutes, { store, catalog })
   await app.register(connectionRoutes, { store, catalog, types: connectionTypes, manager: connections, secrets, connCache })
-  await app.register(widgetRoutes, { catalog, store, bridgePath: opts.bridgePath ?? shippedPaths().bridgePath })
+  await app.register(widgetRoutes, {
+    catalog,
+    store,
+    bridgePath: opts.bridgePath ?? shippedPaths().bridgePath,
+    port: opts.port,
+    dev: process.env.FREMKIT_DEV === '1',
+  })
   await app.register(themeRoutes, { catalog: themes })
   await app.register(proxyRoutes, { catalog, store, secrets, cache: connCache })
   const marketplaceRegistry = new Registry({

@@ -75,6 +75,15 @@ export interface Privacy {
    * usage — the gauges of the claude-usage widget.
    */
   claudeAccountUsage: boolean
+  /**
+   * Let account providers publish the account's e-mail address. Off, the server leaves it out
+   * of every snapshot, so no widget and no screen ever sees it.
+   */
+  showAccountEmail: boolean
+  codexAccount: boolean
+  codexHistorySources: ('cli' | 'vscode' | 'exec' | 'appServer' | 'subAgent' | 'subAgentReview' | 'subAgentCompact' | 'subAgentThreadSpawn' | 'subAgentOther' | 'unknown')[]
+  /** Use the optional local macmon executable for Apple Silicon CPU temperature. */
+  macmonTemperature: boolean
 }
 
 export interface Config {

@@ -48,10 +48,10 @@ Only the tool name and a short summary reach Fremkit. Tool inputs and outputs ar
 never stored.
 
 The hook also adds a `client` object saying where the session lives: the terminal application's
-bundle id, `TERM_PROGRAM`, the pid of the `claude` process, its tty, and — under Orca — the pane
-and tab it runs in. It is the only way anything can know: the server otherwise sees a session id
-and a working directory, and two sessions in two panes of the same folder are the same pair of
-strings. It is what makes the ↗ on a card work.
+bundle id, `TERM_PROGRAM`, the pid of the `claude` process, its tty, and the Orca pane
+handle when present. For cmux, the server reads workspace and surface ids from the live
+process. The server otherwise sees only a session id and a working directory, which cannot
+distinguish two panes of the same folder. These details make the ↗ on a card work.
 
 That object stays on the server. The dashboard is told which *kind* of application it is and what
 to call it (`Orca`, `Terminal`, `iTerm2`, `VS Code`), never the pane key or the tty.
@@ -68,9 +68,16 @@ corner. What happens depends on the application:
 | Client | What is raised |
 |---|---|
 | Orca | the exact pane, through `orca terminal switch --terminal <handle>` |
+| cmux | the exact panel through the bundled `cmux focus-panel` CLI when the socket permits external clients; otherwise the application |
 | Terminal.app, iTerm2 | the tab whose tty matches, through AppleScript — macOS asks once to allow it |
 | VS Code | the window already open on that folder |
 | anything else | the application, by its bundle id |
+
+The helper starts Fremkit outside cmux. With cmux socket control set to `cmuxOnly`, the
+`focus-panel` command is denied and touching a card brings cmux forward without selecting
+its panel. Exact panel selection requires a socket mode that allows the helper's process,
+such as `allowAll`; that mode expands local socket access. Keep `cmuxOnly` if you prefer the
+restricted mode and use the application fallback.
 
 A session whose hook never said where it lives — one Fremkit found by scanning processes, or one
 from before this existed — shows no arrow at all.
@@ -93,3 +100,13 @@ macOS keychain (the item "Claude Code-credentials") every 5 minutes and calls th
 endpoint for per-model weekly limits. The token is never stored or logged and is sent only to
 `api.anthropic.com`. macOS may ask once to allow keychain access. The endpoint is undocumented and
 may change without notice.
+
+Nothing the Claude providers publish carries the account's e-mail address. Should one ever do so,
+it is held to the rule every account provider is: the address is left out unless **/admin →
+Screen → Privacy → Show the account e-mail address** is ticked (see
+[connections.md](connections.md#the-accounts-e-mail-address)).
+
+The usage tile also shows a plan badge when the local Claude CLI reports a known subscription.
+Fremkit reads `claude auth status --json` from a fixed local binary path. It publishes only login
+state, authentication method and the known plan, never the account email or authentication data.
+The plan badge is independent of the optional account-usage read.
