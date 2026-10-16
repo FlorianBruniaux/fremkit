@@ -206,6 +206,8 @@ export const fr: Record<string, string> = {
   'admin.inspector.screen.about': 'À propos',
   'admin.inspector.screen.about.version': 'Fremkit {version}',
   'admin.inspector.screen.about.authors': 'Écrit par {maintainer}, avec {contributors}.',
+  'admin.inspector.screen.about.source': 'Code source',
+  'admin.inspector.screen.about.sietch': 'Sietch',
   'admin.inspector.screen.about.registry': 'Les widgets et thèmes de la Sietch nomment leurs auteurs sur leur carte.',
   'admin.inspector.screen.about.icons': 'Icônes : Lucide (licence ISC).',
   'admin.inspector.screen.navWidgets': 'Widgets de la barre',

@@ -53,6 +53,28 @@ final class KioskOriginTests: XCTestCase {
     }
 }
 
+final class ExternalLinkTests: XCTestCase {
+    private let admin = URL(string: "http://127.0.0.1:4242/admin")!
+
+    func testOpensAnotherSiteInTheBrowser() {
+        XCTAssertTrue(ExternalLink.opensInBrowser(URL(string: "https://github.com/example/repo"), from: admin))
+        XCTAssertTrue(ExternalLink.opensInBrowser(URL(string: "http://example.com/"), from: admin))
+    }
+
+    func testKeepsTheAdminsOwnPagesInTheWindow() {
+        XCTAssertFalse(ExternalLink.opensInBrowser(URL(string: "http://127.0.0.1:4242/"), from: admin))
+        XCTAssertFalse(ExternalLink.opensInBrowser(URL(string: "http://127.0.0.1:4242/api/backup"), from: admin))
+    }
+
+    func testRefusesEveryOtherScheme() {
+        for candidate in ["file:///etc/passwd", "javascript:alert(1)", "data:text/html,x", "about:blank",
+                          "mailto:someone@example.com", "fremkit://admin", "ftp://example.com/"] {
+            XCTAssertFalse(ExternalLink.opensInBrowser(URL(string: candidate), from: admin), candidate)
+        }
+        XCTAssertFalse(ExternalLink.opensInBrowser(nil, from: admin))
+    }
+}
+
 final class NodeVersionOrderTests: XCTestCase {
     /// nvm keeps one directory per version, and the newest is the one to try first.
     func testComparesVersionsNumericallyNotAsText() {
