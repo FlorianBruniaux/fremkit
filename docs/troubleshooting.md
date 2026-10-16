@@ -14,10 +14,10 @@ and "Notifications: active" above the toggles, and *Log…* opens the supervised
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| "Touch: Input Monitoring missing — open Settings…" | Input Monitoring not granted to *this build* of the helper, or [never asked](#input-monitoring-was-never-asked) | Click the line: it opens Privacy & Security → Input Monitoring with the helper listed. Turn "Fremkit" (the app) or "Fremkit Helper" (a source install) on, then relaunch it |
+| "Touch: Input Monitoring missing — open Settings…" | Input Monitoring not granted to *this build* of the helper, or [never asked](#input-monitoring-was-never-asked) | Click the line: it opens Privacy & Security → Input Monitoring with the helper listed. Turn "Fremkit" (the app) or "Fremkit Helper" (a source install) on. Touch starts within seconds, or the line asks for a relaunch |
 | "Touch: allowed — quit and reopen Fremkit…" | Input Monitoring is granted, but macOS applies it only to a relaunched process | Click the line: Fremkit quits (stopping its server as usual) and opens again |
 | "Touch: taken by another driver" | Touchscreen Gestures, another driver or a `--probe` run holds the panel | Quit it, and unload its launchd agent so it does not come back |
-| "Fence: Accessibility missing — open Settings…" (or the same on the Touch or Notifications line) | Accessibility not granted | Click the line: it opens Privacy & Security → Accessibility. Turn "Fremkit" (the app) or "Fremkit Helper" (a source install) on, then relaunch it |
+| "Fence: Accessibility missing — open Settings…" (or the same on the Touch or Notifications line) | Accessibility not granted | Click the line: it opens Privacy & Security → Accessibility, with the helper listed. Turn "Fremkit" (the app) or "Fremkit Helper" (a source install) on; the line clears within seconds |
 | "Fremkit can't be opened" / "is damaged and can't be opened" | The download was altered or is not the published one | Download the DMG again from the release page; see [Gatekeeper](#gatekeeper) |
 | Input Monitoring and Accessibility asked again after moving to the app | The app's Developer ID signature is a new code identity | Expected once; see [The app asks for permissions again](#the-app-asks-for-permissions-again) |
 | Permissions reset after every rebuild | Ad-hoc signature: a new code identity each build | Run `scripts/create-signing-identity.sh`, rebuild, grant once more |

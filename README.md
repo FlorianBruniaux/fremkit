@@ -378,7 +378,7 @@ itself (Sparkle's system profile is off).
 |---|---|
 | "Fremkit can't be opened" or "is damaged" | Download the DMG again from the release page; see the Gatekeeper section of the troubleshooting guide |
 | Permissions asked again after moving to the app | Expected once: the app is signed differently from the developer helper. Grant them to "Fremkit" |
-| "Touch: Input Monitoring missing — open Settings…" | Click the line, turn "Fremkit" (or "Fremkit Helper" for a source install) on in the Input Monitoring list it opens, then relaunch it |
+| "Touch: Input Monitoring missing — open Settings…" | Click the line, turn "Fremkit" (or "Fremkit Helper" for a source install) on in the Input Monitoring list it opens. Touch starts within seconds, or the line asks you to reopen Fremkit — click it |
 | "Touch: taken by another driver" | Quit Touchscreen Gestures and unload its launchd agent |
 | Permissions reset after every rebuild | Run `scripts/create-signing-identity.sh` and rebuild |
 | A LAN device answers `ping` but not Fremkit | Allow Local Network for the app running the server |
