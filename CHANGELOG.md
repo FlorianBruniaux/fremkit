@@ -26,6 +26,9 @@ tagged `vX.Y.Z`.
 ### Fixed
 - **Disks counts like Finder.** Sizes were binary gigabytes labelled GB, about 7 % below what
   Finder and Disk Utility show; they are decimal now, and a disk past 1,000 GB reads in TB.
+- **One row per disk on Disks.** Volumes that share one APFS disk — the Mac's own and a volume
+  added to it, say — each showed the whole disk and the same free space; they are one row now, its
+  bar split into a segment per volume and what the system takes.
 - **Save a backup from the Fremkit admin window.** **Screen → Backup → Save** did nothing in the
   helper's own admin window, which dropped the download; it now asks where to save the archive,
   as a browser does.
