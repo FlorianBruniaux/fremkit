@@ -47,3 +47,15 @@ it('cancels consent when the form closes before the start response arrives',asyn
   w.unmount();release(Response.json({state:'pending'}));await flushPromises()
   expect(calls).toContain('/api/connections/a/google/cancel')
 })
+
+it('requests Tasks only when its checkbox is selected', async () => {
+  setLocale('en')
+  vi.stubGlobal('fetch', async () => Response.json({state: 'pending'}))
+  const form = mount(GoogleConnectionForm, {props: {id: 'tasks-account', connection: null}})
+  await form.get('[name="clientId"]').setValue('test.apps.googleusercontent.com')
+  await form.get('input[value="tasks"]').setValue(true)
+  await form.get('[data-action="connect"]').trigger('click')
+  await flushPromises()
+  expect(save.mock.calls[0]).toMatchObject(['tasks-account', {fields: {services: '["gmail","calendar","tasks"]'}}])
+  form.unmount()
+})

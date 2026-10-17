@@ -16,7 +16,7 @@ const clientSecret = ref('')
 const calendarIds = ref(props.connection?.fields.calendarIds ?? '[]')
 const color = ref(props.connection?.fields.color ?? nextConnectionColor(0))
 function selectedServices(): string[] {
-  try { const s:unknown = JSON.parse(props.connection?.fields.services ?? '["gmail","calendar"]'); return Array.isArray(s) ? s.filter(v=>v==='gmail'||v==='calendar') : [] } catch { return [] }
+  try { const s:unknown = JSON.parse(props.connection?.fields.services ?? '["gmail","calendar"]'); return Array.isArray(s) ? s.filter(v=>v==='gmail'||v==='calendar'||v==='tasks') : [] } catch { return [] }
 }
 const selected = ref(selectedServices())
 const status = ref<GoogleAccountStatus>({state:'disconnected'})
@@ -78,6 +78,7 @@ async function saveSettings():Promise<void> {busy.value=true;try{if(await save()
       <legend>{{ t('google.services') }}</legend>
       <label class="check"><input v-model="selected" type="checkbox" value="gmail" />{{ t('google.gmail') }}</label>
       <label class="check"><input v-model="selected" type="checkbox" value="calendar" />{{ t('google.calendar') }}</label>
+      <label class="check"><input v-model="selected" type="checkbox" value="tasks" />{{ t('google.tasks') }}</label>
     </fieldset>
     <small>{{ t('google.scopeHelp') }}</small>
     <GoogleCalendarSelector v-if="saved && status.services?.includes('calendar') && selected.includes('calendar')" :id="id" v-model="calendarIds" :disabled="busy || status.state==='pending'" />

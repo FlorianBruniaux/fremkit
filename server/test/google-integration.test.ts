@@ -20,10 +20,10 @@ afterEach(async () => { await app.close(); await rm(dir, { recursive: true, forc
 const add = (id: string) => app.inject({ method: 'PUT', url: '/api/connections/' + id, payload: { type: 'google', name: id, fields: { clientId: 'example.apps.googleusercontent.com', services: '["gmail","calendar"]', calendarIds: '[]' } } })
 
 describe('Google registration in the assembled application', () => {
-  it('offers one Google account with separate Gmail and Calendar channels beside ICS', async () => {
+  it('offers one Google account with separate Gmail, Calendar and Tasks channels beside ICS', async () => {
     const types = (await app.inject({ url: '/api/connections/types' })).json()
     const google = types.find((t: { id: string }) => t.id === 'google')
-    expect(google?.services).toEqual([{ id: 'gmail', channelPrefix: 'gmail' }, { id: 'google-calendar', channelPrefix: 'google-calendar' }])
+    expect(google?.services).toEqual([{ id: 'gmail', channelPrefix: 'gmail' }, { id: 'google-calendar', channelPrefix: 'google-calendar' }, { id: 'google-tasks', channelPrefix: 'google-tasks' }])
     expect(google.fields.filter((f: { secret?: boolean }) => f.secret).map((f: { key: string }) => f.key)).toEqual(['credentials'])
     expect(types.some((t: { id: string }) => t.id === 'ics')).toBe(true)
   })

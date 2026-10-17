@@ -13,6 +13,7 @@ export const en: Record<string, string> = {
   "google.secretHelp": "Stored privately with the account. Leave empty on reconnect to keep the stored client secret. After local disconnect, enter it again.",
   "google.services": "Services to authorize",
   "google.gmail": "Gmail metadata, read only",
+  "google.tasks": "Google Tasks lists and tasks, read only",
   "google.calendar": "Calendar list and events, read only",
   "google.scopeHelp": "Google verifies account identity (openid and email). Adding a service requires new consent for all selected services. External Testing apps expire these refresh tokens after seven days.",
   "google.calendarIds": "Calendar IDs (JSON array)",
