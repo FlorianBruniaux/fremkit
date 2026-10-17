@@ -12,12 +12,14 @@ import NavBar from './NavBar.vue'
 import NavPopover from './NavPopover.vue'
 import { useSwipe } from './useSwipe'
 import { useNavPopover } from './useNavPopover'
+import { usePageBadges } from './usePageBadges'
 
 const socket = useSocket()
 const { t } = useI18n()
 const config = ref<Config | null>(null)
 const manifests = ref<Record<string, WidgetManifest>>({})
 const pageIndex = ref(0)
+const badges = usePageBadges(() => config.value?.pages ?? [], () => manifests.value, socket)
 const page = computed(() => config.value?.pages[pageIndex.value] ?? null)
 // The theme the config names, repainted whenever the admin saves another one.
 useConfigTheme(config)
@@ -106,7 +108,7 @@ watch(() => config.value?.locale, (l) => setLocale(l))
       <div class="edge left" @pointerdown.stop="stageSwipe.down" @pointerup.stop="stageSwipe.up" @pointercancel.stop="stageSwipe.cancel" @wheel.stop="stageSwipe.wheel" />
       <div class="edge right" @pointerdown.stop="stageSwipe.down" @pointerup.stop="stageSwipe.up" @pointercancel.stop="stageSwipe.cancel" @wheel.stop="stageSwipe.wheel" />
     </div>
-    <NavBar :pages="config.pages" :active="pageIndex" :height="navHeightOf(config.display)"
+    <NavBar :pages="config.pages" :badges="badges" :active="pageIndex" :height="navHeightOf(config.display)"
       :opacity="config.display.navOpacity" :nav-widgets="navWidgetsOf(config.display)"
       :manifests="manifests" :cell="config.display.cell" :admin-gesture="config.display.adminGesture"
       :nav-style="config.display.navStyle"

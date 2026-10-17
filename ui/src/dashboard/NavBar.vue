@@ -6,6 +6,9 @@ import { fade, surfaceOpacity } from '../shared/background'
 import { useSwipe } from './useSwipe'
 import { useI18n } from '../shared/i18n'
 import CompactWidgetFrame from './CompactWidgetFrame.vue'
+import BaseIcon from '../shared/ui/BaseIcon.vue'
+import { pageVisuals } from './pageVisuals'
+import type { PageBadge } from './pageBadges'
 
 /** The bar's own two colours, from the theme; `fade` mixes an opacity into either form. */
 const NAV_BG = 'var(--nav-surface)'
@@ -19,11 +22,12 @@ const props = withDefaults(defineProps<{
   cell?: number
   /** Admin Edit mode: the bar's widgets stay live but inert, since the Screen tab configures them. */
   edit?: boolean
+  badges?: Record<string, PageBadge>
   /** Which gesture on the page buttons opens the admin. Absent means `both`. */
   adminGesture?: AdminGesture
   /** The default preserves the existing compact page dots. */
   navStyle?: NavStyle
-}>(), { navWidgets: () => [], manifests: () => ({}), cell: 40 })
+}>(), { badges: () => ({}), navWidgets: () => [], manifests: () => ({}), cell: 40 })
 const emit = defineEmits<{
   select: [index: number]; swipe: [delta: 1 | -1]
   /** A compact widget with `popup` on was tapped; the element is where its popover hangs from. */
@@ -248,6 +252,17 @@ function cancelNavigation(): void {
   s.cancel()
 }
 const { t } = useI18n()
+const visuals = computed(() => pageVisuals(props.pages, props.manifests))
+function badgeText(badge: PageBadge): string {
+  if (!badge.count && badge.unavailable) return '?'
+  return badge.count > 99 ? '99+' : String(badge.count) + (badge.lowerBound ? '+' : '')
+}
+function badgeDescription(badge: PageBadge): string {
+  const sources = badge.kinds.map(kind => t('dashboard.badge.' + kind)).join(', ')
+  if (!badge.count && badge.unavailable) return t('dashboard.badge.unavailable', { sources })
+  const text = t(badge.lowerBound ? 'dashboard.badge.minimum' : 'dashboard.badge.count', { count: badge.count, sources })
+  return text + (badge.unavailable ? ' · ' + t('dashboard.badge.partial') : '')
+}
 const names = ref<HTMLElement>()
 const namesOverflow = ref(false)
 const canShowPrevious = ref(false)
@@ -284,7 +299,7 @@ function scrollNames(direction: -1 | 1): void {
 }
 function revealActivePage(): void {
   const el = names.value
-  const button = el?.children[props.active] as HTMLElement | undefined
+  const button = el?.querySelectorAll<HTMLElement>('.page-button')[props.active]
   if (!el || !button) return
   const left = button.offsetLeft - el.offsetLeft
   const right = left + button.offsetWidth
@@ -301,7 +316,7 @@ onMounted(() => {
   }
   window.addEventListener('resize', measureNames)
 })
-watch(() => [props.pages.length, props.height, props.navStyle, props.active], async () => { await nextTick(); revealActivePage() })
+watch(() => [props.pages, props.manifests, props.height, props.navStyle, props.active], async () => { await nextTick(); revealActivePage() }, { deep: true })
 onBeforeUnmount(() => {
   namesObserver?.disconnect()
   window.removeEventListener('resize', measureNames)
@@ -358,12 +373,23 @@ const style = computed<Record<string, string | number>>(() => {
         @wheel.stop @dblclick.stop @contextmenu.prevent.stop @click.stop="scrollNames(-1)">‹</button>
       <div ref="names" class="page-list" :class="{ holding }" @scroll="measureNames"
         @pointerdown="holdDown" @contextmenu="holdContextMenu" @dblclick="adminDoubleClick">
-        <button v-for="(p, i) in pages" :key="p.id" type="button" class="page-button" :class="{ active: i === active }"
-          :style="{ minHeight: targetHeight }" :aria-label="p.name"
-          :aria-current="i === active ? 'page' : undefined" :title="p.name"
-          @pointerdown="pageDown($event, i)" @click="pageClick($event, i)">
-          <span class="page-name">{{ (navStyle ?? DEFAULT_NAV_STYLE) === 'names' ? p.name : '' }}</span>
-        </button>
+        <template v-for="(p, i) in pages" :key="p.id">
+          <span v-if="(navStyle ?? DEFAULT_NAV_STYLE) === 'names' && visuals[i]?.divider" class="group-divider" aria-hidden="true" />
+          <button type="button" class="page-button" :class="{ active: i === active }"
+            :style="{ minHeight: targetHeight }" :aria-label="p.name"
+            :aria-current="i === active ? 'page' : undefined"
+            :title="badges[p.id] ? p.name + ' · ' + badgeDescription(badges[p.id]!) : p.name"
+            :aria-describedby="badges[p.id] ? 'page-badge-' + i : undefined"
+            @pointerdown="pageDown($event, i)" @click="pageClick($event, i)">
+            <span v-if="(navStyle ?? DEFAULT_NAV_STYLE) === 'names'" class="icon-wrap">
+              <BaseIcon class="page-icon" :name="visuals[i]?.icon ?? 'layout-grid'" :size="26" :style="{ color: visuals[i]?.color }" />
+              <span v-if="badges[p.id]" class="page-badge" :class="{ unavailable: badges[p.id]!.unavailable }" aria-hidden="true">{{ badgeText(badges[p.id]!) }}</span>
+            </span>
+            <span v-else-if="badges[p.id]" class="page-badge dot-badge" :class="{ unavailable: badges[p.id]!.unavailable }" aria-hidden="true">{{ badgeText(badges[p.id]!) }}</span>
+            <span v-if="badges[p.id]" :id="'page-badge-' + i" class="badge-description">{{ badgeDescription(badges[p.id]!) }}</span>
+            <span class="page-name">{{ (navStyle ?? DEFAULT_NAV_STYLE) === 'names' ? p.name : '' }}</span>
+          </button>
+        </template>
       </div>
       <button v-if="namesOverflow" type="button" class="names-scroll next-names"
         :style="{ minHeight: targetHeight }" :disabled="!canShowNext"
@@ -389,17 +415,26 @@ nav.named { grid-template-columns: minmax(max-content, 1fr) fit-content(calc(120
   height: 100%; padding: 0; border: 0; display: flex; align-items: center; justify-content: center;
   background: transparent; color: var(--text, #e8edf3); font: inherit;
   font-size: calc(var(--fs-lg, 16px) * 1.125 * var(--nav-scale, 1)); cursor: pointer; box-sizing: border-box;
-  scroll-snap-align: start; }
+  scroll-snap-align: start; position: relative; }
 .page-button::after { content: ''; display: block; width: calc(14px * var(--nav-scale, 1));
   height: calc(14px * var(--nav-scale, 1)); border-radius: calc(7px * var(--nav-scale, 1));
   background: var(--border-strong, #3a404a); transition: width .2s, background .2s; }
 .page-button.active::after { width: calc(36px * var(--nav-scale, 1)); background: var(--accent); }
 .named .page-list { gap: calc(8px * var(--nav-scale, 1)); }
 .named .page-button { width: calc(120px * var(--nav-scale, 1)); min-width: 56px;
-  padding: 0 12px; border-bottom: 4px solid transparent; }
+  padding: 0 12px; border-bottom: 4px solid transparent; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: calc(4px * var(--nav-scale, 1)); }
 .named .page-button::after { display: none; }
 .page-name { display: block; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .named .page-button.active { border-bottom-color: var(--accent); font-weight: 700; background: var(--surface-2, transparent); }
+.icon-wrap { position: relative; display: flex; }
+.page-badge { position: absolute; top: -6px; left: calc(100% - 5px); min-width: 20px; height: 20px; padding: 0 4px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 10px; background: var(--accent, #d9b36a); color: #0b0d10; border: 1px solid var(--nav-bg, var(--nav-surface, #0b0d10)); font-size: 12px; font-weight: 700; line-height: 1; pointer-events: none; }
+.page-badge.unavailable { background: var(--text-muted, #8b93a0); }
+.dot-badge { top: calc(10px * var(--nav-scale, 1)); left: calc(50% + 9px * var(--nav-scale, 1)); }
+.badge-description { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.page-icon { width: calc(26px * var(--nav-scale, 1)); height: calc(26px * var(--nav-scale, 1)); }
+.page-icon :deep(svg) { width: 100%; height: 100%; }
+.group-divider { flex: 0 0 1px; height: 36px; align-self: center; margin: 0 calc(8px * var(--nav-scale, 1)); background: var(--nav-outline, #434a55); }
 .names-scroll { flex: 0 0 56px; width: 56px; height: 100%; padding: 0; border: 0; background: transparent;
   color: var(--text); font: inherit; font-size: calc(var(--fs-lg, 16px) * 1.5); cursor: pointer; }
 .names-scroll:disabled { opacity: .35; cursor: default; }

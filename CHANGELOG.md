@@ -16,6 +16,8 @@ tagged `vX.Y.Z`.
 - **Choose page names in the Edge bar.** Screen can keep the familiar page dots or show scrolling
   names with a current-page marker. Arrows move by a visible page, and the admin reserves room
   for compact widgets. Page taps still work with the admin gestures.
+- **Show page icons and attention badges.** Named pages can show service icons and group dividers;
+  badges distinguish partial or unavailable provider data from zero.
 
 ## 0.4.1 — 2026-10-16
 
@@ -55,7 +57,6 @@ tagged `vX.Y.Z`.
   window too.
 - **RTK token savings.** For registry widgets: the tokens [RTK](https://github.com/rtk-ai/rtk) saved
   today, in total, and over the last 30 days, read from the `rtk` program when it is installed.
-
 ### Changed
 - **Missing permissions say where to go.** A menu bar line such as "Touch: Input Monitoring
   missing — open Settings…" or "Fence: Accessibility missing — open Settings…" can be clicked: it

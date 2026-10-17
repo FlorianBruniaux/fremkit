@@ -309,5 +309,12 @@ export const en: Record<string, string> = {
   'dashboard.reconnecting': 'Reconnecting…',
   'dashboard.navigation.previousNames': 'Show previous pages',
   'dashboard.navigation.nextNames': 'Show next pages',
+  "dashboard.badge.claude": "Claude attention requests",
+  "dashboard.badge.github": "GitHub notifications",
+  "dashboard.badge.gmail": "unread Gmail messages",
+  "dashboard.badge.count": "{count} items to address · {sources}",
+  "dashboard.badge.minimum": "At least {count} items to address · {sources}",
+  "dashboard.badge.unavailable": "Notifications unavailable · {sources}",
+  "dashboard.badge.partial": "Some sources are unavailable",
   'dashboard.widget.notInstalled': 'not installed',
 }
