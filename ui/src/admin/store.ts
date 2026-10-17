@@ -3,7 +3,7 @@ import { api as realApi } from '../shared/api'
 import { pick, setLocale, t } from '../shared/i18n'
 import { useSocket } from '../shared/socket'
 import type { Config, NavHeight, NavWidget, Page, WidgetInstance, WidgetManifest, WidgetPermissionSet, WidgetSource, WidgetsResponse } from '../shared/types'
-import { DEFAULT_NAV_HEIGHT, MAX_NAV_WIDGETS, ROWS_BY_NAV_HEIGHT, compactWidth, mergeSettings, navHasRoom, navWidgetsOf } from '../shared/types'
+import { DEFAULT_NAV_HEIGHT, MAX_NAV_WIDGETS, ROWS_BY_NAV_HEIGHT, compactWidth, mergeSettings, navHasRoom, navWiderClusterWidth, navWidgetsOf } from '../shared/types'
 import { fits, largestFreeSpot, type Grid, type Rect } from './layout'
 
 export type Mode = 'edit' | 'test'
@@ -521,10 +521,15 @@ export function createAdminStore(deps: StoreDeps): AdminStore {
 
     updateNavWidget(instanceId: string, patch: Partial<NavWidget>): void {
       const display = state.config!.display
+      const current = navWidgetsOf(display).find((widget) => widget.instanceId === instanceId)
+      if (!current) return
       const candidate = { ...display, navWidgets: navWidgetsOf(display).map((widget) =>
         widget.instanceId === instanceId ? { ...widget, ...patch } : widget) }
-      if (!navHasRoom(candidate, state.manifests, 0, state.config!.pages.length)) {
-        state.toast = t('admin.store.navFull', { id: instanceId })
+      const growsWiderSide = navWiderClusterWidth(candidate, state.manifests)
+        > navWiderClusterWidth(display, state.manifests)
+      if (growsWiderSide && !navHasRoom(candidate, state.manifests, 0, state.config!.pages.length)) {
+        const manifest = state.manifests[current.widgetId]
+        state.toast = t('admin.store.navFull', { id: pick(manifest?.name) || current.widgetId })
         return
       }
       apply((c) => {

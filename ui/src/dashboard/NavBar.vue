@@ -378,7 +378,7 @@ const style = computed<Record<string, string | number>>(() => {
 nav { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); grid-template-areas: "left pages right";
   align-items: center; box-sizing: border-box; background: var(--nav-bg, var(--nav-surface, #0b0d10)); border-top: 1px solid var(--nav-border, var(--nav-outline, #1f2329));
   touch-action: none; user-select: none; }
-nav.named { grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr); }
+nav.named { grid-template-columns: minmax(max-content, 1fr) fit-content(calc(1200px * var(--nav-scale, 1))) minmax(max-content, 1fr); }
 /* Dots retain their natural width; named pages use a larger, bounded centre. */
 .page-navigation { grid-area: pages; display: flex; height: 100%; width: min(100%, calc(var(--page-count) * 64px * var(--nav-scale, 1)));
   min-width: 0; justify-self: center; }

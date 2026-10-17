@@ -321,13 +321,12 @@ export function navCellsUsed(display: Display, manifests: Record<string, WidgetM
  * The navigation stays centred between equally wide side tracks. Budget against the wider side,
  * including its gaps and padding, or a full cluster can disappear behind the centre.
  */
-export function navHasRoom(
+export function navWiderClusterWidth(
   display: Display,
   manifests: Record<string, WidgetManifest>,
-  width: number,
-  pageCount: number,
+  width = 0,
   slot: NavSlot = 'left',
-): boolean {
+): number {
   const scale = navHeightOf(display) / DEFAULT_NAV_HEIGHT
   const clusterWidth = (side: NavSlot): number => {
     const widgets = navWidgetsIn(display, side)
@@ -337,12 +336,23 @@ export function navHasRoom(
     return content + (side === slot ? width * display.cell : 0)
       + Math.max(0, count - 1) * 12 * scale + 24 * scale
   }
+  return Math.max(clusterWidth('left'), clusterWidth('right'))
+}
+
+export function navHasRoom(
+  display: Display,
+  manifests: Record<string, WidgetManifest>,
+  width: number,
+  pageCount: number,
+  slot: NavSlot = 'left',
+): boolean {
+  const scale = navHeightOf(display) / DEFAULT_NAV_HEIGHT
   const visibleNames = Math.min(Math.max(pageCount, 1), 5)
   const centreWidth = display.navStyle === 'names'
     ? (visibleNames * 120 + Math.max(0, visibleNames - 1) * 8) * scale
       + (pageCount > visibleNames ? 112 : 0)
     : NAV_CENTRE_RESERVE_CELLS * display.cell
-  return 2 * Math.max(clusterWidth('left'), clusterWidth('right')) + centreWidth <= display.cols * display.cell
+  return 2 * navWiderClusterWidth(display, manifests, width, slot) + centreWidth <= display.cols * display.cell
 }
 
 /**

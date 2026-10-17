@@ -631,6 +631,30 @@ describe('navigation bar widgets', () => {
     await vi.advanceTimersByTimeAsync(SAVE_DEBOUNCE_MS)
   })
 
+  it('lets an overfull legacy bar improve without blocking unrelated settings', async () => {
+    const { store } = makeBar()
+    await store.load()
+    store.apply((c) => {
+      c.display.navWidgets = Array.from({ length: 6 }, (_, i) => ({
+        instanceId: `clock-legacy-${i}`, widgetId: 'clock', slot: 'left' as const, settings: {},
+      }))
+    })
+
+    store.updateNavWidget('clock-legacy-0', { popup: true })
+    expect(bar(store)[0].popup).toBe(true)
+
+    store.updateNavWidget('clock-legacy-0', { settings: { compactDate: true } })
+    expect(bar(store)[0].settings).toEqual({})
+    expect(store.state.toast).toContain('Horloge')
+    expect(store.state.toast).not.toContain('clock-legacy-0')
+
+    store.updateNavWidget('clock-legacy-0', { slot: 'right' })
+    expect(bar(store)[0].slot).toBe('right')
+    store.updateNavWidget('clock-legacy-0', { settings: { compactDate: true } })
+    expect(bar(store)[0].settings).toEqual({ compactDate: true })
+    await vi.advanceTimersByTimeAsync(SAVE_DEBOUNCE_MS)
+  })
+
   it('turns the popover on, and drops the key again when it is turned off', async () => {
     const { store } = makeBar()
     await store.load()
